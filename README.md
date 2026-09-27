@@ -38,6 +38,10 @@ DSP feature extraction  --->  immutable JSON analysis report
 supported-family classifier               analyst UI / export / review queue
 ```
 
+## Data and labels
+
+The project uses real SDR captures for evaluation and controlled synthetic waveforms for exact parameter labels. The [dataset plan and label contract](docs/DATASET_AND_LABEL_SCHEMA.md) distinguishes source-provided facts from predictions; the machine-readable [manifest schema](data/schema/demod-record.schema.json) and [synthetic example](data/manifests/example-synthetic.json) are ready for the generator and evaluator.
+
 ## Delivery roadmap
 
 1. **Baseline (now):** deterministic file ingestion and explainable DSP measures.

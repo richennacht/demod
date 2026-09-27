@@ -1,0 +1,116 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/richennacht/demod/blob/main/data/schema/demod-record.schema.json",
+  "title": "DEmod capture manifest record",
+  "type": "object",
+  "required": ["recording_id", "split", "source_type", "data", "capture", "annotations"],
+  "properties": {
+    "recording_id": {"type": "string", "pattern": "^[A-Za-z0-9._-]+$"},
+    "split": {"enum": ["train", "validation", "test", "demo", "holdout"]},
+    "source_type": {"enum": ["real_ota", "real_lab", "synthetic", "benchmark_synthetic"]},
+    "provenance": {
+      "type": "object",
+      "required": ["dataset_name", "license", "label_source"],
+      "properties": {
+        "dataset_name": {"type": "string"},
+        "dataset_version": {"type": ["string", "null"]},
+        "license": {"type": "string"},
+        "source_url": {"type": ["string", "null"], "format": "uri"},
+        "sha256": {"type": ["string", "null"], "pattern": "^[a-fA-F0-9]{64}$"},
+        "label_source": {"enum": ["generated", "instrumented_tx", "protocol_decoder", "source_metadata", "manual_review", "unknown"]},
+        "label_confidence": {"enum": ["high", "medium", "low", "unknown"]}
+      }
+    },
+    "data": {
+      "type": "object",
+      "required": ["uri", "format"],
+      "properties": {
+        "uri": {"type": "string"},
+        "format": {"enum": ["sigmf", "wav", "raw_iq"]},
+        "sigmf_meta_uri": {"type": ["string", "null"]},
+        "datatype": {"type": ["string", "null"], "examples": ["ci16_le", "cf32_le", "cu8"]},
+        "channel_count": {"type": ["integer", "null"], "minimum": 1}
+      }
+    },
+    "capture": {
+      "type": "object",
+      "required": ["sample_rate_hz", "center_frequency_hz"],
+      "properties": {
+        "sample_rate_hz": {"type": ["number", "null"], "exclusiveMinimum": 0},
+        "center_frequency_hz": {"type": ["number", "null"]},
+        "gain_db": {"type": ["number", "null"]},
+        "receiver_id": {"type": ["string", "null"]},
+        "capture_session_id": {"type": ["string", "null"]},
+        "environment": {"enum": ["indoor", "outdoor", "los", "nlos", "unknown", null]}
+      }
+    },
+    "annotations": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/annotation"}
+    },
+    "synthetic": {"$ref": "#/$defs/synthetic"}
+  },
+  "$defs": {
+    "annotation": {
+      "type": "object",
+      "required": ["annotation_id", "sample_start", "sample_count", "truth"],
+      "properties": {
+        "annotation_id": {"type": "string"},
+        "sample_start": {"type": "integer", "minimum": 0},
+        "sample_count": {"type": "integer", "minimum": 1},
+        "freq_lower_edge_hz": {"type": ["number", "null"]},
+        "freq_upper_edge_hz": {"type": ["number", "null"]},
+        "truth": {
+          "type": "object",
+          "required": ["signal_present", "signal_family", "modulation_family", "modulation", "parameters", "coding"],
+          "properties": {
+            "signal_present": {"enum": ["present", "noise", "artifact"]},
+            "signal_family": {"type": ["string", "null"]},
+            "modulation_family": {"type": ["string", "null"]},
+            "modulation": {"type": ["string", "null"]},
+            "parameters": {"$ref": "#/$defs/parameters"},
+            "coding": {"$ref": "#/$defs/coding"}
+          }
+        }
+      }
+    },
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "symbol_rate_baud": {"type": ["number", "null"], "exclusiveMinimum": 0},
+        "occupied_bandwidth_hz": {"type": ["number", "null"], "exclusiveMinimum": 0},
+        "snr_db": {"type": ["number", "null"]},
+        "carrier_offset_hz": {"type": ["number", "null"]},
+        "sampling_offset_ppm": {"type": ["number", "null"]},
+        "iq_gain_imbalance_db": {"type": ["number", "null"]},
+        "iq_phase_imbalance_deg": {"type": ["number", "null"]}
+      }
+    },
+    "coding": {
+      "type": "object",
+      "properties": {
+        "fec_family": {"type": ["string", "null"]},
+        "code_rate": {"type": ["string", "null"]},
+        "interleaver_family": {"type": ["string", "null"]},
+        "interleaver_depth": {"type": ["integer", "null"], "minimum": 1},
+        "scrambler": {"type": ["string", "null"]}
+      }
+    },
+    "synthetic": {
+      "type": "object",
+      "properties": {
+        "generator_version": {"type": "string"},
+        "seed": {"type": "integer"},
+        "parameter_spec_sha256": {"type": "string", "pattern": "^[a-fA-F0-9]{64}$"},
+        "payload_sha256": {"type": "string", "pattern": "^[a-fA-F0-9]{64}$"},
+        "pulse_shape": {"type": ["string", "null"]},
+        "rolloff": {"type": ["number", "null"], "minimum": 0},
+        "channel_model": {"type": ["string", "null"]},
+        "noise_model": {"type": ["string", "null"]},
+        "phase_noise": {"type": ["string", "null"]},
+        "dc_offset": {"type": ["number", "null"]},
+        "interferer_config": {"type": ["object", "null"]}
+      }
+    }
+  }
+}

@@ -3,5 +3,10 @@ __pycache__/
 .venv/
 reports/
 data/
-!data/.gitkeep
-
+!data/
+data/.gitkeep
+!data/schema/
+!data/schema/demod-record.schema.json
+!data/manifests/
+!data/manifests/README.md
+!data/manifests/example-synthetic.json

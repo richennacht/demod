@@ -1,0 +1,73 @@
+{
+  "recording_id": "syn-qpsk-awgn-000001",
+  "split": "train",
+  "source_type": "synthetic",
+  "provenance": {
+    "dataset_name": "DEmod synthetic v0",
+    "dataset_version": "0.1.0",
+    "license": "TBD before release",
+    "source_url": null,
+    "sha256": null,
+    "label_source": "generated",
+    "label_confidence": "high"
+  },
+  "data": {
+    "uri": "data/synthetic/syn-qpsk-awgn-000001.sigmf-data",
+    "format": "sigmf",
+    "sigmf_meta_uri": "data/synthetic/syn-qpsk-awgn-000001.sigmf-meta",
+    "datatype": "ci16_le",
+    "channel_count": 1
+  },
+  "capture": {
+    "sample_rate_hz": 1000000,
+    "center_frequency_hz": 915000000,
+    "gain_db": null,
+    "receiver_id": "synthetic",
+    "capture_session_id": "generator-0.1.0",
+    "environment": "unknown"
+  },
+  "annotations": [
+    {
+      "annotation_id": "syn-qpsk-awgn-000001-a0",
+      "sample_start": 0,
+      "sample_count": 65536,
+      "freq_lower_edge_hz": 914850000,
+      "freq_upper_edge_hz": 915150000,
+      "truth": {
+        "signal_present": "present",
+        "signal_family": "linear_digital",
+        "modulation_family": "psk",
+        "modulation": "qpsk",
+        "parameters": {
+          "symbol_rate_baud": 250000,
+          "occupied_bandwidth_hz": 300000,
+          "snr_db": 12,
+          "carrier_offset_hz": 750,
+          "sampling_offset_ppm": 5,
+          "iq_gain_imbalance_db": 0.3,
+          "iq_phase_imbalance_deg": 1.2
+        },
+        "coding": {
+          "fec_family": "convolutional",
+          "code_rate": "1/2",
+          "interleaver_family": "block",
+          "interleaver_depth": 16,
+          "scrambler": "x7+x4+1, seed=0x5d"
+        }
+      }
+    }
+  ],
+  "synthetic": {
+    "generator_version": "0.1.0",
+    "seed": 381924,
+    "parameter_spec_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "payload_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "pulse_shape": "root_raised_cosine",
+    "rolloff": 0.2,
+    "channel_model": "awgn",
+    "noise_model": "complex_awgn",
+    "phase_noise": "none",
+    "dc_offset": 0.0,
+    "interferer_config": null
+  }
+}
