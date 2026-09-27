@@ -37,6 +37,13 @@ class SyntheticGeneratorTests(unittest.TestCase):
         self.assertEqual(recipe["sample_rate_hz"], 33333000)
         self.assertIn(round(rms, 3), {round(value, 3) for value in recipe["impairments"]["target_rms"]})
 
+    def test_disabled_new_impairments_are_deterministically_inert(self):
+        recipe = next(item for item in GENERATOR.load_recipes(Path(__file__).parents[1] / "data" / "recipes" / "mvp-recipes.json") if item["recipe_id"] == "stage-2-powder-ofdm")
+        baseline, _ = GENERATOR.generate_example(recipe, seed=4)
+        clone = {**recipe, "impairments": {**recipe["impairments"], "flicker_noise_std": 0.0, "gaussian_mixture_probability": 0.0, "gaussian_mixture_std": 999.0, "pa_amam": 0.0, "pa_ampm_rad": 0.0, "doppler_hz": 0.0, "receiver_filter_alpha": 1.0}}
+        repeated, _ = GENERATOR.generate_example(clone, seed=4)
+        self.assertEqual(baseline, repeated)
+
 
 if __name__ == "__main__":
     unittest.main()

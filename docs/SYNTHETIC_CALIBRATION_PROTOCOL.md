@@ -20,6 +20,18 @@ The stage-2 `target_rms` values are receiver-scale bins measured from 48 determi
 
 The stage-2 carrier-offset range is centred near -0.9 MHz because that same calibration subset had mean adjacent-sample phase change of about -0.17 rad at 33.33 MS/s. This is a corpus-specific frequency-placement estimate and must be re-estimated for each receiver/centre-frequency stratum.
 
+## Next noise ablations
+
+Five new controls are added for ablation, not assumed to improve fidelity: (1) Bernoulli Gaussian-mixture background noise to alter tail weight; (2) slow flicker-noise approximation; (3) PA/LNA AM-AM compression; (4) PA/LNA AM-PM conversion; and (5) time-varying Doppler phase plus receiver low-pass filtering. The relevant real-world gaps—LNA intermodulation, sampling/clock drift, protocol/window variability and receiver filtering—are catalogued in [AI for Wireless Waveform Recognition](https://www.mdpi.com/2079-9292/15/10/2112); front-end non-linearities, phase noise and I/Q imbalance are established residual transceiver impairments in [Zhang et al.](https://arxiv.org/abs/1406.3619). Each control is retained only after an unseen-capture improvement.
+
+The first combined range test was **rejected**: on the seed-26148 48-capture check it increased accuracy from 77.1% to 85.4% and single-feature kurtosis accuracy from 87.5% to 97.9%. The active values are consequently neutral. This is evidence that uncalibrated heavy-tail/noise injection is not a substitute for protocol and channel modelling.
+
+## Measured attribution and rejected candidates
+
+On the seeded 48-capture holdout, the single-feature diagnostic attributes the strongest current shortcut to **kurtosis** (87.5% accuracy), followed by coarse spectral bands 4 (68.8%) and 6 (62.5%). RMS, I/Q variance and mean phase step are near chance in this diagnostic. This does not establish physical causality, but it rules out receiver scale as the dominant remaining explanation.
+
+Two candidate changes were rejected against that same evaluation harness: broad combined new-noise ranges (85.4% overall) and lower SNR of 0–12 dB (83.3% overall; 91.7% kurtosis). Future work must fit receiver filtering, burst/window behaviour and 802.11/LTE/NR framing from a training-only stratum, then evaluate on a capture-disjoint holdout.
+
 ## Acceptance test
 
 1. Split by source capture (and ideally collection round/gain), never random windows from the same capture across train and test.

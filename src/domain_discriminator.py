@@ -17,6 +17,9 @@ from generate_synthetic import generate_batch, load_recipes
 from powder_stream import sampled_windows
 
 
+FEATURE_NAMES = ("mean_i", "mean_q", "rms", "variance_i", "variance_q", "iq_covariance", "mean_phase_step", "kurtosis", "band_0", "band_1", "band_2", "band_3", "band_4", "band_5", "band_6", "band_7")
+
+
 def read_complex64_window(path: Path, offset_samples: int, length: int) -> list[complex]:
     with path.open("rb") as source:
         source.seek(offset_samples * 8)
@@ -84,6 +87,16 @@ def wilson_interval(correct: int, total: int, z: float = 1.96) -> tuple[float, f
     return max(0.0, centre - radius), min(1.0, centre + radius)
 
 
+def single_feature_attribution(rows: list[list[float]], labels: list[int], train_indices: list[int], test_indices: list[int]) -> dict[str, float]:
+    """Held-out one-feature accuracies: a shortcut diagnostic, not causality."""
+    scores: dict[str, float] = {}
+    for column, name in enumerate(FEATURE_NAMES):
+        train, means, scales = normalize([[rows[index][column]] for index in train_indices])
+        test = [[(rows[index][column] - means[0]) / scales[0]] for index in test_indices]
+        scores[name] = round(accuracy(test, [labels[index] for index in test_indices], train_logistic(train, [labels[index] for index in train_indices])), 4)
+    return dict(sorted(scores.items(), key=lambda item: item[1], reverse=True))
+
+
 def calibration_report_samples(real: list[list[complex]], recipes_path: Path, seed: int = 26147, window: int = 4096, recipe_id: str | None = None) -> dict[str, float | int | list[float] | bool]:
     recipes = load_recipes(recipes_path)
     if recipe_id:
@@ -101,7 +114,7 @@ def calibration_report_samples(real: list[list[complex]], recipes_path: Path, se
     score = accuracy(test_rows, [labels[index] for index in test_indices], model)
     interval = wilson_interval(round(score * len(test_indices)), len(test_indices))
     half_width = (interval[1] - interval[0]) / 2
-    return {"real_windows": len(real), "synthetic_windows": len(synthetic), "held_out_examples": len(test_indices), "held_out_accuracy": round(score, 4), "accuracy_ci95": [round(interval[0], 4), round(interval[1], 4)], "ci95_half_width": round(half_width, 4), "passes_precision_gate": abs(score - 0.5) <= 0.05 and half_width <= 0.05, "interpretation": "A score near 0.5 is only evidence of a small gap when its held-out confidence interval is narrow and groups were never split across train and test."}
+    return {"real_windows": len(real), "synthetic_windows": len(synthetic), "held_out_examples": len(test_indices), "held_out_accuracy": round(score, 4), "accuracy_ci95": [round(interval[0], 4), round(interval[1], 4)], "ci95_half_width": round(half_width, 4), "passes_precision_gate": abs(score - 0.5) <= 0.05 and half_width <= 0.05, "single_feature_accuracy": single_feature_attribution(rows, labels, train_indices, test_indices), "interpretation": "A score near 0.5 is only evidence of a small gap when its held-out confidence interval is narrow and groups were never split across train and test. Single-feature accuracies identify shortcuts, not causes."}
 
 
 def calibration_report(real_paths: list[Path], recipes_path: Path, seed: int = 26147, window: int = 4096, recipe_id: str | None = None) -> dict[str, float | int | list[float] | bool]:

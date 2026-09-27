@@ -33,6 +33,11 @@ class DomainDiscriminatorTests(unittest.TestCase):
         self.assertGreaterEqual(lower, 0.0)
         self.assertLessEqual(upper, 1.0)
 
+    def test_feature_attribution_names_all_features(self):
+        rows = [[float(index + column) for column in range(16)] for index in range(8)]
+        report = DISCRIMINATOR.single_feature_attribution(rows, [0, 1] * 4, [0, 2, 4, 6], [1, 3, 5, 7])
+        self.assertEqual(set(report), set(DISCRIMINATOR.FEATURE_NAMES))
+
     def test_calibration_acceptance_needs_precision(self):
         report = DISCRIMINATOR.calibration_report_samples([[complex(index, -index) for index in range(8)] for _ in range(6)], ROOT / "data" / "recipes" / "mvp-recipes.json", window=8, recipe_id="stage-0-clean-linear")
         self.assertFalse(report["passes_precision_gate"])

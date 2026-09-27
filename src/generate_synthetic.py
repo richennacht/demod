@@ -112,20 +112,33 @@ def generate_example(recipe: dict[str, Any], seed: int) -> tuple[list[complex], 
     cochannel_amplitude, cochannel_hz = float(settings.get("cochannel_interferer_amplitude", 0.0)), float(settings.get("cochannel_interferer_hz", 0.0))
     adc_bits = int(settings.get("adc_bits", 32))
     target_rms = float(settings.get("target_rms", 0.0))
-    colored_i, colored_q, burst_remaining = 0.0, 0.0, 0
+    mixture_probability, mixture_std = float(settings.get("gaussian_mixture_probability", 0.0)), float(settings.get("gaussian_mixture_std", 0.0))
+    flicker_std, pa_amam, pa_ampm = float(settings.get("flicker_noise_std", 0.0)), float(settings.get("pa_amam", 0.0)), float(settings.get("pa_ampm_rad", 0.0))
+    doppler_hz, receiver_filter_alpha = float(settings.get("doppler_hz", 0.0)), float(settings.get("receiver_filter_alpha", 1.0))
+    colored_i, colored_q, flicker_i, flicker_q, burst_remaining, filtered = 0.0, 0.0, 0.0, 0.0, 0, 0j
     cochannel_points = constellation("qpsk")
     emitters = int(settings.get("cochannel_emitters", 1))
     samples: list[complex] = []
     for index, sample in enumerate(channelled):
+        # Memoryless PA/LNA AM-AM and AM-PM distortion.
+        magnitude_sq = abs(sample) ** 2
+        sample *= max(0.0, 1 - pa_amam * magnitude_sq)
+        sample *= complex(math.cos(pa_ampm * magnitude_sq), math.sin(pa_ampm * magnitude_sq))
         phase_noise += rng.gauss(0, phase_noise_std)
-        phase = 2 * math.pi * cfo_hz * index / sample_rate + phase_noise
+        phase = 2 * math.pi * cfo_hz * index / sample_rate + phase_noise + 0.3 * math.sin(2 * math.pi * doppler_hz * index / sample_rate)
         sample *= complex(math.cos(phase), math.sin(phase))
         i = sample.real * gain + float(dc_i) + rng.gauss(0, noise_sigma)
         q = sample.imag * math.cos(phase_error) + sample.real * math.sin(phase_error) + float(dc_q) + rng.gauss(0, noise_sigma)
         # Colored receiver noise: first-order autoregressive complex noise.
         colored_i = colored_rho * colored_i + math.sqrt(max(0.0, 1 - colored_rho**2)) * rng.gauss(0, colored_std)
         colored_q = colored_rho * colored_q + math.sqrt(max(0.0, 1 - colored_rho**2)) * rng.gauss(0, colored_std)
-        i, q = i + colored_i, q + colored_q
+        # A slow AR process approximates low-frequency/flicker receiver noise.
+        if flicker_std:
+            flicker_i = 0.995 * flicker_i + rng.gauss(0, flicker_std)
+            flicker_q = 0.995 * flicker_q + rng.gauss(0, flicker_std)
+        i, q = i + colored_i + flicker_i, q + colored_q + flicker_q
+        if mixture_probability and rng.random() < mixture_probability:
+            i, q = i + rng.gauss(0, mixture_std), q + rng.gauss(0, mixture_std)
         # Narrowband blocker / oscillator spur.
         tone_phase = 2 * math.pi * tone_hz * index / sample_rate
         i, q = i + tone_amplitude * math.cos(tone_phase), q + tone_amplitude * math.sin(tone_phase)
@@ -147,7 +160,9 @@ def generate_example(recipe: dict[str, Any], seed: int) -> tuple[list[complex], 
             levels, step = 2**adc_bits - 1, 2 * clip_level / (2**adc_bits - 1)
             i, q = round((i + clip_level) / step) * step - clip_level, round((q + clip_level) / step) * step - clip_level
             i, q = max(-clip_level, min(clip_level, i)), max(-clip_level, min(clip_level, q))
-        samples.append(complex(i, q))
+        current = complex(i, q)
+        filtered = current if receiver_filter_alpha == 1 else receiver_filter_alpha * current + (1 - receiver_filter_alpha) * filtered
+        samples.append(filtered)
     # Match the observed receiver scale after channel/front-end effects. This is
     # a recorded calibration parameter, not a label exposed to a downstream model.
     if target_rms > 0:
