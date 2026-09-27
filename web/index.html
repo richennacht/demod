@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>DEMOD Signal Analysis Workbench</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <a class="brand" href="#file-management" aria-label="DEMOD home"><span class="brand-mark">D</span><span>DEMOD<small>Signal workbench</small></span></a>
+      <nav class="stage-nav" aria-label="Analysis stages">
+        <button class="stage-link active" data-tab="file-management"><span>01</span>File management</button>
+        <button class="stage-link" data-tab="dsp"><span>02</span>DSP characterization</button>
+        <button class="stage-link" data-tab="demodulation"><span>03</span>Demodulation</button>
+        <button class="stage-link" data-tab="fec"><span>04</span>FEC &amp; bit recovery</button>
+        <button class="stage-link" data-tab="results"><span>05</span>Results</button>
+      </nav>
+      <div class="sidebar-foot"><span class="status-dot"></span>Local analysis workspace</div>
+    </aside>
+
+    <main class="workspace">
+      <header class="topbar"><div><p class="eyebrow">SIH26147 · evidence-first analysis</p><h1 id="page-title">File management</h1></div><button class="quiet-button" id="reset-button">Reset session</button></header>
+
+      <section class="tab-panel active" id="file-management" aria-labelledby="page-title">
+        <div class="intro-row"><div><h2>Start an automated analysis</h2><p>Upload an authorised IQ or WAV recording. DEMOD selects an interpretation, characterises the signal, and opens the result. You can revisit any stage to adjust its assumptions.</p></div><span class="mode-label">Auto mode</span></div>
+        <div class="file-grid">
+          <label class="upload-zone" for="file-input"><input id="file-input" type="file" accept=".iq,.wav,.sigmf-data,.cf32,.cs16,.cu8"><span class="upload-icon">↑</span><strong>Choose a capture</strong><small>IQ, WAV, SigMF data or supported raw samples</small></label>
+          <div class="metadata-card"><span class="card-kicker">Selected file</span><strong id="selected-file">No file selected</strong><p id="selected-detail">Upload a file or select a prepared demonstration capture.</p><button class="primary-button" id="run-analysis" disabled>Run automated analysis <span>→</span></button></div>
+        </div>
+        <div class="section-heading"><div><p class="eyebrow">Prepared captures</p><h2>Demo files</h2></div><p>Illustrative only — no operational data.</p></div>
+        <div class="demo-grid">
+          <button class="demo-file" data-file="vhf_qpsk_capture.cs16" data-detail="Raw complex signed 16-bit IQ · 2.4 MS/s"><span class="file-badge">IQ</span><span><strong>vhf_qpsk_capture.cs16</strong><small>Raw complex signed 16-bit IQ · 2.4 MS/s</small></span><span class="chevron">›</span></button>
+          <button class="demo-file" data-file="telemetry_burst.wav" data-detail="Stereo PCM WAV · 48 kHz"><span class="file-badge blue">WAV</span><span><strong>telemetry_burst.wav</strong><small>Stereo PCM WAV · 48 kHz</small></span><span class="chevron">›</span></button>
+          <button class="demo-file" data-file="unknown_burst.cu8" data-detail="Headerless unsigned 8-bit raw IQ"><span class="file-badge gold">RAW</span><span><strong>unknown_burst.cu8</strong><small>Headerless unsigned 8-bit raw IQ</small></span><span class="chevron">›</span></button>
+        </div>
+      </section>
+
+      <section class="tab-panel" id="dsp">
+        <div class="intro-row"><div><h2>DSP characterization</h2><p>Clean only what can be evidenced, then measure the candidate signal.</p></div><span class="stage-state" id="dsp-state">Awaiting file</span></div>
+        <div class="control-strip"><label><span>Input interpretation</span><select id="format-select"><option>Auto-detect</option><option>Complex signed 16-bit LE</option><option>Complex unsigned 8-bit</option><option>Complex float32 LE</option></select></label><label><span>Sample rate</span><input id="sample-rate" type="text" value="Auto" aria-label="Sample rate"></label><label><span>Processing</span><select><option>Remove DC + normalize</option><option>Raw samples</option></select></label><button class="secondary-button" id="apply-dsp">Re-run characterization</button></div>
+        <div class="chart-grid"><article class="chart-card"><div class="chart-header"><div><span class="card-kicker">Frequency domain</span><h3>Spectrum / FFT</h3></div><span class="metric">BW 24.1 kHz</span></div><svg viewBox="0 0 600 180" role="img" aria-label="Example frequency spectrum"><path class="grid-line" d="M40 20V150H580M40 85H580"/><path class="spectrum-line" d="M40 142 L80 138 L105 141 L132 135 L165 142 L208 135 L255 142 L284 132 L300 57 L312 134 L332 109 L346 46 L358 104 L378 133 L420 141 L468 137 L520 142 L580 139"/><text x="40" y="173">−1.2 MHz</text><text x="510" y="173">+1.2 MHz</text></svg></article>
+          <article class="chart-card"><div class="chart-header"><div><span class="card-kicker">Time × frequency</span><h3>Waterfall</h3></div><span class="metric">1 burst</span></div><div class="waterfall" aria-label="Example waterfall plot"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div></article>
+          <article class="chart-card"><div class="chart-header"><div><span class="card-kicker">I/Q domain</span><h3>Constellation</h3></div><span class="metric">4 clusters</span></div><svg viewBox="0 0 600 180" role="img" aria-label="Example QPSK constellation"><path class="grid-line" d="M300 16V164M40 90H560"/><g class="constellation"><circle cx="212" cy="48" r="4"/><circle cx="220" cy="55" r="3"/><circle cx="204" cy="59" r="3"/><circle cx="390" cy="49" r="4"/><circle cx="381" cy="56" r="3"/><circle cx="399" cy="61" r="3"/><circle cx="211" cy="129" r="4"/><circle cx="220" cy="122" r="3"/><circle cx="202" cy="119" r="3"/><circle cx="390" cy="130" r="4"/><circle cx="380" cy="121" r="3"/><circle cx="399" cy="118" r="3"/></g><text x="548" y="84">I</text><text x="307" y="24">Q</text></svg></article>
+          <article class="measurement-card"><span class="card-kicker">Measurements</span><dl><div><dt>Frequency offset</dt><dd>+183.25 kHz</dd></div><div><dt>Estimated SNR</dt><dd>14.2 dB</dd></div><div><dt>Symbol rate candidates</dt><dd>9.6 / 12 kBd</dd></div><div><dt>Storage confidence</dt><dd>0.86</dd></div></dl></article></div>
+      </section>
+
+      <section class="tab-panel" id="demodulation"><div class="intro-row"><div><h2>Demodulation detector</h2><p>Rank modulation hypotheses from DSP evidence, then use only a supported decoder.</p></div><span class="stage-state" id="demod-state">Awaiting DSP</span></div><div class="hypothesis-layout"><div class="hypothesis-list"><button class="hypothesis selected"><span class="rank">01</span><span><strong>QPSK</strong><small>Constellation + timing evidence</small></span><b>86%</b></button><button class="hypothesis"><span class="rank">02</span><span><strong>2FSK</strong><small>Frequency-state candidate</small></span><b>11%</b></button><button class="hypothesis"><span class="rank">03</span><span><strong>8PSK</strong><small>Low evidence</small></span><b>3%</b></button></div><article class="decoder-card"><span class="card-kicker">Selected branch</span><h3>QPSK coherent receiver</h3><div class="pipeline"><span>Channel filter</span><i>→</i><span>Carrier recovery</span><i>→</i><span>Timing lock</span><i>→</i><span>Soft bits</span></div><label class="toggle-row"><input type="checkbox" checked><span>Attempt supported demodulation</span></label><button class="primary-button" id="run-demod">Confirm and demodulate <span>→</span></button></article></div></section>
+
+      <section class="tab-panel" id="fec"><div class="intro-row"><div><h2>FEC &amp; bit recovery</h2><p>This stage only runs after a quality-gated soft-bit stream exists.</p></div><span class="stage-state" id="fec-state">Awaiting demodulation</span></div><div class="fec-grid"><article class="decoder-card"><span class="card-kicker">Quality gate</span><h3>Soft-bit stream quality</h3><div class="quality-line"><span>Synchronization</span><b>Locked</b></div><div class="quality-line"><span>Confidence</span><b>0.81</b></div><div class="quality-line"><span>CRC / framing</span><b>Not yet identified</b></div><button class="secondary-button" id="run-fec">Run bounded FEC search</button></article><article class="caution-card"><span>!</span><div><strong>Evidence-gated analysis</strong><p>Unknown or low-quality streams must return insufficient evidence instead of a fabricated code or interleaver label.</p></div></article></div></section>
+
+      <section class="tab-panel" id="results"><div class="intro-row"><div><h2>Analysis result</h2><p id="results-subtitle">Run a capture to create an evidence report.</p></div><span class="mode-label" id="result-mode">No result</span></div><div class="result-hero"><div><span class="card-kicker">Best-supported hypothesis</span><h2 id="result-name">No capture analysed</h2><p id="result-description">Select a file in File management to begin.</p></div><div class="confidence-block"><span>Confidence</span><strong id="result-confidence">—</strong><small>Evidence fusion score</small></div></div><div class="result-grid"><article><span class="card-kicker">Input interpretation</span><strong id="result-format">—</strong><small id="result-input">—</small></article><article><span class="card-kicker">Signal parameters</span><strong id="result-params">—</strong><small>Measured from selected segment</small></article><article><span class="card-kicker">Deep analysis</span><strong id="result-fec">—</strong><small>Only for supported streams</small></article></div><div class="result-actions"><button class="secondary-button" data-go="dsp">Inspect DSP evidence</button><button class="secondary-button" data-go="demodulation">Tune demodulator</button><button class="primary-button" id="export-report">Export JSON report <span>↓</span></button></div></section>
+    </main>
+  </div>
+  <script src="app.js"></script>
+</body>
+</html>
