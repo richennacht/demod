@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="DEmod is an evidence-first workbench for understanding raw IQ and WAV captures.">
+  <title>DEmod — Make signal evidence visible</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="site-header">
+    <a class="wordmark" href="#top">DE<span>mod</span></a>
+    <nav aria-label="Primary navigation"><a href="#method">Method</a><a href="#stages">Workbench</a><a href="#boundary">Boundary</a></nav>
+    <a class="header-link" href="https://web-omega-ten-30.vercel.app" target="_blank" rel="noreferrer">Open workbench ↗</a>
+  </header>
+
+  <main id="top">
+    <section class="hero">
+      <p class="eyebrow">SIH26147 · Signal intelligence, made inspectable</p>
+      <h1>Raw signal files should not be a black box.</h1>
+      <div class="hero-bottom"><p>DEmod helps analysts move from bytes to evidence: format assumptions, spectra, bursts, modulation candidates, and a transparent path to supported bit recovery.</p><a class="round-link" href="https://web-omega-ten-30.vercel.app" target="_blank" rel="noreferrer" aria-label="Open the DEmod workbench">↗</a></div>
+      <div class="signal-surface" aria-label="Abstract signal analysis illustration">
+        <svg viewBox="0 0 1200 470" role="img" aria-label="An abstract landscape of a waveform, constellation points and an FFT grid">
+          <path class="terrain" d="M40 360 C120 336 125 266 210 285 C275 299 292 145 365 185 C430 221 454 347 536 303 C605 265 580 149 668 166 C749 182 743 263 820 246 C887 232 866 130 954 151 C1058 176 1083 319 1160 285"/>
+          <path class="noise" d="M50 324 C102 292 146 343 196 302 S280 328 330 274 S422 307 466 251 S556 317 618 238 S710 301 767 229 S854 309 911 214 S1007 326 1150 245"/>
+          <path class="grid" d="M80 396H1120M220 90V396M440 90V396M660 90V396M880 90V396M1100 90V396"/>
+          <g class="points"><circle cx="188" cy="142" r="7"/><circle cx="214" cy="170" r="5"/><circle cx="250" cy="136" r="6"/><circle cx="977" cy="111" r="7"/><circle cx="1012" cy="145" r="5"/><circle cx="1043" cy="120" r="6"/><circle cx="752" cy="334" r="6"/><circle cx="785" cy="355" r="5"/><circle cx="811" cy="323" r="6"/></g>
+          <g class="labels"><text x="80" y="427">TIME</text><text x="1064" y="427">EVIDENCE</text><text x="122" y="117">I/Q</text><text x="925" y="88">FFT</text></g>
+        </svg>
+      </div>
+    </section>
+
+    <section class="manifesto" id="method"><p class="display-copy">A raw IQ capture can be huge, ambiguous, and full of signals that do not announce themselves. DEmod is built to expose what the data supports—and to show uncertainty where it does not.</p><div class="rule"></div><div class="manifesto-note"><span>01 / METHOD</span><p>Metadata first. Evidence second. Analyst judgement always.</p></div></section>
+
+    <section class="stages" id="stages"><div class="section-kicker"><span>02 / THE WORKBENCH</span><p>Five connected views, one continuous evidence trail.</p></div><ol>
+      <li><span>01</span><div><h2>Bring in the capture.</h2><p>Upload IQ, WAV, SigMF, or a prepared example. Preserve the file and record what is actually known.</p></div><b>FILE</b></li>
+      <li><span>02</span><div><h2>See the signal before naming it.</h2><p>Measure spectrum, waterfall, bursts, bandwidth, timing candidates, and I/Q structure.</p></div><b>DSP</b></li>
+      <li><span>03</span><div><h2>Rank modulation hypotheses.</h2><p>Compare supported families with visible constellation, timing, and synchronization evidence.</p></div><b>DEMOD</b></li>
+      <li><span>04</span><div><h2>Only then inspect bits.</h2><p>Gate FEC and interleaver analysis behind a quality-tested soft-bit stream.</p></div><b>RECOVER</b></li>
+      <li><span>05</span><div><h2>Leave with a report, not a guess.</h2><p>Export assumptions, measurements, candidate rankings, and analyst decisions together.</p></div><b>RESULT</b></li>
+    </ol></section>
+
+    <section class="boundary" id="boundary"><div><p class="eyebrow">03 / A useful boundary</p><h2>We do not pretend every unknown waveform can be decoded.</h2></div><div class="boundary-copy"><p>DEmod distinguishes measured facts from model hypotheses. If capture metadata is missing or a bitstream is too weak, the output says so. That is how a signal-analysis tool earns trust.</p><a class="text-link" href="https://web-omega-ten-30.vercel.app" target="_blank" rel="noreferrer">Try the workbench <span>→</span></a></div></section>
+  </main>
+
+  <footer><a class="wordmark" href="#top">DE<span>mod</span></a><p>Evidence-first signal analysis for SIH26147.</p><a href="https://web-omega-ten-30.vercel.app" target="_blank" rel="noreferrer">Launch workbench ↗</a></footer>
+</body>
+</html>
