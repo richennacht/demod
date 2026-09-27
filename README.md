@@ -90,6 +90,10 @@ The following papers directly motivate the currently documented technology choic
 - Blind carrier/symbol-rate candidates through cyclostationarity: [Zhang et al., 2012](https://doi.org/10.1016/j.proeng.2011.12.753) and [Güner, 2014](https://doi.org/10.1002/dac.2606).
 - Hybrid raw-IQ/deep-learning model choice and domain-shift cautions: [Thakur & Imtiaz, 2026](https://www.mdpi.com/2079-9292/15/10/2163) and [Tian et al., 2026](https://doi.org/10.1016/j.sigpro.2025.110444).
 
+## Submission differentiator
+
+The concise, submission-ready explanation of DEmod’s evidence graph, implemented technologies, research references, and defensible novelty is in [DEmod technical brief](docs/DEMOD_TECHNICAL_DIFFERENTIATORS.md). The key distinction is not “an AI dashboard”: it is a provenance-preserving chain from raw bytes through representation hypotheses, raw/derived DSP evidence and bounded modulation candidates to either a supported result or an explicit abstention.
+
 ## Delivery roadmap
 
 1. **Baseline (now):** deterministic file ingestion and explainable DSP measures.
