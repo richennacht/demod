@@ -7,9 +7,13 @@ import argparse
 import json
 import math
 import struct
+import sys
 import wave
 from pathlib import Path
 from typing import Iterable
+
+sys.path.insert(0, str(Path(__file__).parent))
+from feature_analysis import analyse_iq
 
 
 def rms(samples: Iterable[float]) -> float:
@@ -53,12 +57,24 @@ def read_wav(path: Path) -> tuple[list[float], int, dict[str, int]]:
     return mono, sample_rate, {"channels": channels, "sample_width_bytes": width}
 
 
-def read_s16le_iq(path: Path) -> list[complex]:
+def read_raw_iq(path: Path, iq_format: str) -> list[complex]:
     raw = path.read_bytes()
-    if len(raw) % 4:
-        raise ValueError("s16le IQ files must contain complete interleaved I/Q pairs.")
-    integers = struct.unpack("<" + "h" * (len(raw) // 2), raw)
-    return [complex(integers[index] / 32768.0, integers[index + 1] / 32768.0) for index in range(0, len(integers), 2)]
+    layouts = {
+        "s16le": ("<h", 2, 32768.0, 0.0), "s16be": (">h", 2, 32768.0, 0.0),
+        "s8": ("b", 1, 128.0, 0.0), "cu8": ("B", 1, 128.0, 128.0),
+        "f32le": ("<f", 4, 1.0, 0.0), "f32be": (">f", 4, 1.0, 0.0),
+    }
+    if iq_format not in layouts:
+        raise ValueError(f"Unsupported IQ format: {iq_format}")
+    code, width, scale, offset = layouts[iq_format]
+    pair_bytes = 2 * width
+    if len(raw) % pair_bytes:
+        raise ValueError(f"{iq_format} IQ files must contain complete interleaved I/Q pairs.")
+    values = [struct.unpack_from(code, raw, index)[0] for index in range(0, len(raw), width)]
+    result = [complex((values[index] - offset) / scale, (values[index + 1] - offset) / scale) for index in range(0, len(values), 2)]
+    if not all(math.isfinite(value.real) and math.isfinite(value.imag) for value in result):
+        raise ValueError("Raw IQ interpretation produced NaN or infinity.")
+    return result
 
 
 def analyse(path: Path, sample_rate: int | None, iq_format: str) -> dict:
@@ -69,17 +85,9 @@ def analyse(path: Path, sample_rate: int | None, iq_format: str) -> dict:
     if suffix == ".iq":
         if sample_rate is None:
             raise ValueError("--sample-rate is required for raw IQ input.")
-        if iq_format != "s16le":
-            raise ValueError("Only interleaved signed 16-bit little-endian IQ is supported in this MVP.")
-        samples = read_s16le_iq(path)
-        magnitude = [abs(value) for value in samples]
-        phase = [math.atan2(value.imag, value.real) for value in samples]
         return {
-            "input": {"path": str(path), "format": "iq", "iq_format": iq_format},
-            "measurements": {
-                **summarise_real(magnitude, sample_rate),
-                "mean_phase_radians": round(sum(phase) / len(phase), 8),
-            },
+            "input": {"path": str(path), "format": "iq", "iq_format": iq_format, "sample_rate_source": "user_hypothesis"},
+            "measurements": analyse_iq(read_raw_iq(path, iq_format), sample_rate),
         }
     raise ValueError("Supported input extensions are .wav and .iq.")
 
@@ -88,7 +96,7 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="Generate a transparent baseline analysis report for WAV or raw IQ data.")
     parser.add_argument("input", type=Path, help="Path to a .wav or .iq recording")
     parser.add_argument("--sample-rate", type=int, help="Required for raw IQ input")
-    parser.add_argument("--iq-format", default="s16le", choices=["s16le"], help="Raw IQ sample format")
+    parser.add_argument("--iq-format", default="s16le", choices=["s16le", "s16be", "s8", "cu8", "f32le", "f32be"], help="Interleaved I/Q representation to test")
     parser.add_argument("--output", type=Path, help="Optional JSON output path")
     arguments = parser.parse_args()
     report = analyse(arguments.input, arguments.sample_rate, arguments.iq_format)

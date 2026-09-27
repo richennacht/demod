@@ -10,8 +10,10 @@ data/real/
 data/*.sqlite
 !data/recipes/
 !data/recipes/mvp-recipes.json
+!data/recipes/sih-hf-vhf-uhf.json
 !data/schema/
 !data/schema/demod-record.schema.json
 !data/manifests/
 !data/manifests/README.md
 !data/manifests/example-synthetic.json
+!data/manifests/external-datasets.json

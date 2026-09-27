@@ -1,0 +1,53 @@
+{
+  "manifest_version": "0.1.0",
+  "purpose": "Download registry only. No external capture bytes are redistributed by this repository.",
+  "datasets": [
+    {
+      "dataset_id": "panoradio-hf-2021",
+      "role": "synthetic_hf_reference",
+      "url": "https://panoradio-sdr.de/radio-signal-classification-dataset/",
+      "format": "NumPy array",
+      "known": {"sample_rate_hz": 6000, "window_complex_samples": 2048, "classes": 18},
+      "band": "HF modes",
+      "label_scope": "transmission-mode label; synthetic generation parameters",
+      "ingest_status": "reference_only",
+      "provenance_note": "Synthetic source; do not call it OTA validation."
+    },
+    {
+      "dataset_id": "loradar-v1",
+      "role": "real_uhf_burst_validation",
+      "doi": "10.5281/zenodo.16302856",
+      "url": "https://zenodo.org/records/16302856",
+      "format": "headerless interleaved complex64 binary",
+      "known": {"sample_rate_hz": 4000000, "frequency_range_hz": [399000000, 403000000], "bursts": 181},
+      "band": "UHF",
+      "label_scope": "LoRa PHY configuration, SNR and Doppler where supplied",
+      "ingest_status": "download_on_demand",
+      "provenance_note": "Large corpus; CSS/LoRa is a format/burst test, not a first-pass PSK/QAM/FSK/OFDM target."
+    },
+    {
+      "dataset_id": "tf-domain-rf-classification-framework",
+      "role": "real_sigmf_ingestion_validation",
+      "doi": "10.5281/zenodo.4603987",
+      "url": "https://zenodo.org/records/4603987",
+      "format": "SigMF data plus metadata",
+      "known": {},
+      "band": "source-dependent",
+      "label_scope": "source operational/device class only",
+      "ingest_status": "download_on_demand",
+      "provenance_note": "Pin file version, licence and checksum before any local subset is used."
+    },
+    {
+      "dataset_id": "real-world-iq-amr",
+      "role": "real_modulation_channel_validation",
+      "doi": "10.17632/tjzsbph49x.1",
+      "url": "https://data.mendeley.com/datasets/tjzsbph49x/1",
+      "format": "dataset-card-defined",
+      "known": {},
+      "band": "not established by this registry",
+      "label_scope": "use only fields explicitly released by source",
+      "ingest_status": "licence_and_format_review_required",
+      "provenance_note": "Do not infer RF band, FEC or payload truth from modulation labels."
+    }
+  ]
+}

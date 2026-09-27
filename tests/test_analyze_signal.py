@@ -1,5 +1,7 @@
 import importlib.util
+import os
 import sys
+import tempfile
 import unittest
 from pathlib import Path
 
@@ -16,6 +18,17 @@ class SignalAnalysisTests(unittest.TestCase):
         self.assertEqual(report["sample_rate_hz"], 8)
         self.assertEqual(report["duration_seconds"], 0.5)
         self.assertAlmostEqual(report["zero_crossing_frequency_hz"], 4.0)
+
+    def test_raw_iq_report_marks_sample_rate_as_hypothesis(self):
+        descriptor, name = tempfile.mkstemp(suffix=".iq")
+        try:
+            with os.fdopen(descriptor, "wb") as handle:
+                handle.write(b"\x00\x00\x00\x00" * 16)
+            report = ANALYZER.analyse(Path(name), 48_000, "s16le")
+        finally:
+            Path(name).unlink(missing_ok=True)
+        self.assertEqual(report["input"]["sample_rate_source"], "user_hypothesis")
+        self.assertIn("spectrum", report["measurements"])
 
 
 if __name__ == "__main__":

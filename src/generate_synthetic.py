@@ -169,7 +169,17 @@ def generate_example(recipe: dict[str, Any], seed: int) -> tuple[list[complex], 
         observed_rms = math.sqrt(sum(abs(sample) ** 2 for sample in samples) / len(samples))
         if observed_rms > 0:
             samples = [sample * target_rms / observed_rms for sample in samples]
-    audit_truth = {"recipe_id": recipe["recipe_id"], "seed": seed, "modulation": modulation, "symbol_rate_baud": sample_rate / sps, "impairments": settings}
+    audit_truth = {
+        "recipe_id": recipe["recipe_id"],
+        "seed": seed,
+        "band": recipe.get("band", "unspecified"),
+        "center_frequency_hz": choose(recipe.get("center_frequency_hz", None), rng),
+        "sample_rate_hz": sample_rate,
+        "modulation": modulation,
+        "symbol_rate_baud": sample_rate / sps,
+        "coding": recipe.get("coding", {"fec": "unknown", "interleaver": "unknown"}),
+        "impairments": settings,
+    }
     return samples, audit_truth
 
 
