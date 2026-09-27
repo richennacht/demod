@@ -63,6 +63,27 @@ No public SIH/NTRO capture package or sensor specification has been identified. 
 
 DEmod will keep raw recordings immutable and create versioned, auditable derived branches for each correction. Its first safe candidates are gated DC/LO-leakage correction, blind I/Q-imbalance correction, robust impulse masks, and time-frequency RFI flags. Band filtering, CFO recovery and wavelet shrinkage are optional, supported-waveform steps—not universal preprocessing—because they can erase meaningful signal structure. See the [non-destructive denoising policy and literature](docs/NONDESTRUCTIVE_DENOISING.md).
 
+The `src/denoise_iq.py` branch is present but not connected to the analyser or training pipeline. All stages are disabled by default; the initial implementation only records artifact candidates unless an explicit caller opts into a reversible DC or impulse branch.
+
+## Feature analysis and ML direction
+
+Feature analysis comes next: raw spectrum/STFT, occupancy and burst structure, carrier-offset and bandwidth estimates, amplitude/phase/frequency statistics, higher-order cumulants, and cyclostationary candidates. DEmod will use these deterministic measures as an explainable baseline, then compare them with a compact raw-IQ 1-D CNN fused with the feature vector. See the [manual feature-analysis and model plan](docs/FEATURE_ANALYSIS_AND_MODEL_PLAN.md).
+
+## Blind modulation detection direction
+
+The supported search catalogue is designed around OOK/ASK, BPSK/DBPSK/QPSK/DQPSK/8PSK, 16/32/64/256QAM, 2/4/MFSK plus GFSK/GMSK/MSK, OFDM, and later spread-spectrum/chirp/pulse/analogue routing. This is not a claim that every family has a decoder today. DEmod will use coarse-to-fine **bounded hypothesis search**: continuous receiver settings can be optimised within a family, while discrete family selection uses raw DSP, cyclic/higher-order features, synchronisation, EVM/likelihood and framing/CRC evidence. Printable-text "gibberish" is only a low-weight late check. See the [modulation-hypothesis design and citations](docs/MODULATION_HYPOTHESIS_SEARCH.md).
+
+## Research basis
+
+The following papers directly motivate the currently documented technology choices. They are linked here so the implementation, evidence boundary and source material remain together.
+
+- DC-offset/CFO/IQ-imbalance estimation and compensation: [Liu & Li, 2011](https://doi.org/10.1016/j.sigpro.2010.12.002), [Song et al., 2017](https://arxiv.org/abs/1712.05970), and [Wang et al., 2017](https://pmc.ncbi.nlm.nih.gov/articles/PMC5751594/).
+- Selective impulse/RFI mitigation rather than blanket smoothing: [Hwang et al., 2017](https://doi.org/10.1587/transfun.E100.A.3041), [Nita & Gary, 2010](https://digitalcommons.njit.edu/fac_pubs/13405/), and [Taylor et al., 2018](https://arxiv.org/abs/1808.10365).
+- Optional wavelet denoising, subject to decoder-level validation: [Baxter & Upton, 2002](https://doi.org/10.1111/1467-9876.00276).
+- Classical modulation analysis: [Dobre et al., 2007](https://doi.org/10.1049/iet-com:20050176), [Abdelmutalab et al., 2016](https://doi.org/10.1016/j.phycom.2016.08.001), and [Dobre et al., 2010](https://doi.org/10.1007/s11277-009-9776-2).
+- Blind carrier/symbol-rate candidates through cyclostationarity: [Zhang et al., 2012](https://doi.org/10.1016/j.proeng.2011.12.753) and [Güner, 2014](https://doi.org/10.1002/dac.2606).
+- Hybrid raw-IQ/deep-learning model choice and domain-shift cautions: [Thakur & Imtiaz, 2026](https://www.mdpi.com/2079-9292/15/10/2163) and [Tian et al., 2026](https://doi.org/10.1016/j.sigpro.2025.110444).
+
 ## Delivery roadmap
 
 1. **Baseline (now):** deterministic file ingestion and explainable DSP measures.

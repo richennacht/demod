@@ -1,50 +1,36 @@
-const state = { file: null, analysed: false, demodulated: false, fec: false };
+const state = { file: null, localFile: null, run: null };
 const tabs = [...document.querySelectorAll('.stage-link')];
 const panels = [...document.querySelectorAll('.tab-panel')];
 const pageTitle = document.getElementById('page-title');
 const titles = { 'file-management': 'File management', dsp: 'DSP characterization', demodulation: 'Demodulation detector', fec: 'FEC & bit recovery', results: 'Results' };
 
-function openTab(id) {
-  tabs.forEach(tab => tab.classList.toggle('active', tab.dataset.tab === id));
-  panels.forEach(panel => panel.classList.toggle('active', panel.id === id));
-  pageTitle.textContent = titles[id];
-  window.location.hash = id;
+function openTab(id) { tabs.forEach(tab => tab.classList.toggle('active', tab.dataset.tab === id)); panels.forEach(panel => panel.classList.toggle('active', panel.id === id)); pageTitle.textContent = titles[id]; window.location.hash = id; }
+function setFile(name, detail, localFile = null) { state.file = { name, detail }; state.localFile = localFile; document.getElementById('selected-file').textContent = name; document.getElementById('selected-detail').textContent = detail; document.getElementById('run-analysis').disabled = !localFile; document.querySelectorAll('.demo-file').forEach(button => button.classList.toggle('selected', button.dataset.file === name)); }
+function linePath(values) { const max = Math.max(...values, 1); return values.map((value, index) => `${index ? 'L' : 'M'}${40 + index * 540 / Math.max(1, values.length - 1)} ${150 - value / max * 130}`).join(' '); }
+function spectrum(bytes) { const values = [...bytes.slice(0, 128)].map(value => value - 127.5); const powers = []; for (let bin = 0; bin < values.length / 2; bin += 1) { let re = 0; let im = 0; values.forEach((value, index) => { const phase = 2 * Math.PI * bin * index / values.length; re += value * Math.cos(phase); im -= value * Math.sin(phase); }); powers.push(re * re + im * im); } return powers; }
+function renderPreview(bytes) {
+  const powers = spectrum(bytes); const peak = powers.indexOf(Math.max(...powers));
+  document.getElementById('spectrum-plot').innerHTML = `<path class="grid-line" d="M40 20V150H580M40 85H580"/><path class="spectrum-line" d="${linePath(powers)}"/><text x="40" y="173">byte DFT bin 0</text><text x="485" y="173">Nyquist preview</text>`;
+  document.getElementById('spectrum-metric').textContent = `peak bin ${peak}`;
+  const blocks = []; for (let row = 0; row < 16; row += 1) for (let col = 0; col < 32; col += 1) { const value = bytes[(row * 32 + col) % bytes.length]; blocks.push(`<i style="left:${col * 3.125}%;top:${row * 6.25}%;width:3.2%;height:6.4%;background:hsl(${110 + value / 8},45%,${10 + value / 255 * 55}%);box-shadow:none"></i>`); }
+  document.getElementById('waterfall-plot').innerHTML = blocks.join(''); document.getElementById('waterfall-metric').textContent = `${Math.min(bytes.length, 512)} bytes`;
+  const points = []; for (let index = 0; index + 1 < Math.min(bytes.length, 512); index += 2) points.push(`<circle cx="${(40 + bytes[index] / 255 * 520).toFixed(1)}" cy="${(160 - bytes[index + 1] / 255 * 140).toFixed(1)}" r="1.7"/>`);
+  document.getElementById('constellation-plot').innerHTML = `<path class="grid-line" d="M300 16V164M40 90H560"/><g class="constellation">${points.join('')}</g><text x="510" y="174">byte 0</text><text x="307" y="24">byte 1</text>`; document.getElementById('constellation-metric').textContent = `${points.length} pairs`;
+  const values = [...bytes]; const mean = values.reduce((sum, value) => sum + value, 0) / values.length; const spread = Math.sqrt(values.reduce((sum, value) => sum + (value - mean) ** 2, 0) / values.length);
+  document.getElementById('bytes-inspected').textContent = `${bytes.length} of ${state.localFile.size}`; document.getElementById('byte-distribution').textContent = `${mean.toFixed(1)} / ${spread.toFixed(1)}`; document.getElementById('representation-state').textContent = document.getElementById('format-select').value; document.getElementById('denoise-state').textContent = 'Disabled; raw bytes retained';
 }
-
-function setFile(name, detail) {
-  state.file = { name, detail };
-  document.getElementById('selected-file').textContent = name;
-  document.getElementById('selected-detail').textContent = detail;
-  document.getElementById('run-analysis').disabled = false;
-  document.querySelectorAll('.demo-file').forEach(button => button.classList.toggle('selected', button.dataset.file === name));
+function setProvenance(runId, bytes) { document.getElementById('run-id').textContent = runId; document.getElementById('provenance-source').textContent = `${state.localFile.name} · ${state.localFile.size} bytes · browser local file`; document.getElementById('provenance-plots').textContent = `Browser raw-byte preview: first ${bytes.length} bytes; 128-point byte DFT; paired-byte scatter.`; document.getElementById('provenance-boundary').textContent = 'No Python DSP, denoising, format autodetection, demodulation, FEC search, ML inference, upload or dataset lookup executed.'; }
+async function runAnalysis() {
+  if (!state.localFile) return; const bytes = new Uint8Array(await state.localFile.slice(0, 4096).arrayBuffer()); if (!bytes.length) return; const runId = `browser-${Date.now().toString(36)}`; state.run = { id: runId, inspectedBytes: bytes.length, source: 'browser_raw_byte_preview' };
+  renderPreview(bytes); setProvenance(runId, bytes); document.getElementById('dsp-state').textContent = 'Raw preview complete'; document.getElementById('demod-state').textContent = 'Blocked: feature backend pending'; document.getElementById('results-subtitle').textContent = `Local raw-byte preview for ${state.file.name}; no modulation result.`; document.getElementById('result-mode').textContent = 'Provenance recorded'; document.getElementById('result-name').textContent = 'No demodulation claim'; document.getElementById('result-description').textContent = `Run ${runId} generated browser-only raw-byte plots. Use the DSP tab to inspect scope and provenance.`; document.getElementById('result-confidence').textContent = '—'; document.getElementById('result-format').textContent = document.getElementById('format-select').value; document.getElementById('result-input').textContent = `${state.file.name} · first ${bytes.length} bytes`; document.getElementById('result-params').textContent = 'Raw-byte statistics only'; document.getElementById('result-fec').textContent = 'Not attempted'; openTab('results');
 }
-
-function runAnalysis() {
-  if (!state.file) return;
-  state.analysed = true;
-  document.getElementById('dsp-state').textContent = 'Auto-characterized';
-  document.getElementById('demod-state').textContent = 'Candidates ready';
-  document.getElementById('results-subtitle').textContent = `Automated evidence report for ${state.file.name}.`;
-  document.getElementById('result-mode').textContent = 'Auto result';
-  document.getElementById('result-name').textContent = 'QPSK signal candidate';
-  document.getElementById('result-description').textContent = 'The selected input was interpreted, characterised, and ranked using the current automatic settings.';
-  document.getElementById('result-confidence').textContent = '86%';
-  document.getElementById('result-format').textContent = 'Complex signed 16-bit LE';
-  document.getElementById('result-input').textContent = state.file.name;
-  document.getElementById('result-params').textContent = '+183.25 kHz · 24.1 kHz BW';
-  document.getElementById('result-fec').textContent = 'Awaiting demodulation';
-  openTab('results');
-}
-
 tabs.forEach(tab => tab.addEventListener('click', () => openTab(tab.dataset.tab)));
 document.querySelectorAll('.demo-file').forEach(button => button.addEventListener('click', () => setFile(button.dataset.file, button.dataset.detail)));
-document.getElementById('file-input').addEventListener('change', event => { const file = event.target.files[0]; if (file) setFile(file.name, `${file.type || 'Local binary capture'} · ${(file.size / 1024).toFixed(1)} KB`); });
-document.getElementById('run-analysis').addEventListener('click', runAnalysis);
-document.getElementById('apply-dsp').addEventListener('click', () => { state.analysed = true; document.getElementById('dsp-state').textContent = 'Characterization refreshed'; });
+document.getElementById('file-input').addEventListener('change', event => { const file = event.target.files[0]; if (file) setFile(file.name, `${file.type || 'Local binary capture'} · ${(file.size / 1024).toFixed(1)} KB`, file); });
+document.getElementById('run-analysis').addEventListener('click', runAnalysis); document.getElementById('apply-dsp').addEventListener('click', runAnalysis);
 document.querySelectorAll('.hypothesis').forEach(item => item.addEventListener('click', () => { document.querySelectorAll('.hypothesis').forEach(other => other.classList.remove('selected')); item.classList.add('selected'); }));
-document.getElementById('run-demod').addEventListener('click', () => { state.demodulated = true; document.getElementById('fec-state').textContent = 'Soft bits available'; document.getElementById('result-fec').textContent = 'Soft bits ready for bounded search'; openTab('fec'); });
-document.getElementById('run-fec').addEventListener('click', () => { state.fec = true; document.getElementById('fec-state').textContent = 'Insufficient evidence'; document.getElementById('result-fec').textContent = 'No supported FEC identified'; });
+document.getElementById('run-demod').addEventListener('click', () => { document.getElementById('fec-state').textContent = 'Blocked: no soft bits'; document.getElementById('result-fec').textContent = 'No demodulator backend connected'; openTab('fec'); }); document.getElementById('run-fec').addEventListener('click', () => { document.getElementById('fec-state').textContent = 'Blocked: no soft bits'; document.getElementById('result-fec').textContent = 'No supported FEC identified'; });
 document.querySelectorAll('[data-go]').forEach(button => button.addEventListener('click', () => openTab(button.dataset.go)));
-document.getElementById('export-report').addEventListener('click', () => { const report = { version: '0.1.0-ui', input: state.file, result: state.analysed ? { format: 'cs16_le_iq', modulation: 'QPSK', confidence: 0.86 } : null }; const blob = new Blob([JSON.stringify(report, null, 2)], { type: 'application/json' }); const link = Object.assign(document.createElement('a'), { href: URL.createObjectURL(blob), download: 'demod-analysis-report.json' }); link.click(); URL.revokeObjectURL(link.href); });
-document.getElementById('reset-button').addEventListener('click', () => { state.file = null; state.analysed = false; state.demodulated = false; state.fec = false; document.getElementById('selected-file').textContent = 'No file selected'; document.getElementById('selected-detail').textContent = 'Upload a file or select a prepared demonstration capture.'; document.getElementById('run-analysis').disabled = true; document.getElementById('dsp-state').textContent = 'Awaiting file'; document.getElementById('demod-state').textContent = 'Awaiting DSP'; document.getElementById('fec-state').textContent = 'Awaiting demodulation'; document.querySelectorAll('.demo-file').forEach(button => button.classList.remove('selected')); openTab('file-management'); });
+document.getElementById('export-report').addEventListener('click', () => { const report = { version: '0.3.0-ui', report_type: 'browser_raw_byte_preview', input: state.file, run: state.run, processing: { browser_preview: Boolean(state.run), python_dsp: false, denoising: false, demodulation: false, fec_search: false }, provenance: { plots: 'Computed in browser from first 4096 local file bytes', upload: 'none', limitations: 'Byte plots are not IQ DSP or modulation analysis.' }, measured_result: null }; const blob = new Blob([JSON.stringify(report, null, 2)], { type: 'application/json' }); const link = Object.assign(document.createElement('a'), { href: URL.createObjectURL(blob), download: 'demod-browser-preview-report.json' }); link.click(); URL.revokeObjectURL(link.href); });
+document.getElementById('reset-button').addEventListener('click', () => { state.file = null; state.localFile = null; state.run = null; document.getElementById('selected-file').textContent = 'No file selected'; document.getElementById('selected-detail').textContent = 'Upload a file or select a prepared demonstration capture.'; document.getElementById('run-analysis').disabled = true; document.getElementById('dsp-state').textContent = 'Awaiting file'; document.getElementById('demod-state').textContent = 'Awaiting DSP'; document.getElementById('fec-state').textContent = 'Awaiting demodulation'; document.querySelectorAll('.demo-file').forEach(button => button.classList.remove('selected')); openTab('file-management'); });
 if (window.location.hash && document.getElementById(window.location.hash.slice(1))) openTab(window.location.hash.slice(1));
