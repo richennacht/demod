@@ -59,6 +59,10 @@ The [external dataset registry](data/manifests/external-datasets.json) separates
 
 No public SIH/NTRO capture package or sensor specification has been identified. These sources are therefore validation references and proxy distributions, **not** a claim that they match the hidden NTRO evaluation data. When authorised representative sensor captures are supplied, DEmod will lock them as session-level held-out data, calibrate receiver profiles, and report the measured synthetic-to-real gap with confidence intervals.
 
+## Non-destructive denoising
+
+DEmod will keep raw recordings immutable and create versioned, auditable derived branches for each correction. Its first safe candidates are gated DC/LO-leakage correction, blind I/Q-imbalance correction, robust impulse masks, and time-frequency RFI flags. Band filtering, CFO recovery and wavelet shrinkage are optional, supported-waveform steps—not universal preprocessing—because they can erase meaningful signal structure. See the [non-destructive denoising policy and literature](docs/NONDESTRUCTIVE_DENOISING.md).
+
 ## Delivery roadmap
 
 1. **Baseline (now):** deterministic file ingestion and explainable DSP measures.
