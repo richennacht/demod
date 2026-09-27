@@ -94,6 +94,10 @@ The following papers directly motivate the currently documented technology choic
 
 The concise, submission-ready explanation of DEmod’s evidence graph, implemented technologies, research references, and defensible novelty is in [DEmod technical brief](docs/DEMOD_TECHNICAL_DIFFERENTIATORS.md). The key distinction is not “an AI dashboard”: it is a provenance-preserving chain from raw bytes through representation hypotheses, raw/derived DSP evidence and bounded modulation candidates to either a supported result or an explicit abstention.
 
+## PySDR source audit
+
+DEmod uses PySDR as an educational implementation reference, not as code to copy. The [PySDR research and coding-practice index](docs/PYSDR_RESEARCH_AND_PRACTICES.md) maps relevant chapters to DEmod rules and records the primary external references surfaced by its cyclostationary, noise, metadata, synchronization and detection chapters. The full upstream textbook and source remain linked there under their own CC BY-NC-SA 4.0 licence.
+
 ## Delivery roadmap
 
 1. **Baseline (now):** deterministic file ingestion and explainable DSP measures.
