@@ -5,6 +5,11 @@ reports/
 data/
 !data/
 data/.gitkeep
+data/generated/
+data/real/
+data/*.sqlite
+!data/recipes/
+!data/recipes/mvp-recipes.json
 !data/schema/
 !data/schema/demod-record.schema.json
 !data/manifests/
