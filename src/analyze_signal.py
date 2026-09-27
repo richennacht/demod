@@ -15,6 +15,11 @@ from typing import Iterable
 sys.path.insert(0, str(Path(__file__).parent))
 from feature_analysis import analyse_iq
 
+try:
+    from spectral_analysis import analyse_spectrum
+except ModuleNotFoundError:
+    analyse_spectrum = None
+
 
 def rms(samples: Iterable[float]) -> float:
     values = list(samples)
@@ -85,10 +90,16 @@ def analyse(path: Path, sample_rate: int | None, iq_format: str) -> dict:
     if suffix == ".iq":
         if sample_rate is None:
             raise ValueError("--sample-rate is required for raw IQ input.")
-        return {
+        result = {
             "input": {"path": str(path), "format": "iq", "iq_format": iq_format, "sample_rate_source": "user_hypothesis"},
             "measurements": analyse_iq(read_raw_iq(path, iq_format), sample_rate),
         }
+        if analyse_spectrum is None:
+            result["visualization"] = {"available": False, "reason": "Install requirements-dsp.txt to enable NumPy FFT/STFT analysis."}
+        else:
+            iq = read_raw_iq(path, iq_format)
+            result["visualization"] = analyse_spectrum(iq, sample_rate)
+        return result
     raise ValueError("Supported input extensions are .wav and .iq.")
 
 

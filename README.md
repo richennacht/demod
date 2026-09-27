@@ -69,6 +69,10 @@ The `src/denoise_iq.py` branch is present but not connected to the analyser or t
 
 Feature analysis comes next: raw spectrum/STFT, occupancy and burst structure, carrier-offset and bandwidth estimates, amplitude/phase/frequency statistics, higher-order cumulants, and cyclostationary candidates. DEmod will use these deterministic measures as an explainable baseline, then compare them with a compact raw-IQ 1-D CNN fused with the feature vector. See the [manual feature-analysis and model plan](docs/FEATURE_ANALYSIS_AND_MODEL_PLAN.md).
 
+### Real FFT, waterfall and segmentation backend
+
+The Python backend now contains `src/spectral_analysis.py`: a true complex NumPy FFT/PSD, Hann-window STFT waterfall, sampled constellation points, and robust energy-based segment candidates. It runs over actual interpreted IQ samples, emits plot arrays and transform settings in the JSON provenance, and does **not** denoise or mutate raw samples. Install with `python -m pip install -r requirements-dsp.txt`; the [DSP stack decision](docs/DSP_STACK.md) explains why NumPy is the MVP runtime and SciPy/GNU Radio are optional next layers. The package choice follows the [NumPy FFT reference](https://numpy.org/doc/stable/reference/routines.fft.html), [SciPy signal documentation](https://docs.scipy.org/doc/scipy/reference/signal.html), and the practical [PySDR waterfall guide](https://pysdr.org/content/frequency_domain).
+
 ## Blind modulation detection direction
 
 The supported search catalogue is designed around OOK/ASK, BPSK/DBPSK/QPSK/DQPSK/8PSK, 16/32/64/256QAM, 2/4/MFSK plus GFSK/GMSK/MSK, OFDM, and later spread-spectrum/chirp/pulse/analogue routing. This is not a claim that every family has a decoder today. DEmod will use coarse-to-fine **bounded hypothesis search**: continuous receiver settings can be optimised within a family, while discrete family selection uses raw DSP, cyclic/higher-order features, synchronisation, EVM/likelihood and framing/CRC evidence. Printable-text "gibberish" is only a low-weight late check. See the [modulation-hypothesis design and citations](docs/MODULATION_HYPOTHESIS_SEARCH.md).
