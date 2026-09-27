@@ -21,6 +21,14 @@ class SyntheticGeneratorTests(unittest.TestCase):
         self.assertEqual(len(first), 4096)
         self.assertIn("snr_db", truth["impairments"])
 
+    def test_rf_impairment_recipe_exposes_five_new_controls(self):
+        recipe = GENERATOR.load_recipes(Path(__file__).parents[1] / "data" / "recipes" / "mvp-recipes.json")[1]
+        _, truth = GENERATOR.generate_example(recipe, seed=13)
+        controls = truth["impairments"]
+        for key in ("colored_noise_std", "tone_interferer_amplitude", "burst_probability", "cochannel_interferer_amplitude", "adc_bits"):
+            self.assertIn(key, controls)
+        self.assertEqual(controls["adc_bits"], 10)
+
 
 if __name__ == "__main__":
     unittest.main()

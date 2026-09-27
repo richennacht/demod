@@ -68,6 +68,13 @@ def generate_example(recipe: dict[str, Any], seed: int) -> tuple[list[complex], 
     phase_error = math.radians(float(settings.get("iq_phase_imbalance_deg", 0.0)))
     impulse_probability, impulse_amplitude = float(settings.get("impulse_probability", 0.0)), float(settings.get("impulse_amplitude", 0.0))
     clip_level, gain, phase_noise = float(settings.get("clip_level", 1000.0)), 10 ** (gain_db / 20), 0.0
+    colored_std, colored_rho = float(settings.get("colored_noise_std", 0.0)), float(settings.get("colored_noise_rho", 0.0))
+    tone_amplitude, tone_hz = float(settings.get("tone_interferer_amplitude", 0.0)), float(settings.get("tone_interferer_hz", 0.0))
+    burst_probability, burst_length, burst_amplitude = float(settings.get("burst_probability", 0.0)), int(settings.get("burst_length", 0)), float(settings.get("burst_amplitude", 0.0))
+    cochannel_amplitude, cochannel_hz = float(settings.get("cochannel_interferer_amplitude", 0.0)), float(settings.get("cochannel_interferer_hz", 0.0))
+    adc_bits = int(settings.get("adc_bits", 32))
+    colored_i, colored_q, burst_remaining = 0.0, 0.0, 0
+    cochannel_points = constellation("qpsk")
     samples: list[complex] = []
     for index, sample in enumerate(channelled):
         phase_noise += rng.gauss(0, phase_noise_std)
@@ -75,9 +82,31 @@ def generate_example(recipe: dict[str, Any], seed: int) -> tuple[list[complex], 
         sample *= complex(math.cos(phase), math.sin(phase))
         i = sample.real * gain + float(dc_i) + rng.gauss(0, noise_sigma)
         q = sample.imag * math.cos(phase_error) + sample.real * math.sin(phase_error) + float(dc_q) + rng.gauss(0, noise_sigma)
+        # Colored receiver noise: first-order autoregressive complex noise.
+        colored_i = colored_rho * colored_i + math.sqrt(max(0.0, 1 - colored_rho**2)) * rng.gauss(0, colored_std)
+        colored_q = colored_rho * colored_q + math.sqrt(max(0.0, 1 - colored_rho**2)) * rng.gauss(0, colored_std)
+        i, q = i + colored_i, q + colored_q
+        # Narrowband blocker / oscillator spur.
+        tone_phase = 2 * math.pi * tone_hz * index / sample_rate
+        i, q = i + tone_amplitude * math.cos(tone_phase), q + tone_amplitude * math.sin(tone_phase)
+        # Bursty broadband interference; a short run is more realistic than isolated spikes alone.
+        if burst_remaining == 0 and rng.random() < burst_probability:
+            burst_remaining = burst_length
+        if burst_remaining:
+            i, q, burst_remaining = i + rng.gauss(0, burst_amplitude), q + rng.gauss(0, burst_amplitude), burst_remaining - 1
+        # A second offset QPSK stream is a controlled co-channel interferer.
+        interferer = cochannel_points[rng.randrange(len(cochannel_points))]
+        interference_phase = 2 * math.pi * cochannel_hz * index / sample_rate
+        interferer *= complex(math.cos(interference_phase), math.sin(interference_phase))
+        i, q = i + cochannel_amplitude * interferer.real, q + cochannel_amplitude * interferer.imag
         if rng.random() < impulse_probability:
             i, q = i + rng.gauss(0, impulse_amplitude), q + rng.gauss(0, impulse_amplitude)
-        samples.append(complex(max(-clip_level, min(clip_level, i)), max(-clip_level, min(clip_level, q))))
+        i, q = max(-clip_level, min(clip_level, i)), max(-clip_level, min(clip_level, q))
+        if adc_bits < 32:
+            levels, step = 2**adc_bits - 1, 2 * clip_level / (2**adc_bits - 1)
+            i, q = round((i + clip_level) / step) * step - clip_level, round((q + clip_level) / step) * step - clip_level
+            i, q = max(-clip_level, min(clip_level, i)), max(-clip_level, min(clip_level, q))
+        samples.append(complex(i, q))
     audit_truth = {"recipe_id": recipe["recipe_id"], "seed": seed, "modulation": modulation, "symbol_rate_baud": sample_rate / sps, "impairments": settings}
     return samples, audit_truth
 
