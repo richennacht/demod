@@ -62,8 +62,8 @@ def read_wav(path: Path) -> tuple[list[float], int, dict[str, int]]:
     return mono, sample_rate, {"channels": channels, "sample_width_bytes": width}
 
 
-def read_raw_iq(path: Path, iq_format: str) -> list[complex]:
-    raw = path.read_bytes()
+def decode_raw_iq(raw: bytes, iq_format: str) -> list[complex]:
+    """Decode interleaved raw I/Q bytes without writing a derived file."""
     layouts = {
         "s16le": ("<h", 2, 32768.0, 0.0), "s16be": (">h", 2, 32768.0, 0.0),
         "s8": ("b", 1, 128.0, 0.0), "cu8": ("B", 1, 128.0, 128.0),
@@ -80,6 +80,10 @@ def read_raw_iq(path: Path, iq_format: str) -> list[complex]:
     if not all(math.isfinite(value.real) and math.isfinite(value.imag) for value in result):
         raise ValueError("Raw IQ interpretation produced NaN or infinity.")
     return result
+
+
+def read_raw_iq(path: Path, iq_format: str) -> list[complex]:
+    return decode_raw_iq(path.read_bytes(), iq_format)
 
 
 def analyse(path: Path, sample_rate: int | None, iq_format: str) -> dict:

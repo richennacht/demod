@@ -83,6 +83,10 @@ The supported search catalogue is designed around OOK/ASK, BPSK/DBPSK/QPSK/DQPSK
 
 DEmod will train narrow models for named physical parameters, each paired with a manual estimator and a calibrated disagreement/abstention rule—not one opaque “DSP AI.” The first task is symbol timing: Oerder–Meyr acquisition, Gardner tracking and Mueller–Müller decision-directed tracking provide the classical baselines; a compact raw-IQ/feature-fusion regressor predicts the same rate/phase targets only where their labels exist. The full one-to-one map, data targets and acceptance metrics are in [parameter-estimation model map](docs/PARAMETER_ESTIMATION_MODEL_MAP.md).
 
+### Directly testable DSP-versus-model comparison
+
+`src/local_comparison_api.py` now makes the first comparison testable against an authorised `.iq` capture: it holds a raw byte upload only in memory, returns deterministic DSP features and FFT/STFT evidence, and puts the existing synthetic-trained MLP's DC-I, DC-Q and coarse-CFO outputs beside their manual estimates. It binds to localhost by default, imposes a 16 MiB experiment cap, and does not pretend that Vercel/GitHub Pages should receive sensitive or terabyte-scale RF recordings. The full request format, scope table, provenance fields and papers are in the [comparison-harness guide](docs/COMPARISON_HARNESS.md).
+
 ## Research basis
 
 The following papers directly motivate the currently documented technology choices. They are linked here so the implementation, evidence boundary and source material remain together.
