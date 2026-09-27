@@ -14,6 +14,7 @@ import struct
 from pathlib import Path
 
 from generate_synthetic import generate_batch, load_recipes
+from powder_stream import sampled_windows
 
 
 def read_complex64_window(path: Path, offset_samples: int, length: int) -> list[complex]:
@@ -72,9 +73,24 @@ def accuracy(rows: list[list[float]], labels: list[int], weights: list[float]) -
     return sum(left == right for left, right in zip(predicted, labels)) / len(labels)
 
 
-def calibration_report(real_paths: list[Path], recipes_path: Path, seed: int = 26147, window: int = 4096) -> dict[str, float | int]:
-    real = [read_complex64_window(path, 0, window) for path in real_paths]
-    synthetic = [samples for samples, _ in generate_batch(load_recipes(recipes_path), len(real), seed)]
+def wilson_interval(correct: int, total: int, z: float = 1.96) -> tuple[float, float]:
+    """Two-sided 95% Wilson interval for a binomial held-out accuracy."""
+    if total < 1:
+        raise ValueError("total must be positive")
+    proportion = correct / total
+    denominator = 1 + z * z / total
+    centre = (proportion + z * z / (2 * total)) / denominator
+    radius = z * math.sqrt(proportion * (1 - proportion) / total + z * z / (4 * total * total)) / denominator
+    return max(0.0, centre - radius), min(1.0, centre + radius)
+
+
+def calibration_report_samples(real: list[list[complex]], recipes_path: Path, seed: int = 26147, window: int = 4096, recipe_id: str | None = None) -> dict[str, float | int | list[float] | bool]:
+    recipes = load_recipes(recipes_path)
+    if recipe_id:
+        recipes = [recipe for recipe in recipes if recipe["recipe_id"] == recipe_id]
+        if not recipes:
+            raise ValueError(f"Unknown recipe_id: {recipe_id}")
+    synthetic = [samples for samples, _ in generate_batch(recipes, len(real), seed)]
     rows, labels = [features(item) for item in real] + [features(item[:window]) for item in synthetic], [1] * len(real) + [0] * len(synthetic)
     # Deterministic stratified split: even-index examples train, odd-index examples evaluate.
     train_indices = [index for index in range(len(rows)) if index % 2 == 0]
@@ -82,18 +98,31 @@ def calibration_report(real_paths: list[Path], recipes_path: Path, seed: int = 2
     train_rows, means, scales = normalize([rows[index] for index in train_indices])
     test_rows = [[(value - means[column]) / scales[column] for column, value in enumerate(rows[index])] for index in test_indices]
     model = train_logistic(train_rows, [labels[index] for index in train_indices])
-    return {"real_windows": len(real), "synthetic_windows": len(synthetic), "held_out_accuracy": round(accuracy(test_rows, [labels[index] for index in test_indices], model), 4), "interpretation": "High accuracy indicates an uncalibrated synthetic-to-real domain gap; do not deploy this classifier as a decoder."}
+    score = accuracy(test_rows, [labels[index] for index in test_indices], model)
+    interval = wilson_interval(round(score * len(test_indices)), len(test_indices))
+    half_width = (interval[1] - interval[0]) / 2
+    return {"real_windows": len(real), "synthetic_windows": len(synthetic), "held_out_examples": len(test_indices), "held_out_accuracy": round(score, 4), "accuracy_ci95": [round(interval[0], 4), round(interval[1], 4)], "ci95_half_width": round(half_width, 4), "passes_precision_gate": abs(score - 0.5) <= 0.05 and half_width <= 0.05, "interpretation": "A score near 0.5 is only evidence of a small gap when its held-out confidence interval is narrow and groups were never split across train and test."}
+
+
+def calibration_report(real_paths: list[Path], recipes_path: Path, seed: int = 26147, window: int = 4096, recipe_id: str | None = None) -> dict[str, float | int | list[float] | bool]:
+    return calibration_report_samples([read_complex64_window(path, 0, window) for path in real_paths], recipes_path, seed, window, recipe_id)
 
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Measure the current real-vs-synthetic gap.")
     parser.add_argument("--real-dir", type=Path, default=Path("data/real/powder-pcp-mini"))
     parser.add_argument("--recipes", type=Path, default=Path("data/recipes/mvp-recipes.json"))
+    parser.add_argument("--recipe-id", default="stage-2-powder-ofdm", help="Generate candidates from one protocol-matched recipe family.")
+    parser.add_argument("--stream-powder", type=int, metavar="COUNT", help="Stream COUNT provenance-distinct public POWDER windows into RAM for one evaluation; never writes them to disk.")
+    parser.add_argument("--seed", type=int, default=26147)
     args = parser.parse_args()
-    paths = sorted(args.real_dir.glob("*.bin"))
-    if len(paths) < 2:
-        raise ValueError("At least two real complex64 files are required.")
-    print(calibration_report(paths, args.recipes))
+    if args.stream_powder:
+        print(calibration_report_samples(sampled_windows(args.stream_powder, seed=args.seed), args.recipes, seed=args.seed, recipe_id=args.recipe_id))
+    else:
+        paths = sorted(args.real_dir.glob("*.bin"))
+        if len(paths) < 2:
+            raise ValueError("At least two real complex64 files are required.")
+        print(calibration_report(paths, args.recipes, recipe_id=args.recipe_id))
 
 
 if __name__ == "__main__":

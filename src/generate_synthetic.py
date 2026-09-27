@@ -29,6 +29,38 @@ def constellation(modulation: str) -> list[complex]:
     raise ValueError(f"Unsupported modulation: {modulation}")
 
 
+def ofdm_waveform(symbols: int, rng: random.Random) -> list[complex]:
+    """Generate an 802.11a-shaped, 20 MHz OFDM baseband waveform.
+
+    This is deliberately a *shape* model, not a claim of standards-compliant
+    Wi-Fi packets: 64-point IFFT, 52 occupied carriers and a 16-sample cyclic
+    prefix reproduce the principal occupied-bandwidth and PAPR mechanisms.
+    """
+    fft_size, cp, active = 64, 16, [*range(-26, 0), *range(1, 27)]
+    qpsk = constellation("qpsk")
+    waveform: list[complex] = []
+    for _ in range(symbols):
+        bins = [0j] * fft_size
+        for carrier in active:
+            bins[carrier % fft_size] = qpsk[rng.randrange(len(qpsk))]
+        time = [sum(bins[k] * complex(math.cos(2 * math.pi * k * n / fft_size), math.sin(2 * math.pi * k * n / fft_size)) for k in range(fft_size)) / math.sqrt(len(active)) for n in range(fft_size)]
+        waveform.extend(time[-cp:] + time)
+    return waveform
+
+
+def resample_linear(signal: list[complex], ratio: float) -> list[complex]:
+    """Deterministic fractional-rate resampler for recipe generation."""
+    count = max(2, int(len(signal) * ratio))
+    result: list[complex] = []
+    for index in range(count):
+        source = index / ratio
+        left = min(int(source), len(signal) - 1)
+        right = min(left + 1, len(signal) - 1)
+        fraction = source - left
+        result.append(signal[left] * (1 - fraction) + signal[right] * fraction)
+    return result
+
+
 def choose(value: Any, rng: random.Random) -> Any:
     """Sample a scalar, choice list, or inclusive [low, high] numeric range."""
     if isinstance(value, list) and len(value) == 2 and all(isinstance(item, (int, float)) for item in value):
@@ -49,13 +81,19 @@ def generate_example(recipe: dict[str, Any], seed: int) -> tuple[list[complex], 
     """Generate one ephemeral IQ example and its hidden audit truth."""
     rng = random.Random(seed)
     modulation = choose(recipe["modulation"], rng)
+    waveform = recipe.get("waveform", "linear")
     sample_rate = int(recipe["sample_rate_hz"])
     symbols, sps = int(recipe["symbols"]), int(recipe["samples_per_symbol"])
     settings = {key: choose(value, rng) for key, value in recipe.get("impairments", {}).items() if key not in ("multipath_taps", "dc_offset")}
     dc_distribution = recipe.get("impairments", {}).get("dc_offset", [[0.0, 0.0], [0.0, 0.0]])
     settings["dc_offset"] = [choose(dc_distribution[0], rng), choose(dc_distribution[1], rng)]
     points = constellation(modulation)
-    signal = [points[rng.randrange(len(points))] for _ in range(symbols) for _ in range(sps)]
+    if waveform == "ofdm_20mhz":
+        # POWDER captures run at 33.333 MS/s while the 802.11a-like component
+        # occupies a 20 MHz channel. 5/3 is the nominal rate conversion.
+        signal = resample_linear(ofdm_waveform(symbols, rng), sample_rate / 20_000_000)
+    else:
+        signal = [points[rng.randrange(len(points))] for _ in range(symbols) for _ in range(sps)]
 
     taps = recipe.get("impairments", {}).get("multipath_taps", [[0, 1.0, 0.0]])
     channelled = [sum((signal[index - int(delay)] if index >= int(delay) else 0j) * complex(real, imag) for delay, real, imag in taps) for index in range(len(signal))]
@@ -73,8 +111,10 @@ def generate_example(recipe: dict[str, Any], seed: int) -> tuple[list[complex], 
     burst_probability, burst_length, burst_amplitude = float(settings.get("burst_probability", 0.0)), int(settings.get("burst_length", 0)), float(settings.get("burst_amplitude", 0.0))
     cochannel_amplitude, cochannel_hz = float(settings.get("cochannel_interferer_amplitude", 0.0)), float(settings.get("cochannel_interferer_hz", 0.0))
     adc_bits = int(settings.get("adc_bits", 32))
+    target_rms = float(settings.get("target_rms", 0.0))
     colored_i, colored_q, burst_remaining = 0.0, 0.0, 0
     cochannel_points = constellation("qpsk")
+    emitters = int(settings.get("cochannel_emitters", 1))
     samples: list[complex] = []
     for index, sample in enumerate(channelled):
         phase_noise += rng.gauss(0, phase_noise_std)
@@ -95,10 +135,11 @@ def generate_example(recipe: dict[str, Any], seed: int) -> tuple[list[complex], 
         if burst_remaining:
             i, q, burst_remaining = i + rng.gauss(0, burst_amplitude), q + rng.gauss(0, burst_amplitude), burst_remaining - 1
         # A second offset QPSK stream is a controlled co-channel interferer.
-        interferer = cochannel_points[rng.randrange(len(cochannel_points))]
-        interference_phase = 2 * math.pi * cochannel_hz * index / sample_rate
-        interferer *= complex(math.cos(interference_phase), math.sin(interference_phase))
-        i, q = i + cochannel_amplitude * interferer.real, q + cochannel_amplitude * interferer.imag
+        for emitter in range(emitters):
+            interferer = cochannel_points[rng.randrange(len(cochannel_points))]
+            interference_phase = 2 * math.pi * (cochannel_hz * (emitter + 1)) * index / sample_rate
+            interferer *= complex(math.cos(interference_phase), math.sin(interference_phase))
+            i, q = i + cochannel_amplitude * interferer.real, q + cochannel_amplitude * interferer.imag
         if rng.random() < impulse_probability:
             i, q = i + rng.gauss(0, impulse_amplitude), q + rng.gauss(0, impulse_amplitude)
         i, q = max(-clip_level, min(clip_level, i)), max(-clip_level, min(clip_level, q))
@@ -107,6 +148,12 @@ def generate_example(recipe: dict[str, Any], seed: int) -> tuple[list[complex], 
             i, q = round((i + clip_level) / step) * step - clip_level, round((q + clip_level) / step) * step - clip_level
             i, q = max(-clip_level, min(clip_level, i)), max(-clip_level, min(clip_level, q))
         samples.append(complex(i, q))
+    # Match the observed receiver scale after channel/front-end effects. This is
+    # a recorded calibration parameter, not a label exposed to a downstream model.
+    if target_rms > 0:
+        observed_rms = math.sqrt(sum(abs(sample) ** 2 for sample in samples) / len(samples))
+        if observed_rms > 0:
+            samples = [sample * target_rms / observed_rms for sample in samples]
     audit_truth = {"recipe_id": recipe["recipe_id"], "seed": seed, "modulation": modulation, "symbol_rate_baud": sample_rate / sps, "impairments": settings}
     return samples, audit_truth
 

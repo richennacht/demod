@@ -29,6 +29,14 @@ class SyntheticGeneratorTests(unittest.TestCase):
             self.assertIn(key, controls)
         self.assertEqual(controls["adc_bits"], 10)
 
+    def test_powder_recipe_has_matched_rate_and_receiver_scale(self):
+        recipe = next(item for item in GENERATOR.load_recipes(Path(__file__).parents[1] / "data" / "recipes" / "mvp-recipes.json") if item["recipe_id"] == "stage-2-powder-ofdm")
+        samples, truth = GENERATOR.generate_example(recipe, seed=26147)
+        rms = (sum(abs(sample) ** 2 for sample in samples) / len(samples)) ** 0.5
+        self.assertEqual(truth["recipe_id"], "stage-2-powder-ofdm")
+        self.assertEqual(recipe["sample_rate_hz"], 33333000)
+        self.assertIn(round(rms, 3), {round(value, 3) for value in recipe["impairments"]["target_rms"]})
+
 
 if __name__ == "__main__":
     unittest.main()
