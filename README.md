@@ -79,6 +79,10 @@ The Python backend now contains `src/spectral_analysis.py`: a true complex NumPy
 
 The supported search catalogue is designed around OOK/ASK, BPSK/DBPSK/QPSK/DQPSK/8PSK, 16/32/64/256QAM, 2/4/MFSK plus GFSK/GMSK/MSK, OFDM, and later spread-spectrum/chirp/pulse/analogue routing. This is not a claim that every family has a decoder today. DEmod will use coarse-to-fine **bounded hypothesis search**: continuous receiver settings can be optimised within a family, while discrete family selection uses raw DSP, cyclic/higher-order features, synchronisation, EVM/likelihood and framing/CRC evidence. Printable-text "gibberish" is only a low-weight late check. See the [modulation-hypothesis design and citations](docs/MODULATION_HYPOTHESIS_SEARCH.md).
 
+## DSP-to-model training map
+
+DEmod will train narrow models for named physical parameters, each paired with a manual estimator and a calibrated disagreement/abstention rule—not one opaque “DSP AI.” The first task is symbol timing: Oerder–Meyr acquisition, Gardner tracking and Mueller–Müller decision-directed tracking provide the classical baselines; a compact raw-IQ/feature-fusion regressor predicts the same rate/phase targets only where their labels exist. The full one-to-one map, data targets and acceptance metrics are in [parameter-estimation model map](docs/PARAMETER_ESTIMATION_MODEL_MAP.md).
+
 ## Research basis
 
 The following papers directly motivate the currently documented technology choices. They are linked here so the implementation, evidence boundary and source material remain together.
