@@ -112,6 +112,8 @@ DEmod uses PySDR as an educational implementation reference, not as code to copy
 2. **Demo capability:** spectrogram/waterfall UI, supported modulation-family classifier, and labelled evaluation set.
 3. **Advanced capability:** symbol-rate estimation and demodulation only for explicitly supported families; every result includes confidence and evidence.
 
+The complete, implementation-state-aware build contract is in the [end-to-end workflow specification](docs/END_TO_END_WORKFLOW_SPEC.md). It separates code that works today from required receiver, ML, UI and controlled-deployment work, and defines acceptance evidence for each stage.
+
 ## Safety and demo boundary
 
 Use only recordings and datasets that your team is authorized to analyse. The MVP is a file-analysis tool; it does not acquire radio signals or perform operational interception.
