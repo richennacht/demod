@@ -28,6 +28,8 @@ python src/analyze_signal.py sample.wav --output report.json
 
 For a headerless `.iq` recording, `--sample-rate` and `--iq-format` are hypotheses supplied by the analyst. Raw bytes alone cannot reliably establish absolute sample rate, RF centre frequency, byte order, signedness, or the original receiver gain. DEmod records that limitation in the report rather than treating a plausible interpretation as ground truth.
 
+This follows PySDR’s [IQ Files and SigMF chapter](https://pysdr.org/content/iq_files): raw complex recordings are conventionally interleaved `I,Q,I,Q…`; 16-bit integer IQ consumes four bytes per complex sample, while `complex64` consumes eight. That permits a sample **count** after a format is known, but not an absolute sample rate from file size alone. The same reference motivates DEmod’s SigMF-sidecar strategy and future saturation/clipping flag.
+
 ## Architecture direction
 
 ```text
