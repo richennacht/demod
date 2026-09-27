@@ -114,6 +114,8 @@ DEmod uses PySDR as an educational implementation reference, not as code to copy
 
 The complete, implementation-state-aware build contract is in the [end-to-end workflow specification](docs/END_TO_END_WORKFLOW_SPEC.md). It separates code that works today from required receiver, ML, UI and controlled-deployment work, and defines acceptance evidence for each stage.
 
+For the short, unambiguous inventory of every built, partial and unbuilt module, see the [current build matrix](docs/CURRENT_BUILD_MATRIX.md). It also records how [Gao et al. (2026)](https://doi.org/10.3390/electronics15030674) informs a future complex-autoencoder **noise-robust AMC** branch before conventional demodulation; it is not inaccurately represented as a ready-made demodulator.
+
 ## Safety and demo boundary
 
 Use only recordings and datasets that your team is authorized to analyse. The MVP is a file-analysis tool; it does not acquire radio signals or perform operational interception.

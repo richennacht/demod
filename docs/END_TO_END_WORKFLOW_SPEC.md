@@ -28,6 +28,8 @@ Every stage emits a versioned JSON artifact with: input artifact ID/hash, config
 
 ## Current implementation inventory
 
+For the compact, all-items status table, use the [current build matrix](CURRENT_BUILD_MATRIX.md). The expanded workflow inventory remains below.
+
 | Workflow component | Current state | What actually works now | Important boundary |
 | --- | --- | --- | --- |
 | Static web workbench | Implemented | Five-stage analyst UI and provenance-oriented browser preview | Browser preview is not a Python DSP backend or a decoder. |
@@ -76,6 +78,8 @@ Do not train timing models until generator labels include pulse shape, fractiona
 ### 4. Modulation and demodulation workflow
 
 Implement a bounded, evidence-ranked hypothesis executor rather than trying every algorithm blindly. Start with an explicit MVP family set: BPSK, QPSK, 2-FSK/4-FSK, and narrow, declared OFDM profiles. For each candidate, record preprocessing, synchronisation state, constellation/EVM evidence, frame/CRC evidence when a known profile applies, and failure reason. Add QAM only after timing/carrier recovery tests are robust.
+
+The noise-robust AMC experiment before this receiver stage follows [Gao et al. (2026)](https://doi.org/10.3390/electronics15030674): select high-SNR examples from scarce data, augment with rotation and cyclic time shifts, train a complex-valued noise-reduction autoencoder, then classify modulation. This is a research branch for *classification robustness*, not itself a demodulator. It will be retained only if a held-out ablation improves AMC without reducing BER/EVM after conventional supported-family recovery.
 
 **Acceptance:** generated and authorised held-out captures show measured BER/SER/EVM against known labels; unsupported formats end in an abstention, not fabricated text.
 
