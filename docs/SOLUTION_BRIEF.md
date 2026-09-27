@@ -1,4 +1,4 @@
-# DEMOD: SIH26147 solution brief
+# DEmod: SIH26147 solution brief
 
 ## Problem interpretation
 
@@ -6,7 +6,7 @@ SIH26147 asks for automated analysis of `.IQ` and `.wav` signal captures, with f
 
 ## Submission thesis
 
-**DEMOD is an evidence-first signal-analysis copilot, not a black-box decoder.** It turns raw recordings into an auditable chain of hypotheses: file representation -> signal segmentation -> DSP measurements -> ranked modulation family -> supported demodulation -> conditional FEC/interleaver candidates. Every conclusion carries its assumptions, plots, confidence, and reproducible feature values.
+**DEmod is an evidence-first signal-analysis copilot, not a black-box decoder.** It turns raw recordings into an auditable chain of hypotheses: file representation -> signal segmentation -> DSP measurements -> ranked modulation family -> supported demodulation -> conditional FEC/interleaver candidates. Every conclusion carries its assumptions, plots, confidence, and reproducible feature values.
 
 This is more defensible than a dashboard that simply labels a spectrogram, and more feasible than claiming universal blind decoding.
 

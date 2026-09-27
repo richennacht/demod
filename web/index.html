@@ -3,13 +3,13 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>DEMOD Signal Analysis Workbench</title>
+  <title>DEmod Signal Analysis Workbench</title>
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
   <div class="app-shell">
     <aside class="sidebar">
-      <a class="brand" href="#file-management" aria-label="DEMOD home"><span class="brand-mark">D</span><span>DEMOD<small>Signal workbench</small></span></a>
+      <a class="brand" href="#file-management" aria-label="DEmod home"><span class="brand-mark">D</span><span>DEmod<small>Signal workbench</small></span></a>
       <nav class="stage-nav" aria-label="Analysis stages">
         <button class="stage-link active" data-tab="file-management"><span>01</span>File management</button>
         <button class="stage-link" data-tab="dsp"><span>02</span>DSP characterization</button>
@@ -24,7 +24,7 @@
       <header class="topbar"><div><p class="eyebrow">SIH26147 · evidence-first analysis</p><h1 id="page-title">File management</h1></div><button class="quiet-button" id="reset-button">Reset session</button></header>
 
       <section class="tab-panel active" id="file-management" aria-labelledby="page-title">
-        <div class="intro-row"><div><h2>Start an automated analysis</h2><p>Upload an authorised IQ or WAV recording. DEMOD selects an interpretation, characterises the signal, and opens the result. You can revisit any stage to adjust its assumptions.</p></div><span class="mode-label">Auto mode</span></div>
+        <div class="intro-row"><div><h2>Start an automated analysis</h2><p>Upload an authorised IQ or WAV recording. DEmod selects an interpretation, characterises the signal, and opens the result. You can revisit any stage to adjust its assumptions.</p></div><span class="mode-label">Auto mode</span></div>
         <div class="file-grid">
           <label class="upload-zone" for="file-input"><input id="file-input" type="file" accept=".iq,.wav,.sigmf-data,.cf32,.cs16,.cu8"><span class="upload-icon">↑</span><strong>Choose a capture</strong><small>IQ, WAV, SigMF data or supported raw samples</small></label>
           <div class="metadata-card"><span class="card-kicker">Selected file</span><strong id="selected-file">No file selected</strong><p id="selected-detail">Upload a file or select a prepared demonstration capture.</p><button class="primary-button" id="run-analysis" disabled>Run automated analysis <span>→</span></button></div>
