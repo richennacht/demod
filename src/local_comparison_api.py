@@ -18,15 +18,12 @@ from typing import Any
 ROOT = Path(__file__).parent
 sys.path.insert(0, str(ROOT))
 
+from analysis_pipeline import analyse as analyse_pipeline
 from analyze_signal import decode_raw_iq
 from dual_parameter_estimator import DualParameterEstimator
-from feature_analysis import analyse_iq
 from generate_synthetic import load_recipes
-
-try:
-    from spectral_analysis import analyse_spectrum
-except ModuleNotFoundError:
-    analyse_spectrum = None
+from modulation_classifier import CentroidAMC
+from provenance import input_provenance
 
 
 MAX_INPUT_BYTES = 16 * 1024 * 1024
@@ -39,9 +36,11 @@ class ComparisonService:
     def __init__(self, recipes_path: Path, examples: int = 96) -> None:
         self.recipes_path = recipes_path
         self.examples = examples
-        self.estimator = DualParameterEstimator.train_from_recipes(load_recipes(recipes_path), examples=examples)
+        recipes = load_recipes(recipes_path)
+        self.estimator = DualParameterEstimator.train_from_recipes(recipes, examples=examples)
+        self.classifier = CentroidAMC.train(recipes, examples=examples)
 
-    def analyse_bytes(self, raw: bytes, iq_format: str, sample_rate_hz: float) -> dict[str, Any]:
+    def analyse_bytes(self, raw: bytes, iq_format: str, sample_rate_hz: float, denoise_profile: str = "raw", centre_frequency_hz: float | None = None, gain_db: float | None = None, metadata_source: str = "analyst_hypothesis") -> dict[str, Any]:
         if iq_format not in SUPPORTED_FORMATS:
             raise ValueError(f"Unsupported iq format: {iq_format}")
         if sample_rate_hz <= 0:
@@ -51,29 +50,35 @@ class ComparisonService:
         samples = decode_raw_iq(raw, iq_format)
         if len(samples) < 8:
             raise ValueError("At least eight complete complex I/Q samples are required for the DSP-versus-model comparison.")
-        manual = analyse_iq(samples, sample_rate_hz)
+        profiles: dict[str, dict[str, dict[str, Any]]] = {
+            "raw": {}, "dc_only": {"dc_offset": {"enabled": True}},
+            "dc_and_impulse": {"dc_offset": {"enabled": True}, "impulse_blanking": {"enabled": True}},
+        }
+        if denoise_profile not in profiles:
+            raise ValueError("X-DEmod-Denoise-Profile must be raw, dc_only, or dc_and_impulse.")
+        pipeline = analyse_pipeline(samples, sample_rate_hz, profiles[denoise_profile])
+        # The learned baseline is deliberately compared on the untouched input.
+        # Derived denoising results are shown separately in the analysis graph.
+        comparison_samples = samples
         report: dict[str, Any] = {
             "run_id": str(uuid.uuid4()),
-            "input": {
-                "byte_count": len(raw), "iq_format": iq_format,
-                "sample_rate_hz": sample_rate_hz, "sample_rate_source": "analyst_supplied_hypothesis",
-            },
-            "manual_dsp": manual,
-            "automated_parameter_comparison": self.estimator.compare(samples, sample_rate_hz),
+            "input": input_provenance(raw, iq_format, sample_rate_hz, centre_frequency_hz, gain_db, metadata_source),
+            "analysis": pipeline,
+            "manual_dsp": pipeline["raw_branch"]["features"],
+            "manual_parameter_estimation": pipeline["raw_branch"]["manual_parameters"],
+            "automated_parameter_comparison": self.estimator.compare(comparison_samples, sample_rate_hz),
+            "modulation_classification": self.classifier.predict(comparison_samples),
             "provenance": {
                 "raw_data_persisted": False,
-                "denoising_applied": False,
-                "manual_branch": "feature_analysis.analyse_iq deterministic statistics and DFT preview",
+                "denoising_profile": denoise_profile,
+                "manual_branch": "feature analysis, FFT/STFT, energy segmentation and named manual estimators",
                 "automated_branch": "7-to-12-to-3 TinyMLP; trained in memory from the checked-in synthetic recipe set",
-                "automated_targets": ["dc_i", "dc_q", "carrier_offset_hz"],
-                "not_supported_by_model": ["sample_rate", "centre_frequency", "symbol_timing", "modulation", "FEC", "interleaver"],
+                "automated_targets": ["dc_i", "dc_q", "carrier_offset_hz", "modulation_classification"],
+                "not_supported_by_model": ["sample_rate", "centre_frequency", "symbol_timing", "FEC", "interleaver"],
                 "model_training_recipes": str(self.recipes_path).replace("\\\\", "/"),
                 "training_examples": self.examples,
                 "scope": "MVP comparison baseline; not a calibrated production model or blind decoder.",
             },
-        }
-        report["visualization"] = analyse_spectrum(samples, sample_rate_hz) if analyse_spectrum else {
-            "available": False, "reason": "Install requirements-dsp.txt for NumPy FFT/STFT visualisation."
         }
         return report
 
@@ -88,7 +93,7 @@ def make_handler(service: ComparisonService):
             self.send_header("Content-Type", "application/json; charset=utf-8")
             self.send_header("Content-Length", str(len(encoded)))
             self.send_header("Access-Control-Allow-Origin", "*")
-            self.send_header("Access-Control-Allow-Headers", "Content-Type, X-DEmod-IQ-Format, X-DEmod-Sample-Rate")
+            self.send_header("Access-Control-Allow-Headers", "Content-Type, X-DEmod-IQ-Format, X-DEmod-Sample-Rate, X-DEmod-Denoise-Profile, X-DEmod-Centre-Frequency, X-DEmod-Gain, X-DEmod-Metadata-Source")
             self.end_headers()
             self.wfile.write(encoded)
 
@@ -96,7 +101,7 @@ def make_handler(service: ComparisonService):
             self.send_response(204)
             self.send_header("Access-Control-Allow-Origin", "*")
             self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
-            self.send_header("Access-Control-Allow-Headers", "Content-Type, X-DEmod-IQ-Format, X-DEmod-Sample-Rate")
+            self.send_header("Access-Control-Allow-Headers", "Content-Type, X-DEmod-IQ-Format, X-DEmod-Sample-Rate, X-DEmod-Denoise-Profile, X-DEmod-Centre-Frequency, X-DEmod-Gain, X-DEmod-Metadata-Source")
             self.end_headers()
 
         def do_GET(self) -> None:
@@ -114,7 +119,8 @@ def make_handler(service: ComparisonService):
                 if length <= 0 or length > MAX_INPUT_BYTES:
                     raise ValueError(f"Content-Length must be between 1 and {MAX_INPUT_BYTES} bytes.")
                 raw = self.rfile.read(length)
-                report = service.analyse_bytes(raw, self.headers.get("X-DEmod-IQ-Format", "s16le"), float(self.headers.get("X-DEmod-Sample-Rate", "0")))
+                optional_float = lambda name: float(self.headers[name]) if self.headers.get(name) else None
+                report = service.analyse_bytes(raw, self.headers.get("X-DEmod-IQ-Format", "s16le"), float(self.headers.get("X-DEmod-Sample-Rate", "0")), self.headers.get("X-DEmod-Denoise-Profile", "raw"), optional_float("X-DEmod-Centre-Frequency"), optional_float("X-DEmod-Gain"), self.headers.get("X-DEmod-Metadata-Source", "analyst_hypothesis"))
                 self._send(200, report)
             except (ValueError, OverflowError) as error:
                 self._send(400, {"error": str(error)})

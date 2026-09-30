@@ -16,10 +16,10 @@ The service has `GET /health` and `POST /analyse`. The post body is raw bytes, n
 ```powershell
 Invoke-WebRequest http://127.0.0.1:8787/analyse -Method Post -InFile .\capture.iq `
   -ContentType application/octet-stream `
-  -Headers @{ "X-DEmod-IQ-Format" = "s16le"; "X-DEmod-Sample-Rate" = "2400000" }
+  -Headers @{ "X-DEmod-IQ-Format" = "s16le"; "X-DEmod-Sample-Rate" = "2400000"; "X-DEmod-Denoise-Profile" = "raw" }
 ```
 
-The response contains `manual_dsp`, `automated_parameter_comparison`, FFT/STFT plot data when NumPy is installed, and a `provenance` block. The test-harness input cap is 16 MiB. That is intentional: it makes a bounded comparison experiment, not an architecture that uploads or holds terabyte-scale RF archives. A ministry deployment should run the same worker inside the authorised network and use chunked/object-store ingestion controlled by the data owner.
+The response contains `analysis.raw_branch` and `analysis.derived_branch`, `manual_parameter_estimation`, `automated_parameter_comparison`, `modulation_classification`, FFT/STFT plot data when NumPy is installed, and a `provenance` block. `X-DEmod-Denoise-Profile` accepts `raw` (default), `dc_only`, or `dc_and_impulse`; raw evidence is always retained beside a derived branch. Optional `X-DEmod-Centre-Frequency`, `X-DEmod-Gain`, and `X-DEmod-Metadata-Source` make the source of capture parameters explicit. The test-harness input cap is 16 MiB. That is intentional: it makes a bounded comparison experiment, not an architecture that uploads or holds terabyte-scale RF archives. A ministry deployment should run the same worker inside the authorised network and use chunked/object-store ingestion controlled by the data owner.
 
 ## What is compared today
 
@@ -28,7 +28,8 @@ The response contains `manual_dsp`, `automated_parameter_comparison`, FFT/STFT p
 | DC I/Q | Complex sample mean | 7→12→3 MLP estimate | Report absolute disagreement; do not silently choose a value. |
 | Coarse carrier offset | Fourth-power phase-increment estimator | Same MLP target | Report absolute disagreement; it is intentionally fallible outside the recipe distribution. |
 | Spectrum, occupied bandwidth, burst candidates | DFT/NumPy FFT, STFT, energy segmentation | None | Manual evidence only. |
-| Sample rate, centre frequency, timing, modulation, FEC/interleaving | Analyst metadata or future supported estimators | None | Explicitly unsupported by this trained baseline. |
+| Modulation | Explainable family triage | Normalized synthetic-feature centroids | Ranked output with margin abstention; not field calibrated. |
+| Sample rate, centre frequency, timing, FEC/interleaving | Metadata or future supported estimators | None | Explicitly unsupported by this trained baseline. |
 
 The learned baseline is trained afresh, in memory, from `data/recipes/mvp-recipes.json`; it sees generated samples but not their recipes during inference. It is an auditable calibration comparison, not a claim of blind operational extraction. Its manual CFO baseline uses the fourth-power technique appropriate mainly to PSK-like content; the report therefore preserves disagreement rather than masking it.
 

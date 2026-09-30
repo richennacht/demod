@@ -20,7 +20,9 @@ class LocalComparisonTests(unittest.TestCase):
         report = self.service.analyse_bytes(raw, "s16le", 1_000_000)
         self.assertFalse(report["provenance"]["raw_data_persisted"])
         self.assertIn("dc_i", report["automated_parameter_comparison"])
-        self.assertIn("modulation", report["provenance"]["not_supported_by_model"])
+        self.assertIn("FEC", report["provenance"]["not_supported_by_model"])
+        self.assertIn("modulation_classification", report)
+        self.assertIn("raw_branch", report["analysis"])
 
     def test_invalid_format_is_rejected(self):
         with self.assertRaises(ValueError):

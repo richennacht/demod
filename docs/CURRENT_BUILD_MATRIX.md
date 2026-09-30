@@ -7,17 +7,17 @@ This is the single source of truth for the current product state. “Built” me
 | Landing page and static workbench | Built | GitHub Pages landing page and five-tab web interface | Connect the controls and charts to the local analysis API. |
 | WAV ingestion | Built | Standard PCM WAV parsing, channel handling, basic level/frequency summary | Audio playback, speech/telemetry interpretation, and session export. |
 | Raw IQ ingestion | Built | Interleaved `s8`, `cu8`, `s16le`, `s16be`, `f32le`, `f32be` parsing | Format auto-detection ranking, explicit confirmation UI, and chunked large-file handling. |
-| Input metadata provenance | Partial | Reports label raw-IQ sample rate as analyst hypothesis | SigMF parser, WAV metadata display, source hash, immutable session manifest. |
+| Input metadata provenance | Built for local IQ analysis | SHA-256, byte count, format/sample-rate/centre/gain source tags and SigMF sidecar-field parser | UI-side SigMF attachment and persistent session catalog. |
 | Dataset registry and schema | Built | Recipe files, external-data registry, record schema and manifests | Controlled downloader/importer, licence/checksum pinning and train/validation/test split manager. |
 | Synthetic IQ generation | Built | In-memory BPSK/QPSK/8PSK/16QAM and OFDM-shaped recipes with noise/impairments | Fractional timing, pulse shaping, FSK generation, coded frames and a validation corpus. |
-| Non-destructive denoising | Partial | Reversible opt-in DC and impulse branches; disabled by default | Connect to pipeline; measure signal preservation; add guarded RFI/IQ-imbalance paths. |
+| Non-destructive denoising | Built for the MVP analysis path | Raw and opt-in derived branches, reversible DC/impulse corrections, audit actions and both raw/derived spectral analysis | Held-out BER/EVM preservation study; guarded RFI/IQ-imbalance paths. |
 | Deterministic basic features | Built | DC, RMS, crest, instantaneous-frequency statistics, DFT preview and modulation triage | Calibrated noise floor, clipping flags, cyclostationary features and symbol-rate candidates. |
 | Spectrum / waterfall / constellation | Built | NumPy FFT/PSD, STFT arrays, sampled constellation and energy segments | Render real backend arrays in UI and support window/chunk navigation. |
-| Burst segmentation | Partial | Energy-based segment candidates | Threshold calibration, multi-burst merging, real-data evaluation and UI interaction. |
-| Manual parameter estimation | Partial | DC and coarse PSK-compatible CFO estimation | Symbol-rate/timing/carrier loops and documented validity ranges. |
-| Automated parameter estimation | Partial | Recipe-trained 7→12→3 MLP for DC-I, DC-Q and coarse CFO | Saved/calibrated model, real held-out evaluation, timing/rate/bandwidth model targets and abstention policy. |
-| Manual-versus-AI comparison | Built as local MVP | Local API reports estimates, absolute disagreement and provenance; source bytes remain in memory | UI integration, model/version registry, calibration plots and analyst override recording. |
-| Modulation classification | Partial | Explainable heuristic family ranking | Train/evaluate an AMC model; confidence calibration; supported-family gating. |
+| Burst segmentation | Built as an analysis proposal | Robust-smoothed-energy proposals flow into the raw/derived report | Threshold calibration, multi-burst merging, real-data evaluation and UI interaction. |
+| Manual parameter estimation | Built baseline | Named DC, coarse PSK-CFO, power, FFT bandwidth/burst and transition-periodicity estimators | Symbol timing/carrier loops and validity calibration. |
+| Automated parameter estimation | Built baseline | Recipe-trained 7→12→3 MLP compares DC-I/DC-Q/coarse CFO with manual estimates | Saved/calibrated model, real held-out evaluation, timing/rate/bandwidth targets and abstention policy. |
+| Manual-versus-AI comparison | Built as local MVP | Local API returns raw/derived DSP, estimator disagreement, metadata provenance and source bytes remain in memory | UI integration, model/version registry, calibration plots and analyst override recording. |
+| Modulation classification | Built baseline | Synthetic-trained normalized feature-centroid AMC with ranked candidates and margin abstention | Real held-out evaluation, confidence calibration and supported-family gating. |
 | Paper-driven noise-robust AMC experiment | Not built | Design choice documented below | High-SNR selection, rotation/CTS augmentation, complex-valued autoencoder and held-out ablation. |
 | Symbol synchronisation | Not built | Design and literature map only | Oerder–Meyr acquisition plus Gardner/Mueller–Müller tracking, fixtures and BER tests. |
 | Carrier recovery / equalisation | Not built | Coarse CFO metric only | Family-gated carrier loop/equaliser and EVM evidence. |

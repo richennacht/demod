@@ -87,6 +87,8 @@ DEmod will train narrow models for named physical parameters, each paired with a
 
 `src/local_comparison_api.py` now makes the first comparison testable against an authorised `.iq` capture: it holds a raw byte upload only in memory, returns deterministic DSP features and FFT/STFT evidence, and puts the existing synthetic-trained MLP's DC-I, DC-Q and coarse-CFO outputs beside their manual estimates. It binds to localhost by default, imposes a 16 MiB experiment cap, and does not pretend that Vercel/GitHub Pages should receive sensitive or terabyte-scale RF recordings. The full request format, scope table, provenance fields and papers are in the [comparison-harness guide](docs/COMPARISON_HARNESS.md).
 
+The local comparison API now also produces an immutable input-provenance record (SHA-256 and each metadata field's source), raw and optional-derived denoising branches, FFT/STFT constellation and burst evidence for both branches, named manual parameter estimates, and a synthetic-trained modulation-classification baseline with ranked candidates and abstention. Set `X-DEmod-Denoise-Profile` to `raw` (default), `dc_only`, or `dc_and_impulse`; this never overwrites raw IQ. These models are baseline evidence tools, not field-calibrated blind decoders. The [build matrix](docs/CURRENT_BUILD_MATRIX.md) records this precise completion boundary.
+
 ## Research basis
 
 The following papers directly motivate the currently documented technology choices. They are linked here so the implementation, evidence boundary and source material remain together.
