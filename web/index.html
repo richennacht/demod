@@ -52,6 +52,7 @@
           <button class="text-button" type="button" id="make-test">Generate a test capture</button>
           <button class="text-button" type="button" id="open-example">Open example run</button>
           <button class="text-button" type="button" id="open-wav-example">Load WAV example</button>
+          <button class="text-button" type="button" id="open-fec-example">Load coded BPSK example</button>
         </div>
 
         <div class="form-grid">
@@ -167,6 +168,7 @@
           <button class="button" id="run-demod" type="button" disabled>Run demodulation</button>
           <button class="button" id="run-auto-demod" type="button">Run AMC-guided receiver</button>
         </div>
+        <label class="field"><span>FEC/interleaver frame offset (bits)</span><input id="fec-frame-offset" inputmode="numeric" value="0"><small>Experimental known-candidate search. Supply the 420-bit interleaver frame start relative to receiver bits; no arbitrary frame recovery or decryption.</small></label>
         <div class="hints" id="rx-hints"></div>
         <p class="error" id="rx-error" role="alert" hidden></p>
         <div class="feed" id="rx-feed"></div>

@@ -1,0 +1,48 @@
+{
+  "version": 1,
+  "train_seed": 26147,
+  "validation_seed": 526147,
+  "test_seed": 826147,
+  "ood_seed": 926147,
+  "train_per_joint_class": 100,
+  "validation_per_joint_class": 30,
+  "test_per_joint_class_per_ber": 20,
+  "labels": [
+    "repetition3:none",
+    "repetition3:matrix420_r4",
+    "repetition3:matrix420_r10",
+    "repetition3:matrix420_r20",
+    "hamming7:none",
+    "hamming7:matrix420_r4",
+    "hamming7:matrix420_r10",
+    "hamming7:matrix420_r20",
+    "hamming15:none",
+    "hamming15:matrix420_r4",
+    "hamming15:matrix420_r10",
+    "hamming15:matrix420_r20",
+    "conv_k3_7_5:none",
+    "conv_k3_7_5:matrix420_r4",
+    "conv_k3_7_5:matrix420_r10",
+    "conv_k3_7_5:matrix420_r20",
+    "unknown"
+  ],
+  "payload": "iid Bernoulli(0.5)",
+  "train_lengths_bits": [
+    1680,
+    3360,
+    5040
+  ],
+  "train_bsc_ber": [
+    0,
+    0.005,
+    0.01,
+    0.03,
+    0.05,
+    0.08
+  ],
+  "interleaver_period_bits": 420,
+  "frame_alignment": "known interleaver block boundary; codeword offset scanned",
+  "model": "standardized parity/statistics features -> ReLU64 -> 17-class softmax; Adam120epochs",
+  "raw_capture_storage": "none; regenerate per instance",
+  "selection": "validation NLL temperature; >=99% observed selective validation precision and >=30 accepted examples"
+}

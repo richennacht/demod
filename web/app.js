@@ -85,6 +85,7 @@ async function checkApi() {
 
 function captureHeaders(s) {
   const h = { 'Content-Type': 'application/octet-stream', 'X-DEmod-IQ-Format': s.iq_format, 'X-DEmod-Sample-Rate': String(s.sample_rate_hz), 'X-DEmod-Metadata-Source': s.metadata_source };
+  h['X-DEmod-FEC-Frame-Offset'] = $('#fec-frame-offset').value.trim() || '0';
   if (s.centre_frequency_hz != null) h['X-DEmod-Centre-Frequency'] = String(s.centre_frequency_hz);
   if (s.gain_db != null) h['X-DEmod-Gain'] = String(s.gain_db);
   const duration = parseNum($('#p-duration').value);
@@ -228,6 +229,18 @@ $('#open-wav-example').addEventListener('click', async () => {
     $('#drop-detail').textContent = 'Synthetic QPSK demo wrapped in PCM WAV. Known channel order: channel 1 = I, channel 2 = Q.';
     updateSummary(); syncBound();
   } catch (err) { flash('#capture-error', err.message); }
+});
+$('#open-fec-example').addEventListener('click', async () => {
+  try {
+    const res = await fetch('examples/synthetic-fec-bpsk.s16le.iq');
+    if (!res.ok) throw new Error('Coded example is unavailable.');
+    const raw = await res.arrayBuffer();
+    F.format.value='s16le'; F.rate.value='250000'; F.source.value='capture_log';
+    F.mod.value='bpsk'; F.sps.value='8'; F.cfo.value='0'; F.timing.value='0';
+    F.centre.value=''; F.gain.value=''; $('#p-duration').value=''; $('#fec-frame-offset').value='0';
+    await loadBytes({name:'synthetic-fec-bpsk.s16le.iq',size:raw.byteLength},raw,{note:'Synthetic aligned BPSK fixture: Hamming(7,4), matrix420_r4. Known receiver settings; no real-channel validation.'});
+    syncBound(); updateSummary();
+  } catch (err) { flash('#capture-error',err.message); }
 });
 $('#estimate-rates').addEventListener('click', async () => {
   if (!state.bytes) { $('#rate-evidence').textContent = 'Load a capture first.'; return; }
@@ -751,11 +764,22 @@ function renderReceiver() {
       <dl class="kv" style="margin-top:12px"><dt>Samples per symbol</dt><dd>${cfg.samples_per_symbol}</dd><dt>Timing offset</dt><dd>${cfg.timing_offset_samples} samples</dd><dt>Carrier offset removed</dt><dd>${fmtHz(cfg.carrier_offset_hz, true)}</dd>${fs ? `<dt>Implied symbol rate</dt><dd>${fmtHz(fs / cfg.samples_per_symbol).replace('Hz', 'Bd')}</dd>` : ''}<dt>Settings from</dt><dd>${esc(SOURCE_LABEL[cfg.parameter_source] || cfg.parameter_source)}</dd></dl>` }));
 
   const bits = d.bits_preview || ''; const grouped = bits.match(/.{1,8}/g) || [];
+  const fec = d.fec_identification;
+  if (fec) {
+    const best = fec.selected_candidate; const baseline = fec.manual_baseline?.candidate;
+    tiles.push(tile({title:'Experimental FEC and interleaver evidence', src:'Hard-bit parity tests versus FECFeatureMLP-v1; simulation only', av:'model',
+      metric:fec.status === 'candidate_identified' ? 'candidate, not decoded' : 'abstained',
+      body:`<p>${best ? `${esc(best.code)} / ${esc(best.interleaver)}, codeword offset ${best.codeword_offset_bits} bits.` : esc(fec.reason)}</p>
+        <p>Analysed ${fec.bit_count_analysed || 0} of ${fec.bit_count_supplied} receiver bits, not just the preview.</p>
+        ${baseline ? `<p>Algebraic leader: ${esc(baseline.code)} / ${esc(baseline.interleaver)}; syndrome violations ${pct(baseline.syndrome_violation_rate)}.</p>` : ''}
+        ${fec.learned ? `<p>Learned probability ${pct(fec.learned.confidence)}; threshold ${pct(fec.learned.acceptance_threshold)}.</p><ul class="list">${fec.learned.ranking.slice(0,4).map(r=>`<li><span>${esc(r.label)}</span><span>${pct(r.probability)}</span></li>`).join('')}</ul>` : ''}
+        <p class="note">Known candidates only: repetition-3, Hamming(7,4)/(15,11), convolutional K=3 rate 1/2 (7,5 octal); no interleaver or 420-bit row/column permutations. Matrix frame alignment is an analyst hypothesis. No decoder, CRC, descrambler or decryption ran. An unknown result does not establish encryption.</p>`}));
+  }
   tiles.push(tile({ title: 'Candidate hard decisions', src: 'Unframed, unchecked, not decoded data', av: 'rx', metric: `${bits.length} of ${d.bit_count.toLocaleString()} bits`,
     body: `<p class="bits">${grouped.map((g, i) => (i % 2 ? `<b>${g}</b>` : g)).join(' ')}</p>
       <p class="note">Packed into bytes, first ${d.packed_bytes_preview.length}:</p>
       <p class="bits">${d.packed_bytes_preview.map(b => b.toString(16).padStart(2, '0')).join(' ')}</p>
-      <p class="note">No framing, CRC, FEC or descrambling ran. Phase ambiguity is unresolved, so the whole stream may be rotated or inverted.</p>` }));
+      <p class="note">No framing, CRC, FEC decoding or descrambling ran. Phase ambiguity is unresolved, so the whole stream may be rotated or inverted.</p>` }));
 
   const g = d.gnu_radio_graph;
   if (g) tiles.push(tile({ title: 'GNU Radio flowgraph', src: g.engine.installed ? 'GNU Radio found on the API machine' : 'Descriptor only. GNU Radio isn\'t installed where the API runs.', av: 'est', metric: `${g.blocks.length} blocks`,
@@ -798,6 +822,12 @@ function renderReport() {
     const c = d.configuration;
     add('Receiver', `${esc(d.modulation.toUpperCase())}, ${c.samples_per_symbol} sps, offset ${c.timing_offset_samples}, ${fmtHz(c.carrier_offset_hz, true)} removed. Settings from ${esc(SOURCE_LABEL[c.parameter_source] || c.parameter_source)}.`);
     add('Receiver output', `${d.bit_count.toLocaleString()} candidate bits, not decoded data`);
+    if (d.fec_identification) {
+      const f=d.fec_identification, c=f.selected_candidate;
+      add('FEC/interleaver hypothesis', c ? `${esc(c.code)} / ${esc(c.interleaver)}. Experimental; frame alignment unverified.` : `Abstained: ${esc(f.reason)}`);
+      if (f.learned) add('FEC model SHA-256', `<code>${esc(f.learned.model_sha256)}</code>`);
+      if (f.input_bits_sha256) add('Receiver-bit SHA-256', `<code>${esc(f.input_bits_sha256)}</code>. One byte per bit, before the FEC region offset.`);
+    }
   } else if (d) add('Receiver', `Abstained. ${esc(d.reason)}`);
   if (state.example) add('Recorded from', esc(state.example.recorded_from));
   $('#report').innerHTML = rows.join('') || '';

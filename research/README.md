@@ -1,5 +1,7 @@
 # DEmod learned models: carrier offset and modulation classification
 
+The independent [FEC/interleaver experiment](../docs/FEC_AND_INTERLEAVER_REVIEW.md) adds a small algebraic/statistical feature MLP, not a reproduction of a published CNN. Run `python research/train_fec_identifier.py`; reproducible recipes are in `data/recipes/fec-recipes.json`, shipped weights in `data/models/fec_identifier.npz`, and detailed independent-seed comparisons/stress results in `research/results/fec_results.json`. The code/interleaver universe is deliberately narrow; no real captures or published external benchmark are evaluated, and exact frame/permutation recovery and FEC decoding remain unsupported.
+
 This folder holds the research code behind two learned components of the local analysis API:
 
 - **SpecCFO**, a carrier frequency offset (CFO) estimator.

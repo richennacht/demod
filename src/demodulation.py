@@ -43,7 +43,7 @@ def _evm(symbols: list[complex], points: list[complex]) -> float:
     return math.sqrt(sum(min(abs(value - point) ** 2 for point in points) for value in normalized) / len(normalized))
 
 
-def demodulate(samples: list[complex], sample_rate_hz: float, modulation: str, samples_per_symbol: int, timing_offset: int = 0, carrier_offset_hz: float = 0.0, source: str = "analyst_override") -> dict[str, Any]:
+def demodulate(samples: list[complex], sample_rate_hz: float, modulation: str, samples_per_symbol: int, timing_offset: int = 0, carrier_offset_hz: float = 0.0, source: str = "analyst_override", fec_frame_offset_bits: int = 0) -> dict[str, Any]:
     if modulation not in SUPPORTED:
         raise ValueError(f"Supported MVP modulations are {', '.join(SUPPORTED)}.")
     if len(samples) < samples_per_symbol * 2:
@@ -68,11 +68,21 @@ def demodulate(samples: list[complex], sample_rate_hz: float, modulation: str, s
         bits = [int(value.real >= 0) for value in symbol_values]
         evm = 0.0  # FSK uses discriminator separation, not constellation EVM.
         decisions = [{"frequency_step_rad": round(value.real, 6), "symbol": bit} for value, bit in zip(symbol_values[:256], bits[:256])]
+    # Use the full bounded hard-bit region, never the 512-bit presentation preview.
+    if type(fec_frame_offset_bits) is not int or fec_frame_offset_bits < 0 or fec_frame_offset_bits >= len(bits):
+        raise ValueError('FEC frame offset must be an integer within receiver bits.')
+    if len(bits) >= 1680:
+        from fec_identification import analyse_bits
+        fec = analyse_bits(bits, fec_frame_offset_bits)
+    else:
+        fec = {"status": "abstained", "reason": "Need at least 1680 bits for experimental FEC identification.",
+               "bit_count_supplied": len(bits), "scope": "No code or interleaver inferred from this short preview."}
     return {
         "status": "hard_decisions_available", "modulation": modulation,
         "configuration": {"samples_per_symbol": samples_per_symbol, "timing_offset_samples": timing_offset, "carrier_offset_hz": carrier_offset_hz, "parameter_source": source},
         "symbol_count": len(symbol_values), "bit_count": len(bits), "bits_preview": "".join(map(str, bits[:512]),), "packed_bytes_preview": _pack(bits[:512]),
         "quality": {"evm_rms": None if modulation == "2fsk" else round(evm, 6), "meaning": "constellation EVM after fixed integrate-and-dump; it is not BER without known reference bits."},
         "decisions_preview": decisions,
-        "limitations": ["No framing, CRC, FEC, encryption, differential decoding, equalisation, or protocol recognition is performed.", "Timing is a manual fixed integrate-and-dump override, not a recovered clock.", "Hard bits are candidate decisions, not validated payload data."],
+        "fec_identification": fec,
+        "limitations": ["No framing, CRC, FEC decoding, decryption, differential decoding, equalisation, or protocol recognition is performed.", "Timing is a fixed integrate-and-dump override, not a recovered clock.", "Hard bits are candidate decisions, not validated payload data."],
     }

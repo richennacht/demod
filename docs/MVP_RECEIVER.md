@@ -18,4 +18,4 @@ The development runtime does not currently include GNU Radio, so the API reports
 
 ## Validation boundary
 
-Acceptance currently means that synthetic, known BPSK/QPSK samples produce the expected hard-decision sequence and that the configuration/provenance is emitted. The next receiver milestone is genuinely blind timing/carrier recovery and BER/SER on held-out, authorised captures. FEC, deinterleaving, encryption and human-readable telemetry are outside this MVP.
+Acceptance currently means that synthetic, known BPSK/QPSK samples produce the expected hard-decision sequence and that the configuration/provenance is emitted. The next receiver milestone is genuinely blind timing/carrier recovery and BER/SER on held-out, authorised captures. Experimental [FEC/interleaver identification](FEC_AND_INTERLEAVER_REVIEW.md) now runs on full candidate bits and records an analyst frame-offset hypothesis. It does not establish frame synchronization or exact permutation recovery. FEC decoding, verified deinterleaving, decryption and human-readable telemetry remain outside this MVP.

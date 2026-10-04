@@ -11,6 +11,7 @@ data/*.sqlite
 !data/recipes/
 !data/recipes/mvp-recipes.json
 !data/recipes/sih-hf-vhf-uhf.json
+!data/recipes/fec-recipes.json
 !data/schema/
 !data/schema/demod-record.schema.json
 !data/manifests/

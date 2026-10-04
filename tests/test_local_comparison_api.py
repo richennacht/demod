@@ -134,6 +134,19 @@ class LocalUiServingTests(unittest.TestCase):
         status, headers, _ = self._get("/analyse", method="OPTIONS")
         self.assertEqual(status, 204)
         self.assertEqual(headers.get("Access-Control-Allow-Private-Network"), "true")
+        self.assertIn('X-DEmod-FEC-Frame-Offset',headers.get('Access-Control-Allow-Headers',''))
+
+    def test_fec_bit_endpoint_and_invalid_json(self):
+        import urllib.request
+        import urllib.error
+        import json
+        request=urllib.request.Request(self.base+'/fec',data=json.dumps({'bits':'01'*20}).encode(),headers={'Content-Type':'application/json'})
+        with urllib.request.urlopen(request) as response:
+            self.assertEqual(json.loads(response.read())['status'],'abstained')
+        for raw in (b'null',b'{',b'{"bits":"012"}',b'{"bits":"01","frame_offset_bits":true}'):
+            with self.assertRaises(urllib.error.HTTPError) as error:
+                urllib.request.urlopen(urllib.request.Request(self.base+'/fec',data=raw))
+            self.assertEqual(error.exception.code,400)
 
 
 MODELS_PRESENT = (ROOT / "data" / "models" / "speccfo.npz").exists() and (ROOT / "data" / "models" / "demod_amc.npz").exists()
