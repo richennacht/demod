@@ -38,6 +38,28 @@ class LocalComparisonTests(unittest.TestCase):
         self.assertEqual(report["bits_preview"], "0101")
         self.assertIn("gnu_radio_graph", report)
 
+    def test_guided_receiver_uses_models_and_keeps_zero_override(self):
+        from unittest.mock import patch
+        raw = b''.join(v.to_bytes(2, 'little', signed=True) for bit in (0,1,0,1) for _ in range(4) for v in ((-16384 if bit == 0 else 16384),0))
+        evidence = {'modulation_classification': {'abstained': False, 'predicted_modulation': 'bpsk'},
+                    'rate_estimation': {'learned': {'abstained': False, 'samples_per_symbol': 4}},
+                    'automated_parameter_comparison': {'carrier_offset_hz': {'learned_detail': {'carrier_offset_hz': 10., 'confidence': .95, 'trained_range_hz': [-200000,200000], 'model_file': 'speccfo_v2.npz'}}},
+                    'learned_region': {'source': 'test_region', 'sample_start': 0, 'sample_count': 16}, 'input': {'sha256': 'test'}}
+        with patch.object(self.service, 'analyse_bytes', return_value=evidence):
+            guided = self.service.demodulate_bytes(raw, 's16le', 1000000, 'auto', None, carrier_offset_hz=None)
+            self.assertEqual(guided['configuration']['samples_per_symbol'], 4)
+            self.assertEqual(guided['configuration']['carrier_offset_hz'], 10.)
+            self.assertEqual(guided['configuration']['parameter_sources']['modulation'], 'DemodAMC')
+            explicit = self.service.demodulate_bytes(raw, 's16le', 1000000, 'auto', 4, carrier_offset_hz=0.)
+            self.assertEqual(explicit['configuration']['carrier_offset_hz'], 0.)
+            self.assertEqual(explicit['configuration']['parameter_sources']['carrier_offset_hz'], 'analyst_override')
+            evidence['rate_estimation']['learned']['abstained'] = True
+            rejected = self.service.demodulate_bytes(raw, 's16le', 1000000, 'auto', None, carrier_offset_hz=None)
+            self.assertEqual(rejected['status'], 'abstained')
+            self.assertNotIn('bits_preview', rejected)
+            evidence['modulation_classification']['predicted_modulation'] = '16qam'
+            self.assertEqual(self.service.demodulate_bytes(raw, 's16le', 1000000, 'auto')['status'], 'abstained')
+
 
 class LocalUiServingTests(unittest.TestCase):
     @classmethod

@@ -110,6 +110,8 @@ A defect in `src/generate_synthetic.py` was found along the way: it draws a new 
 
 ### Receiver MVP and GNU Radio graphs
 
+The **Run AMC-guided receiver** action now connects DemodAMC → confident SPS estimate → SpecCFO correction → the supported receiver on the selected analysis region. `/demodulate` accepts omitted SPS/CFO headers for this automatic path; supplied values remain manual overrides, including an explicit zero CFO. Unsupported modulation, absent/abstained rate estimates and low-confidence CFO produce an abstention. Automatic SPS currently supports BPSK/QPSK; 2-FSK requires manual SPS. Reports retain per-parameter model sources, input hash, selected sample range and upstream evidence. Timing remains fixed at zero on the guided path, so output remains candidate hard decisions pending timing recovery and BER validation.
+
 The local API also exposes `POST /demodulate` for controlled BPSK, QPSK and 2-FSK recordings. It requires an analyst-supplied samples-per-symbol value and returns reproducible hard-bit candidates, decision/EVM evidence and a GNU Radio graph descriptor. GNU Radio is preferred when installed for interactive frequency, timing and constellation nodes; the supplied Python receiver is only the tested fallback for declared parameters. It does not claim FEC, framing, payload recovery or blind synchronisation. See the [receiver MVP contract](docs/MVP_RECEIVER.md) and [GNU Radio graph notes](gnuradio/README.md).
 
 ### Analyst UI (connected to the local API)

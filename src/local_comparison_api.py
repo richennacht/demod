@@ -107,15 +107,46 @@ class ComparisonService:
         }
         return report
 
-    def demodulate_bytes(self, raw: bytes, iq_format: str, sample_rate_hz: float, modulation: str, samples_per_symbol: int, timing_offset: int = 0, carrier_offset_hz: float = 0.0, parameter_source: str = "analyst_override") -> dict[str, Any]:
+    def demodulate_bytes(self, raw: bytes, iq_format: str, sample_rate_hz: float, modulation: str, samples_per_symbol: int | None = None, timing_offset: int = 0, carrier_offset_hz: float | None = 0.0, parameter_source: str = "analyst_override") -> dict[str, Any]:
+        if not math.isfinite(sample_rate_hz) or sample_rate_hz <= 0:
+            raise ValueError('Sample rate must be finite and positive.')
+        report = None
+        sources = {'modulation': 'analyst_override', 'samples_per_symbol': 'analyst_override', 'carrier_offset_hz': 'analyst_override', 'timing_offset_samples': 'analyst_fixed_offset'}
+        if modulation == "auto" or samples_per_symbol is None or carrier_offset_hz is None:
+            report = self.analyse_bytes(raw, iq_format, sample_rate_hz)
         if modulation == "auto":
-            classification = self.analyse_bytes(raw, iq_format, sample_rate_hz)["modulation_classification"]
+            classification = report["modulation_classification"]
             if classification["abstained"] or classification["predicted_modulation"] not in SUPPORTED_DEMODULATIONS:
                 return {"status": "abstained", "reason": "Automatic classifier did not select a supported receiver; provide X-DEmod-Modulation manually.", "classification": classification}
             modulation = classification["predicted_modulation"]
             parameter_source = "automatic_classifier"
+            sources['modulation'] = 'DemodAMC'
+        if samples_per_symbol is None:
+            rate = (report.get('rate_estimation') or {}).get('learned')
+            if modulation not in ('bpsk', 'qpsk') or not rate or rate['abstained'] or rate['samples_per_symbol'] is None:
+                return {'status': 'abstained', 'reason': 'No supported confident SPS estimate; set samples per symbol manually (automatic SPS supports BPSK/QPSK receivers only).', 'rate_estimation': report.get('rate_estimation')}
+            samples_per_symbol = int(rate['samples_per_symbol'])
+            sources['samples_per_symbol'] = 'symbol_rate.npz'
+        if carrier_offset_hz is None:
+            cfo = report['automated_parameter_comparison']['carrier_offset_hz'].get('learned_detail')
+            if not cfo or cfo['confidence'] < .7 or abs(cfo['carrier_offset_hz']) > cfo['trained_range_hz'][1]:
+                return {'status': 'abstained', 'reason': 'Carrier estimate unavailable or low confidence; set carrier offset manually.'}
+            carrier_offset_hz = cfo['carrier_offset_hz']
+            sources['carrier_offset_hz'] = cfo['model_file']
         samples = decode_raw_iq(raw, iq_format)
+        region_info = {'source': 'whole_capture', 'sample_start': 0, 'sample_count': len(samples)}
+        if report is not None and sources['samples_per_symbol'] != 'analyst_override':
+            region_info = report['learned_region']
+            start, count = region_info['sample_start'], region_info['sample_count']
+            samples = samples[start:start + count]
         result = demodulate(samples, sample_rate_hz, modulation, samples_per_symbol, timing_offset, carrier_offset_hz, parameter_source)
+        if report is not None:
+            result['configuration']['parameter_source'] = 'model_guided_with_fixed_timing'
+        result['configuration']['parameter_sources'] = sources
+        result['input_region'] = region_info
+        if report is not None:
+            result['input'] = report['input']
+            result['automatic_evidence'] = {'classification': report['modulation_classification'], 'rates': report.get('rate_estimation'), 'carrier_offset': report['automated_parameter_comparison']['carrier_offset_hz']}
         result["gnu_radio_graph"] = flowgraph(modulation, sample_rate_hz, samples_per_symbol, carrier_offset_hz)
         return result
 
@@ -201,9 +232,8 @@ def make_handler(service: ComparisonService):
                         if report['rate_estimation']:
                             report['rate_estimation']['sample_rate_source'] = 'sample_count / analyst_recording_duration'
                 else:
-                    if not self.headers.get("X-DEmod-Samples-Per-Symbol"):
-                        raise ValueError("X-DEmod-Samples-Per-Symbol is required for MVP demodulation.")
-                    report = service.demodulate_bytes(raw, self.headers.get("X-DEmod-IQ-Format", "s16le"), float(self.headers.get("X-DEmod-Sample-Rate", "0")), self.headers.get("X-DEmod-Modulation", "auto"), int(self.headers["X-DEmod-Samples-Per-Symbol"]), int(self.headers.get("X-DEmod-Timing-Offset", "0")), optional_float("X-DEmod-Carrier-Offset") or 0.0)
+                    sps = int(self.headers['X-DEmod-Samples-Per-Symbol']) if self.headers.get('X-DEmod-Samples-Per-Symbol') else None
+                    report = service.demodulate_bytes(raw, self.headers.get("X-DEmod-IQ-Format", "s16le"), float(self.headers.get("X-DEmod-Sample-Rate", "0")), self.headers.get("X-DEmod-Modulation", "auto"), sps, int(self.headers.get("X-DEmod-Timing-Offset", "0")), optional_float("X-DEmod-Carrier-Offset"))
                 self._send(200, report)
             except (ValueError, OverflowError, wave.Error, EOFError) as error:
                 self._send(400, {"error": str(error)})

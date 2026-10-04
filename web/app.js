@@ -309,6 +309,17 @@ $('#run-demod').addEventListener('click', () => busy($('#run-demod'), 'Running',
   } catch (err) { flash('#rx-error', err.message); }
 }));
 
+$('#run-auto-demod').addEventListener('click', () => busy($('#run-auto-demod'), 'Estimating and receiving', async () => {
+  const s = settings(); const problems = captureProblems(s);
+  if (!state.bytes) problems.push('Load a capture first.');
+  if (problems.length) { flash('#rx-error', problems.join(' ')); return; }
+  flash('#rx-error', '');
+  try {
+    state.demod = await post('/demodulate', { ...captureHeaders(s), 'X-DEmod-Modulation': 'auto' });
+    state.demodSettings = s; renderReceiver(); renderReport();
+  } catch (err) { flash('#rx-error', err.message); }
+}));
+
 /* ---------- navigation ---------- */
 function go(view) {
   if (!['capture', 'evidence', 'receiver', 'report'].includes(view)) view = 'capture';
@@ -660,10 +671,13 @@ function renderReceiver() {
   if (d.status === 'abstained') {
     const c = d.classification;
     tiles.push(tile({ title: 'No receiver selected', src: 'Automatic modulation choice', av: 'model', metric: 'abstained',
-      body: `<div class="big">Abstained</div><p class="note">${esc(d.reason)}</p><p class="note">Classifier: ${c.abstained ? 'abstained' : `${esc(String(c.predicted_modulation).toUpperCase())} at ${pct(c.confidence)}`}. Pick a modulation above to run it anyway.</p>` }));
+      body: `<div class="big">Abstained</div><p class="note">${esc(d.reason)}</p>${c ? `<p class="note">Classifier: ${c.abstained ? 'abstained' : `${esc(String(c.predicted_modulation).toUpperCase())} at ${pct(c.confidence)}`}.</p>` : ''}<p class="note">Review the estimates and supply manual receiver settings above.</p>` }));
     setTiles('rx-feed', tiles); return;
   }
   const cfg = d.configuration; const mod = d.modulation; const fs = state.demodSettings?.sample_rate_hz;
+  if (cfg.parameter_sources) tiles.push(tile({ title: 'Receiver parameter sources', src: 'Applied settings and evidence', av: 'rx',
+    metric: d.input_region?.source || 'whole capture',
+    body: `<dl class="kv">${Object.entries(cfg.parameter_sources).map(([k,v]) => `<dt>${esc(k.replaceAll('_',' '))}</dt><dd>${esc(v)}</dd>`).join('')}</dl><p class="note">${d.input_region ? `Input samples ${d.input_region.sample_start} through ${d.input_region.sample_start + d.input_region.sample_count - 1}.` : ''} Timing is a fixed offset, not a recovered symbol clock.</p>` }));
   const dec = d.decisions_preview || [];
   if (mod === '2fsk') {
     const vals = dec.map(x => x.frequency_step_rad);
@@ -687,7 +701,7 @@ function renderReceiver() {
   const evm = d.quality.evm_rms;
   tiles.push(tile({ title: 'Quality', src: 'Error vector magnitude after fixed integrate-and-dump', av: 'rx', metric: `${d.symbol_count.toLocaleString()} symbols`,
     body: `<div class="big">${evm == null ? 'n/a' : pct(evm)}<small>${evm == null ? 'EVM not defined for FSK' : 'EVM RMS'}</small></div>
-      <p class="note">${esc(d.quality.meaning)}${segs.length > 0 && evm != null ? ' It covers the whole file, so quiet stretches between bursts push it up.' : ''}</p>
+      <p class="note">${esc(d.quality.meaning)}${segs.length > 0 && evm != null ? (d.input_region?.source !== 'whole_capture' && d.input_region ? ' Measured on the selected analysis region.' : ' It covers the whole file, so quiet stretches between bursts push it up.') : ''}</p>
       <dl class="kv" style="margin-top:12px"><dt>Samples per symbol</dt><dd>${cfg.samples_per_symbol}</dd><dt>Timing offset</dt><dd>${cfg.timing_offset_samples} samples</dd><dt>Carrier offset removed</dt><dd>${fmtHz(cfg.carrier_offset_hz, true)}</dd>${fs ? `<dt>Implied symbol rate</dt><dd>${fmtHz(fs / cfg.samples_per_symbol).replace('Hz', 'Bd')}</dd>` : ''}<dt>Settings from</dt><dd>${esc(SOURCE_LABEL[cfg.parameter_source] || cfg.parameter_source)}</dd></dl>` }));
 
   const bits = d.bits_preview || ''; const grouped = bits.match(/.{1,8}/g) || [];
