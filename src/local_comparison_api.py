@@ -26,6 +26,7 @@ from demodulation import SUPPORTED as SUPPORTED_DEMODULATIONS, demodulate
 from dual_parameter_estimator import DualParameterEstimator
 from generate_synthetic import load_recipes
 from gnu_radio_adapter import flowgraph
+from learned_analysis import analysis_region, carrier_offset, classify
 from modulation_classifier import CentroidAMC
 from provenance import input_provenance
 
@@ -64,19 +65,35 @@ class ComparisonService:
         # The learned baseline is deliberately compared on the untouched input.
         # Derived denoising results are shown separately in the analysis graph.
         comparison_samples = samples
+        import numpy as np
+        segments = ((pipeline.get("raw_branch") or {}).get("visualization") or {}).get("segmentation", {}).get("segments")
+        region, region_info = analysis_region(np.asarray(samples, dtype=np.complex128), segments)
+        comparison = self.estimator.compare(comparison_samples, sample_rate_hz)
+        learned_cfo = carrier_offset(region, sample_rate_hz)
+        if learned_cfo is not None:
+            legacy = comparison["carrier_offset_hz"]["learned"]
+            dsp = comparison["carrier_offset_hz"]["dsp"]
+            value = learned_cfo["carrier_offset_hz"]
+            tolerance = max(250.0, 0.001 * sample_rate_hz)
+            comparison["carrier_offset_hz"] = {"dsp": dsp, "learned": round(value, 6), "absolute_disagreement": round(abs(dsp - value), 6), "agreement": float(abs(dsp - value) <= tolerance), "tolerance_hz": tolerance, "learned_detail": learned_cfo, "legacy_tinymlp": round(legacy, 6)}
+        legacy_classification = self.classifier.predict(comparison_samples)
+        classification = classify(region, learned_cfo["normalised_cycles_per_sample"] if learned_cfo else None)
+        if classification is not None:
+            classification["legacy_centroid"] = {k: legacy_classification[k] for k in ("predicted_modulation", "confidence", "abstained")}
         report: dict[str, Any] = {
             "run_id": str(uuid.uuid4()),
             "input": input_provenance(raw, iq_format, sample_rate_hz, centre_frequency_hz, gain_db, metadata_source),
             "analysis": pipeline,
             "manual_dsp": pipeline["raw_branch"]["features"],
             "manual_parameter_estimation": pipeline["raw_branch"]["manual_parameters"],
-            "automated_parameter_comparison": self.estimator.compare(comparison_samples, sample_rate_hz),
-            "modulation_classification": self.classifier.predict(comparison_samples),
+            "automated_parameter_comparison": comparison,
+            "modulation_classification": classification or legacy_classification,
+            "learned_region": region_info,
             "provenance": {
                 "raw_data_persisted": False,
                 "denoising_profile": denoise_profile,
                 "manual_branch": "feature analysis, FFT/STFT, energy segmentation and named manual estimators",
-                "automated_branch": "7-to-12-to-3 TinyMLP; trained in memory from the checked-in synthetic recipe set",
+                "automated_branch": ("SpecCFO carrier offset and DemodAMC classifier (data/models, evaluated in research/README.md); TinyMLP kept for DC only" if classification is not None else "7-to-12-to-3 TinyMLP and feature centroids; trained in memory from the checked-in synthetic recipe set"),
                 "automated_targets": ["dc_i", "dc_q", "carrier_offset_hz", "modulation_classification"],
                 "not_supported_by_model": ["sample_rate", "centre_frequency", "symbol_timing", "FEC", "interleaver"],
                 "model_training_recipes": str(self.recipes_path).replace("\\\\", "/"),
