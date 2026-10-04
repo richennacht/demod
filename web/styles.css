@@ -233,7 +233,9 @@ nav { display: flex; flex-direction: column; }
 .cmp th { font-weight: 400; color: var(--muted); text-align: right; padding: 0 0 8px; }
 .cmp th:first-child, .cmp td:first-child { text-align: left; }
 .cmp td { padding: 8px 0; border-top: 1px solid var(--surface-2); text-align: right; vertical-align: top; }
+.cmp td + td, .cmp th + th { padding-left: 16px; white-space: nowrap; }
 .cmp td .flag { margin-top: 4px; }
+.cmp td:first-child { white-space: normal; }
 .chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
 .timeline { position: relative; height: 34px; border-radius: 8px; background: var(--surface-2); overflow: hidden; margin: 6px 0 10px; }
 .timeline i { position: absolute; top: 0; bottom: 0; background: var(--signal); border-radius: 3px; }

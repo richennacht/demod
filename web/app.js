@@ -3,7 +3,7 @@
 /* DEmod analyst UI. Talks only to the local comparison API the analyst points it at.
    Every number shown is either returned by that API or labelled as a browser-side check. */
 
-const UI_VERSION = '0.5.0';
+const UI_VERSION = '0.6.0';
 const MAX_BYTES = 16 * 1024 * 1024;
 const SAMPLE_BYTES = { s8: 2, cu8: 2, s16le: 4, s16be: 4, f32le: 8, f32be: 8 };
 const SOURCE_LABEL = { analyst_hypothesis: 'My hypothesis', sigmf_metadata: 'SigMF sidecar', capture_log: 'Capture log', unavailable: 'Not supplied', automatic_classifier: 'Classifier', analyst_override: 'Analyst setting' };
@@ -503,28 +503,45 @@ function renderEvidence() {
     tiles.push(tile({ cat: 'spectrum time iq', title: 'Plots unavailable', src: 'The API ran without NumPy', av: 'est', body: '<p class="note" style="margin:0">Install NumPy on the machine running the API (<code>pip install -r requirements-dsp.txt</code>) to get FFT, waterfall, scatter and segment evidence.</p>' }));
   }
 
-  /* Classifier */
-  const cls = a.modulation_classification; const ranked = cls.ranked_candidates || []; const dmin = Math.min(...ranked.map(r => r.distance));
+  /* Classifier: new DemodAMC returns probabilities, the legacy centroid returned distances. */
+  const cls = a.modulation_classification; const ranked = cls.ranked_candidates || [];
+  const isProb = ranked.length > 0 && ranked[0].probability != null;
+  const dmin = isProb ? 0 : Math.min(...ranked.map(r => r.distance));
   const pred = cls.predicted_modulation; const noRx = !cls.abstained && pred && !RX_SUPPORTED.includes(pred);
-  tiles.push(tile({ cat: 'model', title: 'Modulation classifier', src: 'Synthetic-trained feature centroids, raw input', av: 'model', metric: cls.abstained ? 'abstained' : `${pct(cls.confidence)} confidence`,
-    body: `<div class="big">${cls.abstained ? 'Abstained' : esc(String(pred).toUpperCase())}${cls.abstained ? '' : `<small>${pct(cls.confidence)}</small>`}</div>
-      <p class="note" style="margin-top:6px">${esc(cls.reason)}${noRx ? ` There is no ${esc(pred.toUpperCase())} receiver in this build.` : ''}</p>
-      <div class="rows">${ranked.map((r, i) => `<div class="row${i === 0 && !cls.abstained ? ' lead' : ''}"><span>${esc(r.modulation.toUpperCase())}</span><span class="track"><span class="fill" style="width:${(r.distance ? Math.min(1, dmin / r.distance) * 100 : 100).toFixed(1)}%"></span></span><span>${r.distance.toFixed(2)}</span></div>`).join('')}</div>
-      <p class="note">Bars show closeness to each class centroid, numbers are distance (lower is closer). ${esc(cls.model?.scope || '')}</p>` }));
+  const label = m => (m === 'ofdm' ? 'OFDM' : m === 'am' ? 'AM' : m === 'fm' ? 'FM' : m === 'noise' ? 'Noise only' : m.toUpperCase());
+  const legacy = cls.legacy_centroid;
+  tiles.push(tile({ cat: 'model', title: 'Modulation classifier', av: 'model',
+    src: isProb ? `DemodAMC, ${cls.chunks_used} chunks of 1,024 samples, carrier offset removed first` : 'Legacy feature centroids (new model files not found on the API machine)',
+    metric: cls.abstained ? 'abstained' : `${pct(cls.confidence)} ${isProb ? 'probability' : 'margin'}`,
+    body: `<div class="big">${cls.abstained ? 'Abstained' : esc(label(String(pred)))}${cls.abstained ? '' : `<small>${pct(cls.confidence)}</small>`}</div>
+      <p class="note" style="margin-top:6px">${esc(cls.reason)}${noRx ? ` There is no ${esc(label(pred))} receiver in this build.` : ''}</p>
+      <div class="rows">${ranked.map((r, i) => { const v = isProb ? r.probability : (r.distance ? Math.min(1, dmin / r.distance) : 1); return `<div class="row${i === 0 && !cls.abstained ? ' lead' : ''}"><span>${esc(label(r.modulation))}</span><span class="track"><span class="fill" style="width:${(v * 100).toFixed(1)}%"></span></span><span>${isProb ? pct(r.probability) : r.distance.toFixed(2)}</span></div>`; }).join('')}</div>
+      <p class="note">${isProb ? (cls.model?.calibrated ? 'Probabilities from a temperature-scaled softmax fitted on held-out simulated data, averaged over chunks.' : 'Raw softmax probabilities, not calibrated, averaged over chunks.') : 'Bars show closeness to each class centroid, numbers are distance (lower is closer).'} ${esc(cls.model?.scope || '')}</p>
+      ${legacy ? `<p class="note">The old centroid classifier said ${legacy.abstained ? 'nothing (abstained)' : esc(label(String(legacy.predicted_modulation)))} at ${pct(legacy.confidence)}.</p>` : ''}` }));
 
-  /* Manual versus learned */
+  /* Manual versus learned. Carrier offset now comes from SpecCFO and carries a confidence. */
   const cmp = a.automated_parameter_comparison;
-  const nyq = fs / 2; const label = { dc_i: 'DC, I', dc_q: 'DC, Q', carrier_offset_hz: 'Carrier offset' };
-  const fmtVal = (k, v) => (k === 'carrier_offset_hz' ? fmtHz(v, true) : fmtNum(v, 5));
+  const nyq = fs / 2; const plabel = { dc_i: 'DC, I', dc_q: 'DC, Q', carrier_offset_hz: 'Carrier offset' };
+  const fmtFine = v => (Math.abs(v) < 1e5 ? `${v > 0 ? '+' : v < 0 ? '−' : ''}${Math.abs(v).toFixed(1)} Hz` : fmtHz(v, true));
+  const fmtVal = (k, v) => (k === 'carrier_offset_hz' ? fmtFine(v) : fmtNum(v, 5));
   const rows = Object.entries(cmp).map(([k, v]) => {
     const flags = [v.agreement >= 1 ? '<span class="flag ok">Agree</span>' : '<span class="flag warn">Disagree</span>'];
+    const det = v.learned_detail;
     if (k === 'carrier_offset_hz' && Math.abs(v.learned) > nyq) flags.push(`<span class="flag warn">Model value is outside ±${fmtHz(nyq)}, impossible at this rate</span>`);
-    return `<tr><td>${esc(label[k] || k)}<br>${flags.join(' ')}</td><td>${fmtVal(k, v.dsp)}</td><td>${fmtVal(k, v.learned)}</td></tr>`;
+    if (det) { flags.push(`<span class="flag">${pct(det.confidence)} confidence</span>`); if (Math.abs(v.learned) > det.trained_range_hz[1]) flags.push('<span class="flag warn">Beyond the range it was trained on</span>'); }
+    const extra = det ? `<br><span class="note" style="margin:0">${esc(det.method)}${det.refined_on_power ? `, line at x^${det.refined_on_power}` : ''}</span>` : '';
+    return `<tr><td>${esc(plabel[k] || k)}<br>${flags.join(' ')}${extra}</td><td>${fmtVal(k, v.dsp)}</td><td>${fmtVal(k, v.learned)}</td></tr>`;
   }).join('');
   const disagreements = Object.values(cmp).filter(v => v.agreement < 1).length;
-  tiles.push(tile({ cat: 'model estimates', title: 'Manual versus model', src: 'Named DSP estimators next to the synthetic-trained MLP, raw input', av: 'model', metric: disagreements ? `${disagreements} disagreement${disagreements > 1 ? 's' : ''}` : 'all agree',
+  const cfoRow = cmp.carrier_offset_hz; const legacyCfo = cfoRow?.legacy_tinymlp;
+  const learnedBranch = Boolean(cfoRow?.learned_detail);
+  tiles.push(tile({ cat: 'model estimates', title: 'Manual versus model', av: 'model',
+    src: learnedBranch ? 'Named DSP estimators next to SpecCFO (carrier offset) and the DC regressor' : 'Named DSP estimators next to the synthetic-trained MLP, raw input',
+    metric: disagreements ? `${disagreements} disagreement${disagreements > 1 ? 's' : ''}` : 'all agree',
     body: `<table class="cmp"><thead><tr><th>Parameter</th><th>Manual</th><th>Model</th></tr></thead><tbody>${rows}</tbody></table>
-      <p class="note">The model doesn't estimate ${esc((a.provenance.not_supported_by_model || []).join(', ').replaceAll('_', ' '))}. Where they disagree, trust neither until a reference confirms one.</p>` }));
+      ${a.learned_region ? `<p class="note">Model carrier offset measured on ${a.learned_region.sample_count.toLocaleString()} samples from ${a.learned_region.source === 'longest_energy_segment' ? 'the longest energy segment' : 'the start of the file'}, so silence doesn't dilute it.</p>` : ''}
+      ${legacyCfo != null ? `<p class="note">The old MLP gave ${fmtHz(legacyCfo, true)} for the same offset. It was trained at a fixed 1 MS/s and isn't used for this value any more.</p>` : ''}
+      <p class="note">The models don't estimate ${esc((a.provenance.not_supported_by_model || []).join(', ').replaceAll('_', ' '))}. Where they disagree, trust neither until a reference confirms one.</p>` }));
 
   /* Manual estimates for the chosen branch */
   const mp = B.manual_parameters; const cfo = mp.coarse_carrier_offset_hz; const bw = mp.spectrum;
@@ -587,7 +604,9 @@ function renderRxHints() {
   if (!a) { box.innerHTML = ''; return; }
   const cls = a.modulation_classification; const mp = a.manual_parameter_estimation; const chips = [];
   if (!cls.abstained && RX_SUPPORTED.includes(cls.predicted_modulation)) chips.push(`<button class="chip" data-set="p-mod" data-value="${cls.predicted_modulation}">Classifier says ${cls.predicted_modulation.toUpperCase()}</button>`);
-  chips.push(`<button class="chip" data-set="p-cfo" data-value="${mp.coarse_carrier_offset_hz.carrier_offset_hz.toFixed(1)}">CFO estimate ${fmtHz(mp.coarse_carrier_offset_hz.carrier_offset_hz, true)}</button>`);
+  const learnedCfo = a.automated_parameter_comparison?.carrier_offset_hz?.learned_detail;
+  if (learnedCfo) chips.push(`<button class="chip" data-set="p-cfo" data-value="${learnedCfo.carrier_offset_hz.toFixed(1)}" title="${pct(learnedCfo.confidence)} confidence">SpecCFO ${fmtHz(learnedCfo.carrier_offset_hz, true)}</button>`);
+  chips.push(`<button class="chip" data-set="p-cfo" data-value="${mp.coarse_carrier_offset_hz.carrier_offset_hz.toFixed(1)}">Manual CFO ${fmtHz(mp.coarse_carrier_offset_hz.carrier_offset_hz, true)}</button>`);
   (mp.symbol_rate_candidates || []).slice(0, 4).forEach(c => chips.push(`<button class="chip" data-set="p-sps" data-value="${c.samples_per_symbol_candidate}">${c.samples_per_symbol_candidate} sps</button>`));
   box.innerHTML = `<span>From the analysis:</span>${chips.join('')}`;
 }
