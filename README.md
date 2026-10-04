@@ -19,6 +19,14 @@ The [sampling-rate and modulation review](docs/RATE_AND_MODULATION_REVIEW.md) no
 
 It deliberately does **not** claim universal blind recovery of FEC, interleaving, encryption, or every unknown waveform. Those are research-level SIGINT problems and must be demonstrated only for supported signal families with recorded validation data.
 
+## Frozen-model validation (2026-10-05)
+
+The [three-stage validation report](research/results/stage_validation.md) records fresh independent-seed synthetic comparisons with unchanged product weights: SPS 400/400 versus spectral-peak baseline 260/400; current capture-level AMC 114/120 versus separately fitted centroid 35/120; joint known-candidate FEC/interleaver 339/340 versus hard-syndrome baseline 324/340. Improvements are respectively +35.00, +65.83 and +4.41 percentage points **on those specific synthetic cohorts**, not published SOTA or real-intercept claims. Separate CFO sweeps, confidence intervals, abstention coverage, per-component FEC/interleaver scores and limitations are included. AMC accepted one incorrect prediction; its selective accuracy is not perfect. Absolute raw sampling frequency, FEC decoding and decryption remain unvalidated/unimplemented as previously documented.
+
+`research/validate_stages.py` regenerates ephemeral examples and retains only recipes, hashes, predictions, confusion matrices and paired bootstrap intervals. `research/report_stage_validation.py` renders the report. Model SHA-256 checks prevent accidental recalibration during evaluation; the old evaluator that fits temperature is not used. The report also audits the O'Shea/Chen/Rajendran recreations and the 2026 DBFCNN and subspace-code literature without equating narrow candidate recognition with general blind recovery. Four scoring regression tests distinguish closed accuracy from accepted-only accuracy and account for unknown predictions in confusion matrices.
+
+The fresh [research-model replay](research/results/stage_paper_recreations.json) also runs the saved IQ-ResNet/O'Shea CFO and VT-CNN2/LSTM AMC recreations on the same test captures. For example, wide-range CFO within ±0.005 cycles/sample is 96.50% for SpecCFO versus 68.00% for the O'Shea recreation; AMC is 95.00% versus 24.17%/25.83% for the saved VT-CNN2/LSTM. These large margins are **not published research wins**: the baseline checkpoints were undertrained, their budgets differ, and no original external benchmark was acquired. Replay uses isolated CPU JAX/optax dependencies and leaves all weights untouched.
+
 ## Quick start
 
 Requires Python 3.10+; no third-party packages are needed for the baseline analyzer.

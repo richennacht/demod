@@ -180,6 +180,12 @@ A summary, because it changed the design:
 - The classifier has no class for modes outside the 12, so it can only abstain or pick the nearest of them.
 - The tuned fallback and abstention thresholds depend on the validation mixture they were fitted on.
 
+## Fresh frozen-stage validation
+
+See [stage_validation.md](results/stage_validation.md) and its machine-readable [predictions and provenance](results/stage_validation.json). `validate_stages.py` evaluates shipped SPS/CFO, current API AMC aggregation and the known-candidate FEC/interleaver model on new independent seeds, comparing identical inputs with scoped baselines. It never recalibrates product weights. `report_stage_validation.py` renders accuracy, Wilson intervals, paired-bootstrap improvements and abstention coverage separately. Same-generator success is not real-data validation or a paper-benchmark win; absolute Fs and payload recovery are not tested. The archived tables below/above retain their original conditions and are not merged with these easier, higher-SNR cohorts.
+
+`validate_paper_recreations.py` additionally replays the exact CFO/AMC recipes against the frozen IQ-ResNet, O'Shea CNN, VT-CNN2 and LSTM checkpoints when JAX/optax are available. It never invokes calibration or training. This is still a comparison with local, limited-budget recreations, not their original published results.
+
 ## 8. Reproduce
 
 ```bash
