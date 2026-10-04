@@ -3,7 +3,7 @@
 /* DEmod analyst UI. Talks only to the local comparison API the analyst points it at.
    Every number shown is either returned by that API or labelled as a browser-side check. */
 
-const UI_VERSION = '0.4.0';
+const UI_VERSION = '0.5.0';
 const MAX_BYTES = 16 * 1024 * 1024;
 const SAMPLE_BYTES = { s8: 2, cu8: 2, s16le: 4, s16be: 4, f32le: 8, f32be: 8 };
 const SOURCE_LABEL = { analyst_hypothesis: 'My hypothesis', sigmf_metadata: 'SigMF sidecar', capture_log: 'Capture log', unavailable: 'Not supplied', automatic_classifier: 'Classifier', analyst_override: 'Analyst setting' };
@@ -304,96 +304,160 @@ function layout(id) {
   const w = box.clientWidth || box.parentElement.clientWidth;
   const n = w >= 1120 ? 3 : w >= 640 ? 2 : 1;
   box.innerHTML = '';
-  const cols = Array.from({ length: n }, () => box.appendChild(el('<div class="col"></div>')));
+  const inst = box.appendChild(el('<div class="instruments"></div>'));
+  const mas = box.appendChild(el('<div class="masonry"></div>'));
+  const cols = Array.from({ length: n }, () => mas.appendChild(el('<div class="col"></div>')));
   feeds[id].forEach(t => {
     const visible = id !== 'feed' || state.filter === 'all' || t.dataset.cat.split(' ').includes(state.filter);
     t.hidden = !visible; if (!visible) return;
-    cols.reduce((a, b) => (b.offsetHeight < a.offsetHeight ? b : a)).appendChild(t);
+    if (t.classList.contains('instrument')) inst.appendChild(t);
+    else cols.reduce((a, b) => (b.offsetHeight < a.offsetHeight ? b : a)).appendChild(t);
   });
+  show(inst, inst.children.length > 0);
   feeds[id].forEach(t => { if (!t.hidden && t._draw) t._draw(); });
 }
 function layoutAll() { layout('feed'); layout('rx-feed'); }
 let resizeTimer; window.addEventListener('resize', () => { clearTimeout(resizeTimer); resizeTimer = setTimeout(layoutAll, 120); });
 matchMedia('(prefers-color-scheme: dark)').addEventListener?.('change', layoutAll);
 
-/* ---------- canvas plots ---------- */
-function canvas(ratio) { return `<canvas style="aspect-ratio:${ratio}"></canvas>`; }
-function prep(c) {
-  const r = c.getBoundingClientRect(); const dpr = window.devicePixelRatio || 1;
-  c.width = Math.max(1, Math.round(r.width * dpr)); c.height = Math.max(1, Math.round(r.height * dpr));
-  const ctx = c.getContext('2d'); ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, r.width, r.height);
-  return { ctx, w: r.width, h: r.height };
+/* ---------- instruments (GNU Radio style sinks, see plots.js) ---------- */
+/* legend: [{label, trace, on}], controls: extra HTML, render(canvas, legendState) */
+function instrument({ cat = '', title, src, av = 'raw', metric = '', wide = false, ratio = '16 / 9', legend = [], controls = '', note = '', render }) {
+  const legendHtml = legend.map((l, i) => `<button type="button" class="lg" data-i="${i}" aria-pressed="${l.on !== false}"><i style="background:var(--trace-${l.trace})${l.dash ? ';height:0;border-top:2px dashed var(--trace-' + l.trace + ');background:none' : ''}"></i>${esc(l.label)}</button>`).join('');
+  const node = tile({ cat, title, src, av, metric, pad: false,
+    body: `<div class="scope"><canvas class="plot" style="aspect-ratio:${ratio}"></canvas><div class="scope-bar"><div class="legend">${legendHtml}</div><div class="scope-ctl">${controls}</div></div>${note ? `<p class="scope-note">${note}</p>` : ''}</div>` });
+  node.classList.add('instrument'); if (wide) node.classList.add('wide');
+  const st = { on: legend.map(l => l.on !== false) };
+  node._st = st;
+  node._draw = () => render($('canvas', node), st, node);
+  node.addEventListener('click', e => {
+    const b = e.target.closest('.lg'); if (!b) return;
+    const i = Number(b.dataset.i); st.on[i] = !st.on[i]; b.setAttribute('aria-pressed', String(st.on[i])); node._draw();
+  });
+  return node;
 }
 const tip = $('#tip');
-function hover(c, fn) {
-  c.addEventListener('pointermove', e => { const r = c.getBoundingClientRect(); const text = fn((e.clientX - r.left) / r.width, (e.clientY - r.top) / r.height); if (!text) { tip.hidden = true; return; } tip.textContent = text; tip.style.left = `${e.clientX}px`; tip.style.top = `${e.clientY}px`; tip.hidden = false; });
-  c.addEventListener('pointerleave', () => { tip.hidden = true; });
+const tr = n => getComputedStyle(document.documentElement).getPropertyValue(`--trace-${n}`).trim();
+function nearestIndex(arr, v) {
+  let lo = 0, hi = arr.length - 1;
+  while (hi - lo > 1) { const mid = (lo + hi) >> 1; if (arr[mid] < v) lo = mid; else hi = mid; }
+  return Math.abs(arr[lo] - v) <= Math.abs(arr[hi] - v) ? lo : hi;
 }
+function percentile(values, q) { const s = [...values].sort((a, b) => a - b); return s[Math.min(s.length - 1, Math.max(0, Math.round((s.length - 1) * q)))]; }
+const fmtF = v => { const [u, k] = Plot.unitFor('Hz', v, v); return Plot.fmtVal(v, u, k, 9); };
+const fmtFr = (v, res) => { const [u, k] = Plot.unitFor('Hz', v, v); const d = Math.max(0, Math.ceil(-Math.log10(res / k) - 1e-9)); return `${(v / k).toFixed(d).replace('-', '−')} ${u}`; };
+const fmtT = v => { const [u, k] = Plot.unitFor('s', v, v); return Plot.fmtVal(v, u, k, 5); };
 
-function drawSpectrum(c, spec, centre, guide = null) {
-  const { ctx, w, h } = prep(c); const f = spec.frequency_hz, p = spec.power_db;
-  const floor = Math.max(-100, Math.floor(Math.min(...p) / 10) * 10); const top = 4, bottom = h - 6;
-  const X = i => (i / (f.length - 1)) * w; const Y = v => top + (Math.min(0, v) / floor) * (bottom - top);
-  ctx.strokeStyle = css('--surface-2'); ctx.lineWidth = 1;
-  for (let d = 0; d >= floor; d -= 20) { ctx.beginPath(); ctx.moveTo(0, Y(d) + .5); ctx.lineTo(w, Y(d) + .5); ctx.stroke(); }
-  ctx.beginPath(); ctx.moveTo(w / 2 + .5, top); ctx.lineTo(w / 2 + .5, bottom); ctx.stroke();
-  ctx.beginPath(); p.forEach((v, i) => (i ? ctx.lineTo(X(i), Y(v)) : ctx.moveTo(X(i), Y(v))));
-  ctx.lineTo(w, bottom); ctx.lineTo(0, bottom); ctx.closePath(); ctx.fillStyle = css('--signal-soft'); ctx.fill();
-  ctx.beginPath(); p.forEach((v, i) => (i ? ctx.lineTo(X(i), Y(v)) : ctx.moveTo(X(i), Y(v)))); ctx.strokeStyle = css('--signal'); ctx.lineWidth = 1.25; ctx.stroke();
-  if (guide != null) { ctx.strokeStyle = css('--ink'); ctx.beginPath(); ctx.moveTo(X(guide) + .5, top); ctx.lineTo(X(guide) + .5, bottom); ctx.stroke(); }
-  if (!c._hover) {
-    c._hover = true;
-    hover(c, x => {
-      const i = Math.max(0, Math.min(f.length - 1, Math.round(x * (f.length - 1)))); drawSpectrum(c, spec, centre, i);
-      const abs = centre != null ? `, ${fmtHz(centre + f[i])} if the centre is right` : '';
-      return `${fmtHz(f[i], true)}, ${p[i].toFixed(1)} dB${abs}`;
-    });
-    c.addEventListener('pointerleave', () => drawSpectrum(c, spec, centre));
+
+/* Evidence instruments: frequency sink, waterfall sink, constellation sink, two time sinks. */
+function instruments(vis, fs, centre, src, av) {
+  const out = []; const spec = vis.spectrum; const f = spec.frequency_hz;
+  const hasWelch = Array.isArray(spec.welch_power_db);
+  const traces = hasWelch
+    ? [{ label: `Welch average, ${spec.welch_frames} frames`, y: spec.welch_power_db, trace: 0 }, { label: 'Max hold', y: spec.max_hold_db, trace: 1 }, { label: `Single FFT, first ${spec.fft_size} samples`, y: spec.power_db, trace: 2, on: false }]
+    : [{ label: `Single FFT, first ${spec.fft_size} samples`, y: spec.power_db, trace: 0 }];
+  const rfOk = centre != null;
+  out.push(instrument({
+    cat: 'spectrum', wide: true, ratio: '21 / 8', title: 'Frequency sink', av, src: `${src}, Hann ${spec.fft_size}-point${hasWelch ? ', 50% overlap' : ''}`,
+    metric: `RBW ${fmtFr(fs / spec.fft_size * 1.5, 1)}`, legend: traces,
+    controls: rfOk ? '<div class="seg small" role="radiogroup" aria-label="Frequency axis"><button type="button" role="radio" data-axis="bb" aria-checked="true">Baseband</button><button type="button" role="radio" data-axis="rf" aria-checked="false">RF</button></div>' : '<span class="muted">Baseband offset. Add a centre frequency for an RF axis.</span>',
+    note: `${hasWelch ? 'dB relative to the peak of the Welch average. ' : 'dB relative to the FFT peak. '}RBW is the Hann equivalent noise bandwidth, 1.5 bins. Drag across the plot to zoom, double-click to reset.${rfOk ? ' The RF axis assumes the stated centre frequency is correct.' : ''}`,
+    render(c, st, node) {
+      const rf = rfOk && node.dataset.axis === 'rf'; const off = rf ? centre : 0;
+      const shown = traces.filter((_, i) => st.on[i]); const all = (shown.length ? shown : traces).flatMap(t => t.y);
+      const top = Math.max(...all); const bottom = Math.max(Math.min(...all), top - 110);
+      Plot.line(c, {
+        x: { label: rf ? 'Frequency' : 'Frequency offset', unit: 'Hz', domain: [f[0] + off, f[f.length - 1] + off] },
+        y: { label: 'Relative power', unit: 'dB', domain: Plot.niceDomain(bottom, top, 0.04) }, zoomX: true,
+        series: traces.map((t, i) => ({ x: f.map(v => v + off), y: t.y, color: tr(t.trace), hidden: !st.on[i], width: t.trace === 0 ? 1.4 : 1 })),
+        readout: x => { const k = nearestIndex(f, x - off); return `${fmtFr(f[k] + off, fs / spec.fft_size)}  ${traces.filter((_, i) => st.on[i]).map(t => `${t.label.split(',')[0]} ${t.y[k].toFixed(1)} dB`).join('  ')}`; },
+      });
+    },
+  }));
+  const fNode = out[0];
+  fNode.dataset.axis = 'bb';
+  fNode.addEventListener('click', e => { const b = e.target.closest('button[data-axis]'); if (!b) return; fNode.dataset.axis = b.dataset.axis; $$('button[data-axis]', fNode).forEach(x => x.setAttribute('aria-checked', String(x === b))); const c = $('canvas', fNode); c._zoom = null; fNode._draw(); });
+
+  /* Waterfall sink */
+  const wf = vis.waterfall; const global = Array.isArray(wf.power_db_global) && wf.power_db_global.length;
+  const rows = global ? wf.power_db_global : wf.power_db_relative;
+  if (rows.length) {
+    const half = wf.fft_size / 2 / fs; const t0 = wf.time_seconds[0] - half; const t1 = wf.time_seconds[wf.time_seconds.length - 1] + half;
+    const total = vis.input.sample_count / fs; const wff = wf.frequency_hz; const df = (wff[wff.length - 1] - wff[0]) / (wff.length - 1);
+    const flat = rows.flat(); const zlo = Math.floor(percentile(flat, 0.05) / 10) * 10; const zhi = 0;
+    const marks = (vis.segmentation.segments || []).map(sg => [sg.sample_start / fs, (sg.sample_start + sg.sample_count) / fs]).filter(([x, y]) => y > t0 && x < t1).map(([x, y]) => [Math.max(x, t0), Math.min(y, t1)]);
+    out.push(instrument({
+      cat: 'spectrum time', ratio: '5 / 4', title: 'Waterfall sink', av, src: `${src}, STFT ${wf.fft_size}-point, hop ${wf.hop_size}`,
+      metric: t1 < total * 0.98 ? `first ${fmtT(t1)} of ${fmtT(total)}` : fmtT(total),
+      controls: `<label class="mini">Colour map <select data-cmap><option value="multi">Multi-colour</option><option value="whitehot">White hot</option><option value="blackhot">Black hot</option></select></label>`,
+      note: `${global ? 'dB relative to the strongest bin across the frames shown, so quiet frames stay dark.' : 'Older API output: each frame is normalised to its own peak, so quiet frames look as bright as bursts.'} Time runs down. Red ticks on the left edge mark energy segments. Colour range autoscaled from the 5th percentile to the peak.`,
+      render(c, st, node) {
+        Plot.image(c, {
+          x: { label: 'Frequency offset', unit: 'Hz', domain: [wff[0] - df / 2, wff[wff.length - 1] + df / 2] },
+          y: { label: 'Time', unit: 's', domain: [t1, t0] }, z: { label: 'Power (dB rel.)', domain: [zlo, zhi] },
+          rows, colormap: node.dataset.cmap || 'multi', marks,
+          readout: (x, y) => { const k = nearestIndex(wff, x); const r = Math.max(0, Math.min(rows.length - 1, Math.floor((y - t0) / (t1 - t0) * rows.length))); return `${fmtFr(wff[k], df)}  t ${fmtT(y)}  ${rows[r][k].toFixed(1)} dB`; },
+        });
+      },
+    }));
+    const wNode = out[out.length - 1];
+    wNode.addEventListener('change', e => { if (e.target.matches('[data-cmap]')) { wNode.dataset.cmap = e.target.value; wNode._draw(); } });
   }
-}
 
-function colormap() {
-  const stops = [css('--surface'), css('--signal-soft'), css('--signal'), css('--ink')].map(rgb);
-  const lut = new Uint8ClampedArray(256 * 3);
-  for (let i = 0; i < 256; i += 1) {
-    const t = Math.pow(i / 255, 2.2) * (stops.length - 1); const k = Math.min(stops.length - 2, Math.floor(t)); const u = t - k;
-    for (let ch = 0; ch < 3; ch += 1) lut[i * 3 + ch] = stops[k][ch] + (stops[k + 1][ch] - stops[k][ch]) * u;
+  /* Constellation sink */
+  const pts = vis.constellation.sampled_points;
+  out.push(instrument({
+    cat: 'iq', ratio: '5 / 4', title: 'Constellation sink', av, src: `${src}, every Nth sample, DC removed`, metric: `${pts.length} points`,
+    legend: [{ label: 'Samples', trace: 0 }],
+    note: 'Raw samples spread across the capture. No matched filter, timing or carrier correction, so a carrier offset smears PSK into a ring.',
+    render(c, st) { Plot.scatter(c, { x: { label: 'In-phase' }, y: { label: 'Quadrature' }, points: st.on[0] ? pts : [] }); },
+  }));
+
+  /* Time sink: smoothed power envelope with the segmentation threshold */
+  const env = vis.segmentation.envelope;
+  if (env) {
+    const segs = (vis.segmentation.segments || []).map(sg => [sg.sample_start / fs, (sg.sample_start + sg.sample_count) / fs]);
+    const et = env.time_seconds;
+    out.push(instrument({
+      cat: 'time', wide: true, ratio: '21 / 7', title: 'Time sink, power envelope', av, src: `${src}, ${vis.segmentation.window_samples}-sample moving average, max-pooled`,
+      metric: `${segs.length} segment${segs.length === 1 ? '' : 's'}`,
+      legend: [{ label: 'Smoothed power', trace: 0 }, { label: 'Threshold', trace: 1, dash: true }, { label: 'Baseline', trace: 3, dash: true }],
+      note: 'Shaded spans are the energy segments. Drag to zoom, double-click to reset.',
+      render(c, st) {
+        const ys = env.power_db; const lo = Math.max(Math.min(...ys), Math.max(...ys) - 80);
+        const T = tr;
+        Plot.line(c, {
+          x: { label: 'Time', unit: 's', domain: [0, vis.input.sample_count / fs] },
+          y: { label: 'Power', unit: 'dB', domain: Plot.niceDomain(Math.min(lo, env.baseline_db), Math.max(...ys, env.threshold_db), 0.05) }, zoomX: true,
+          vspans: segs, series: [{ x: et, y: ys, color: T(0), hidden: !st.on[0] }],
+          hlines: [st.on[1] && { y: env.threshold_db, color: T(1), label: 'threshold' }, st.on[2] && { y: env.baseline_db, color: T(3), dash: [2, 4], label: 'baseline' }].filter(Boolean),
+          readout: (x, y) => { const k = nearestIndex(et, x); return `t ${fmtT(et[k])}  ${ys[k].toFixed(1)} dB`; },
+        });
+      },
+    }));
   }
-  return lut;
-}
-function drawWaterfall(c, wf, segs, fs) {
-  const { ctx, w, h } = prep(c); const rows = wf.power_db_relative; if (!rows.length) return;
-  const cols = rows[0].length; const off = document.createElement('canvas'); off.width = cols; off.height = rows.length;
-  const octx = off.getContext('2d'); const img = octx.createImageData(cols, rows.length); const lut = colormap();
-  rows.forEach((row, y) => row.forEach((v, x) => { const k = Math.round(Math.max(0, Math.min(1, (v + 70) / 70)) * 255); const o = (y * cols + x) * 4; img.data[o] = lut[k * 3]; img.data[o + 1] = lut[k * 3 + 1]; img.data[o + 2] = lut[k * 3 + 2]; img.data[o + 3] = 255; }));
-  octx.putImageData(img, 0, 0); ctx.imageSmoothingEnabled = true; ctx.drawImage(off, 0, 0, w, h);
-  const t0 = wf.time_seconds[0] - wf.fft_size / 2 / fs; const t1 = wf.time_seconds[wf.time_seconds.length - 1] + wf.fft_size / 2 / fs;
-  ctx.fillStyle = css('--warn');
-  (segs || []).forEach(s => { const a = s.sample_start / fs, b = (s.sample_start + s.sample_count) / fs; if (b < t0 || a > t1) return; const ya = Math.max(0, (a - t0) / (t1 - t0)) * h, yb = Math.min(1, (b - t0) / (t1 - t0)) * h; ctx.fillRect(0, ya, 3, Math.max(2, yb - ya)); });
-  if (!c._hover) {
-    c._hover = true;
-    hover(c, (x, y) => { const r = Math.min(rows.length - 1, Math.floor(y * rows.length)); const k = Math.min(cols - 1, Math.floor(x * cols)); const fr = wf.frequency_hz[k]; return `${fmtTime(wf.time_seconds[r])}, ${fmtHz(fr, true)}, ${rows[r][k].toFixed(1)} dB`; });
+
+  /* Time sink: I and Q around the first burst */
+  const tp = vis.time_preview;
+  if (tp && tp.i.length) {
+    const tt = tp.i.map((_, n) => (tp.start_sample + n) / fs);
+    out.push(instrument({
+      cat: 'time iq', wide: true, ratio: '21 / 7', title: 'Time sink, I and Q', av, src: `${src}, samples ${tp.start_sample.toLocaleString()} to ${(tp.start_sample + tp.sample_count - 1).toLocaleString()}, DC removed`,
+      metric: fmtT(tp.sample_count / fs),
+      legend: [{ label: 'Re (I)', trace: 0 }, { label: 'Im (Q)', trace: 1 }],
+      note: `${esc(tp.placement.charAt(0).toUpperCase() + tp.placement.slice(1))}. Drag to zoom, double-click to reset.`,
+      render(c, st) {
+        const T = tr;
+        const m = Math.max(...tp.i.map(Math.abs), ...tp.q.map(Math.abs)) || 1;
+        Plot.line(c, {
+          x: { label: 'Time', unit: 's', domain: [tt[0], tt[tt.length - 1]] }, y: { label: 'Amplitude', domain: Plot.niceDomain(-m, m, 0.05) }, zoomX: true,
+          series: [{ x: tt, y: tp.i, color: T(0), hidden: !st.on[0], width: 1 }, { x: tt, y: tp.q, color: T(1), hidden: !st.on[1], width: 1 }],
+          readout: x => { const k = nearestIndex(tt, x); return `n ${(tp.start_sample + k).toLocaleString()}  t ${fmtT(tt[k])}  I ${tp.i[k].toFixed(4)}  Q ${tp.q[k].toFixed(4)}`; },
+        });
+      },
+    }));
   }
-}
-
-function drawIQ(c, pts, ideal = null, colorBy = null) {
-  const { ctx, w, h } = prep(c); const s = Math.min(w, h); const cx = w / 2, cy = h / 2;
-  let m = 0; pts.forEach(p => { m = Math.max(m, Math.abs(p.i), Math.abs(p.q)); }); (ideal || []).forEach(p => { m = Math.max(m, Math.abs(p.i), Math.abs(p.q)); }); m = m * 1.12 || 1;
-  const X = v => cx + (v / m) * (s / 2 - 10); const Y = v => cy - (v / m) * (s / 2 - 10);
-  ctx.strokeStyle = css('--surface-2'); ctx.lineWidth = 1;
-  ctx.beginPath(); ctx.moveTo(cx + .5, 8); ctx.lineTo(cx + .5, h - 8); ctx.moveTo(8, cy + .5); ctx.lineTo(w - 8, cy + .5); ctx.stroke();
-  ctx.beginPath(); ctx.arc(cx, cy, (s / 2 - 10) / 1.12, 0, Math.PI * 2); ctx.stroke();
-  ctx.fillStyle = css('--signal'); ctx.globalAlpha = Math.max(0.25, Math.min(0.8, 160 / pts.length + 0.2));
-  pts.forEach(p => { ctx.fillRect(X(p.i) - 1.5, Y(p.q) - 1.5, 3, 3); });
-  ctx.globalAlpha = 1;
-  if (ideal) { ctx.strokeStyle = css('--ink'); ctx.lineWidth = 1.5; ideal.forEach(p => { ctx.beginPath(); ctx.arc(X(p.i), Y(p.q), 6, 0, Math.PI * 2); ctx.stroke(); }); }
-}
-
-function drawSeries(c, values) {
-  const { ctx, w, h } = prep(c); const m = Math.max(...values.map(Math.abs)) * 1.15 || 1; const cy = h / 2;
-  ctx.strokeStyle = css('--surface-2'); ctx.beginPath(); ctx.moveTo(0, cy + .5); ctx.lineTo(w, cy + .5); ctx.stroke();
-  ctx.fillStyle = css('--signal');
-  values.forEach((v, i) => { const x = 8 + (i / Math.max(1, values.length - 1)) * (w - 16); ctx.fillRect(x - 1.5, cy - (v / m) * (h / 2 - 8) - 1.5, 3, 3); });
+  return out;
 }
 
 /* ---------- evidence ---------- */
@@ -431,26 +495,10 @@ function renderEvidence() {
   const tiles = [];
 
   if (vis) {
-    const spec = vis.spectrum;
-    tiles.push(tile({ cat: 'spectrum', title: 'Power spectrum', src: `${src}, Hann ${spec.fft_size}-point FFT`, av, metric: `peak ${fmtHz(spec.peak_frequency_hz, true)}`, pad: false,
-      body: `${canvas('16 / 9')}<div class="plot-axis"><span>${fmtHz(spec.frequency_hz[0], true)}</span><span>0 Hz offset</span><span>${fmtHz(spec.frequency_hz[spec.frequency_hz.length - 1], true)}</span></div>`,
-      draw() { drawSpectrum($('canvas', this), spec, centre); } }));
-
-    const wf = vis.waterfall; const segs = vis.segmentation.segments; const total = vis.input.sample_count / fs;
-    const shown = wf.time_seconds.length ? wf.time_seconds[wf.time_seconds.length - 1] + wf.fft_size / 2 / fs : 0;
-    tiles.push(tile({ cat: 'spectrum time', title: 'Waterfall', src: `${src}, STFT hop ${wf.hop_size}`, av, metric: shown < total * 0.98 ? `first ${fmtTime(shown)} of ${fmtTime(total)}` : fmtTime(total), pad: false,
-      body: `${canvas('4 / 5')}<div class="plot-axis"><span>Time runs down. Orange marks energy segments.</span></div>`,
-      draw() { drawWaterfall($('canvas', this), wf, segs, fs); } }));
-
-    const pts = vis.constellation.sampled_points;
-    tiles.push(tile({ cat: 'iq', title: 'IQ scatter', src: `${src}, DC-centred, no timing or carrier correction`, av, metric: `${pts.length} points`, pad: false,
-      body: canvas('1 / 1'), draw() { drawIQ($('canvas', this), pts); } }));
-
+    tiles.push(...instruments(vis, fs, centre, src, av));
     const seg = vis.segmentation;
     tiles.push(tile({ cat: 'time', title: 'Energy segments', src: `${src}, ${seg.method.replaceAll('_', ' ')}`, av, metric: `${seg.segments.length} candidate${seg.segments.length === 1 ? '' : 's'}`,
-      body: `<div class="timeline">${seg.segments.map(s => `<i style="left:${(s.sample_start / vis.input.sample_count * 100).toFixed(2)}%;width:${Math.max(0.4, s.sample_count / vis.input.sample_count * 100).toFixed(2)}%"></i>`).join('')}</div>
-        ${seg.segments.length ? `<ul class="list">${seg.segments.map((s, i) => `<li><span>Segment ${i + 1} at ${fmtTime(s.sample_start / fs)}</span><span>${fmtTime(s.duration_seconds)}, ${s.sample_count.toLocaleString()} samples</span></li>`).join('')}</ul>` : '<p class="note">Nothing crossed the threshold. That alone doesn\'t mean there is no signal.</p>'}
-        <p class="note">${esc(seg.limitation)}</p>` }));
+      body: seg.segments.length ? `<ul class="list">${seg.segments.map((sg, i) => `<li><span>Segment ${i + 1} at ${fmtTime(sg.sample_start / fs)}</span><span>${fmtTime(sg.duration_seconds)}, ${sg.sample_count.toLocaleString()} samples</span></li>`).join('')}</ul><p class="note">${esc(seg.limitation)}</p>` : `<p class="note" style="margin:0">Nothing crossed the threshold. That alone doesn't mean there is no signal. ${esc(seg.limitation)}</p>` }));
   } else {
     tiles.push(tile({ cat: 'spectrum time iq', title: 'Plots unavailable', src: 'The API ran without NumPy', av: 'est', body: '<p class="note" style="margin:0">Install NumPy on the machine running the API (<code>pip install -r requirements-dsp.txt</code>) to get FFT, waterfall, scatter and segment evidence.</p>' }));
   }
@@ -560,12 +608,21 @@ function renderReceiver() {
   const dec = d.decisions_preview || [];
   if (mod === '2fsk') {
     const vals = dec.map(x => x.frequency_step_rad);
-    tiles.push(tile({ title: 'Discriminator output', src: 'Phase step per symbol, first 256 symbols', av: 'rx', metric: '2-FSK', pad: false, body: canvas('16 / 9'), draw() { drawSeries($('canvas', this), vals); } }));
+    const idx = vals.map((_, n) => n); const m = Math.max(...vals.map(Math.abs)) || 1;
+    tiles.push(instrument({ wide: true, ratio: '21 / 8', title: 'Time sink, discriminator', src: `Mean phase step per symbol, first ${vals.length} symbols`, av: 'rx', metric: '2-FSK',
+      legend: [{ label: 'Symbol mean', trace: 0 }, { label: 'Slicer threshold', trace: 1, dash: true }],
+      note: 'Above zero decides 1, below decides 0. Two well-separated rows mean the tones and symbol timing fit. Drag to zoom, double-click to reset.',
+      render(c, st) { Plot.line(c, { x: { label: 'Symbol index', domain: [0, Math.max(1, vals.length - 1)] }, y: { label: 'Phase step', unit: 'rad/sample', domain: Plot.niceDomain(-m, m, 0.08) }, zoomX: true,
+        series: [{ x: idx, y: vals, color: tr(0), dots: true, joined: true, hidden: !st.on[0] }], hlines: st.on[1] ? [{ y: 0, color: tr(1), label: 'threshold' }] : [],
+        readout: x => { const k = Math.max(0, Math.min(vals.length - 1, Math.round(x))); return `symbol ${k}  ${vals[k].toFixed(4)} rad/sample  bit ${vals[k] >= 0 ? 1 : 0}`; } }); } }));
   } else {
     const rms = Math.sqrt(dec.reduce((s, x) => s + x.i * x.i + x.q * x.q, 0) / Math.max(1, dec.length)) || 1;
     const pts = dec.map(x => ({ i: x.i / rms, q: x.q / rms }));
     const ideal = mod === 'bpsk' ? [{ i: -1, q: 0 }, { i: 1, q: 0 }] : [-1, 1].flatMap(i => [-1, 1].map(q => ({ i: i * Math.SQRT1_2, q: q * Math.SQRT1_2 })));
-    tiles.push(tile({ title: 'Symbol decisions', src: `First ${dec.length} symbols, RMS-normalised. Rings mark ideal points.`, av: 'rx', metric: mod.toUpperCase(), pad: false, body: canvas('1 / 1'), draw() { drawIQ($('canvas', this), pts, ideal); } }));
+    tiles.push(instrument({ wide: true, ratio: '21 / 9', title: 'Constellation sink, decisions', src: `First ${dec.length} integrate-and-dump outputs, RMS-normalised`, av: 'rx', metric: mod.toUpperCase(),
+      legend: [{ label: 'Symbols', trace: 0 }, { label: 'Ideal points', trace: 1 }],
+      note: 'Tight clusters on the crosses mean timing and carrier settings fit. A ring means residual carrier offset. A cloud at the centre means these symbols fall in a quiet stretch.',
+      render(c, st) { Plot.scatter(c, { x: { label: 'In-phase' }, y: { label: 'Quadrature' }, points: st.on[0] ? pts : [], ideal: st.on[1] ? ideal : null }); } }));
   }
   const segs = state.analysis?.analysis.raw_branch.visualization?.segmentation.segments || [];
   const evm = d.quality.evm_rms;

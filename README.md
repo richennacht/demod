@@ -112,6 +112,15 @@ What it does:
 - **Receiver:** runs `POST /demodulate` for BPSK, QPSK and 2-FSK only, then shows decisions against ideal points, EVM, the GNU Radio block graph and the API's limits. Output is labelled *candidate hard decisions*, never decoded, validated or decrypted data.
 - **Report:** run ID, browser-side SHA-256 checked against the API's hash, every parameter with its source, and a JSON export that keeps both API responses unchanged.
 
+Plots are scientific instruments modelled on GNU Radio's Qt GUI sinks (`web/plots.js`, no dependencies): a framed plot area with a dotted major grid, 1-2-5 ticks, labelled axes in engineering units, toggleable legends, a crosshair readout rounded to the actual bin resolution, drag-to-zoom and double-click reset.
+
+- **Frequency sink:** Welch average over the whole capture (Hann, 50% overlap), max hold, and the old single FFT of the first block for comparison. Shows RBW (Hann ENBW, 1.5 bins) and switches between baseband offset and an RF axis when a centre frequency is supplied.
+- **Waterfall sink:** STFT referenced to the strongest bin across all shown frames, so quiet frames stay dark. GNU Radio multi-colour, white-hot and black-hot maps, a dB colour bar, and segment marks on the time axis.
+- **Constellation sink:** equal-aspect I/Q with a polar readout. In the receiver it overlays ideal points on the decisions.
+- **Time sinks:** the max-pooled power envelope with the segmentation threshold and baseline, I and Q around the first burst, and the 2-FSK discriminator with its slicer threshold.
+
+The API adds these fields without changing existing ones: `spectrum.welch_power_db`, `spectrum.max_hold_db`, `waterfall.power_db_global`, `segmentation.envelope` and `time_preview`. The single-FFT `power_db` only covers the first `fft_size` samples, which misses bursts that start later; the Welch trace fixes that.
+
 `web/examples/` holds a synthetic QPSK burst capture and the API responses recorded from it, so the hosted page can show real output with no local API. It is labelled as synthetic everywhere it appears.
 
 This change also removed two accidental O(n²) loops (a median and two means recomputed per element in `denoise_iq.py` and `feature_analysis.py`). A 30,000-sample `/analyse` call dropped from about 4 minutes to about 5 seconds with byte-identical output, and a regression test guards it.
