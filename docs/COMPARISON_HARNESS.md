@@ -25,10 +25,10 @@ The response contains `analysis.raw_branch` and `analysis.derived_branch`, `manu
 
 | Parameter | Deterministic branch | Automated branch | Current decision rule |
 | --- | --- | --- | --- |
-| DC I/Q | Complex sample mean | 7→12→3 MLP estimate | Report absolute disagreement; do not silently choose a value. |
-| Coarse carrier offset | Fourth-power phase-increment estimator | Same MLP target | Report absolute disagreement; it is intentionally fallible outside the recipe distribution. |
+| DC I/Q | Complex sample mean | 7→12→3 MLP estimate (DC only) | Report absolute disagreement; do not silently choose a value. |
+| Coarse carrier offset | Fourth-power phase-increment estimator | SpecCFO (cycles per sample, scaled to Hz) with a confidence and the longest energy segment as input | Report absolute disagreement against a 250 Hz tolerance. The old MLP value is returned beside it as `legacy_tinymlp`. |
 | Spectrum, occupied bandwidth, burst candidates | DFT/NumPy FFT, STFT, energy segmentation | None | Manual evidence only. |
-| Modulation | Explainable family triage | Normalized synthetic-feature centroids | Ranked output with margin abstention; not field calibrated. |
+| Modulation | Explainable family triage | DemodAMC (12 classes) with calibrated probabilities; the legacy centroid answer is returned as `legacy_centroid` | Ranked probabilities with abstention below a calibrated threshold. Simulation-validated only. |
 | Sample rate, centre frequency, timing, FEC/interleaving | Metadata or future supported estimators | None | Explicitly unsupported by this trained baseline. |
 
 The learned baseline is trained afresh, in memory, from `data/recipes/mvp-recipes.json`; it sees generated samples but not their recipes during inference. It is an auditable calibration comparison, not a claim of blind operational extraction. Its manual CFO baseline uses the fourth-power technique appropriate mainly to PSK-like content; the report therefore preserves disagreement rather than masking it.

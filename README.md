@@ -89,6 +89,23 @@ DEmod will train narrow models for named physical parameters, each paired with a
 
 The local comparison API now also produces an immutable input-provenance record (SHA-256 and each metadata field's source), raw and optional-derived denoising branches, FFT/STFT constellation and burst evidence for both branches, named manual parameter estimates, and a synthetic-trained modulation-classification baseline with ranked candidates and abstention. Set `X-DEmod-Denoise-Profile` to `raw` (default), `dc_only`, or `dc_and_impulse`; this never overwrites raw IQ. These models are baseline evidence tools, not field-calibrated blind decoders. The [build matrix](docs/CURRENT_BUILD_MATRIX.md) records this precise completion boundary.
 
+### Learned carrier-offset estimator and modulation classifier
+
+The first-generation learned models were replaced after testing showed they were not usable outside their training recipe: the TinyMLP returned about -595 kHz for a true +1.5 kHz offset on a 250 kS/s capture, and the centroid classifier called an FSK capture QPSK. The replacements, and the research behind them, are in [`research/README.md`](research/README.md).
+
+- **SpecCFO** estimates carrier offset in cycles per sample from the spectra of x, x^2, x^4 and x^8 with a circular convolutional network, then refines the result with a periodogram. It reports a confidence and falls back to a posterior mean when unsure.
+- **DemodAMC** classifies 12 classes (BPSK, QPSK, 8PSK, 16QAM, 64QAM, 2-FSK, 4-FSK, GMSK, OFDM, AM, FM, noise only) after removing the carrier offset, with calibrated probabilities and abstention.
+
+Evaluated on simulated signals against recreated baselines from Chen et al. (2023), O'Shea et al. (2017 and 2016), Rajendran et al. (2018), Kay, Luise-Reggiannini and Swami-Sadler:
+
+- SpecCFO has the lowest overall RMSE on the +-0.2 cycles/sample sweep (0.0165 against 0.0216 for the O'Shea CNN and 0.0357 for IQ-ResNet), the lowest median error (15 times below the CNN), and 64% of estimates within the README's 250 Hz tolerance on the repo's own recipe signals against 18% for the shipped TinyMLP.
+- DemodAMC reaches 76% over 12 classes against 27 to 35% for the recreated VT-CNN2 and LSTM, with 95 to 96% accuracy on the 62 to 63% of captures it does not abstain on.
+- It does not win everywhere: it is no better than Kay's estimator on the narrow-range set, loses to the O'Shea CNN at 0 dB on that set, and is weak on 8PSK carrier offset at one sample per symbol. The paper baselines were trained for minutes on a CPU, so the margins are inflated. Everything is simulation only.
+
+The API loads the model files from `data/models/` and falls back to the original models when they are absent. Training and evaluation are resumable (`research/run_all_training.sh`, `research/run_v2_training.sh`), and `research/train_on_free_gpu.ipynb` runs them on a free Colab or Kaggle GPU.
+
+A defect in `src/generate_synthetic.py` was found along the way: it draws a new random symbol on every sample, so `samples_per_symbol` is ignored. It is documented by an expected-failure test and not yet fixed, because fixing it requires retraining the first-generation models.
+
 ### Receiver MVP and GNU Radio graphs
 
 The local API also exposes `POST /demodulate` for controlled BPSK, QPSK and 2-FSK recordings. It requires an analyst-supplied samples-per-symbol value and returns reproducible hard-bit candidates, decision/EVM evidence and a GNU Radio graph descriptor. GNU Radio is preferred when installed for interactive frequency, timing and constellation nodes; the supplied Python receiver is only the tested fallback for declared parameters. It does not claim FEC, framing, payload recovery or blind synchronisation. See the [receiver MVP contract](docs/MVP_RECEIVER.md) and [GNU Radio graph notes](gnuradio/README.md).
