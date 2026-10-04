@@ -4,7 +4,7 @@ This is the single source of truth for the current product state. “Built” me
 
 | Area | Status | Present now | Still required before it is an end-to-end feature |
 | --- | --- | --- | --- |
-| Landing page and static workbench | Built | GitHub Pages landing page and five-tab web interface | Connect the controls and charts to the local analysis API. |
+| Landing page and analyst UI | Built | GitHub Pages landing page; `web/` UI connected to the local API (capture settings with provenance, backend FFT/waterfall/scatter/segments, raw vs derived, manual vs model, classifier, BPSK/QPSK/2-FSK receiver, report export); also served by the API at `/ui/` | Large-file chunking beyond the 16 MiB API cap, real-capture example set, user testing with analysts. |
 | WAV ingestion | Built | Standard PCM WAV parsing, channel handling, basic level/frequency summary | Audio playback, speech/telemetry interpretation, and session export. |
 | Raw IQ ingestion | Built | Interleaved `s8`, `cu8`, `s16le`, `s16be`, `f32le`, `f32be` parsing | Format auto-detection ranking, explicit confirmation UI, and chunked large-file handling. |
 | Input metadata provenance | Built for local IQ analysis | SHA-256, byte count, format/sample-rate/centre/gain source tags and SigMF sidecar-field parser | UI-side SigMF attachment and persistent session catalog. |

@@ -53,12 +53,16 @@ def analyse_iq(samples: list[complex], sample_rate_hz: float) -> dict[str, Any]:
     magnitudes = [abs(sample) for sample in centered]
     powers = [value * value for value in magnitudes]
     rms = math.sqrt(_mean(powers))
-    amplitude_cv = math.sqrt(_mean([(value - _mean(magnitudes)) ** 2 for value in magnitudes])) / max(rms, 1e-12)
+    # Means are hoisted out of the comprehensions; recomputing them per element was O(n^2).
+    magnitude_mean = _mean(magnitudes)
+    amplitude_cv = math.sqrt(_mean([(value - magnitude_mean) ** 2 for value in magnitudes])) / max(rms, 1e-12)
     phases = [math.atan2(sample.imag, sample.real) for sample in centered]
     phase_steps = [_wrapped_difference(right, left) for left, right in zip(phases, phases[1:])]
     inst_freq = [step * sample_rate_hz / (2 * math.pi) for step in phase_steps]
     freq_mean = _mean(inst_freq)
     freq_std = math.sqrt(_mean([(value - freq_mean) ** 2 for value in inst_freq]))
+    phase_step_mean = _mean(phase_steps)
+    phase_step_std = math.sqrt(_mean([(value - phase_step_mean) ** 2 for value in phase_steps]))
     spectrum = _fft_power(centered)
     spectrum_total = sum(spectrum) or 1.0
     peak = max(range(len(spectrum)), key=lambda index: spectrum[index]) if spectrum else 0
@@ -84,6 +88,6 @@ def analyse_iq(samples: list[complex], sample_rate_hz: float) -> dict[str, Any]:
         "amplitude_cv": round(amplitude_cv, 5),
         "instantaneous_frequency_hz": {"mean": round(freq_mean, 3), "std": round(freq_std, 3)},
         "spectrum": {"preview_bins": len(spectrum), "peak_frequency_hz": round(peak_hz, 3), "occupied_bandwidth_99pct_hz": round(occupied_bw, 3)},
-        "modulation_hypotheses": _rank_modulation(amplitude_cv, math.sqrt(_mean([(value - _mean(phase_steps)) ** 2 for value in phase_steps])), freq_std, occupied_fraction),
+        "modulation_hypotheses": _rank_modulation(amplitude_cv, phase_step_std, freq_std, occupied_fraction),
         "limitations": ["Centre frequency cannot be recovered from baseband IQ without capture metadata or an external reference.", "A raw byte stream cannot establish an absolute sample rate; sample_rate_hz is a supplied hypothesis.", "Modulation hypotheses are DSP triage scores, not a demodulation or FEC result."],
     }

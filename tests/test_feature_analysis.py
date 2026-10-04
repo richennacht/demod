@@ -23,3 +23,17 @@ class FeatureAnalysisTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class FeatureAnalysisScalingTests(unittest.TestCase):
+    def test_long_capture_features_stay_linear_time(self):
+        # Regression guard: means/medians recomputed inside comprehensions made
+        # a 30k-sample /analyse call take minutes. This bound is deliberately loose.
+        import math
+        import time
+        from denoise_iq import apply_pipeline
+        samples = [complex(math.cos(index * 0.3), math.sin(index * 0.3)) for index in range(20000)]
+        started = time.perf_counter()
+        FEATURES.analyse_iq(samples, 250_000)
+        apply_pipeline(samples, {"impulse_blanking": {"enabled": True}})
+        self.assertLess(time.perf_counter() - started, 15.0)

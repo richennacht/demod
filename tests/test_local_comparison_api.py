@@ -37,3 +37,50 @@ class LocalComparisonTests(unittest.TestCase):
         report = self.service.demodulate_bytes(b"".join(values), "s16le", 1_000_000, "bpsk", 4)
         self.assertEqual(report["bits_preview"], "0101")
         self.assertIn("gnu_radio_graph", report)
+
+
+class LocalUiServingTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        import threading
+        from http.server import ThreadingHTTPServer
+        from local_comparison_api import make_handler
+        service = ComparisonService(ROOT / "data" / "recipes" / "mvp-recipes.json", examples=12)
+        cls.server = ThreadingHTTPServer(("127.0.0.1", 0), make_handler(service))
+        cls.base = f"http://127.0.0.1:{cls.server.server_address[1]}"
+        threading.Thread(target=cls.server.serve_forever, daemon=True).start()
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.server.shutdown()
+        cls.server.server_close()
+
+    def _get(self, path, method="GET"):
+        import urllib.error
+        import urllib.request
+        try:
+            with urllib.request.urlopen(urllib.request.Request(self.base + path, method=method)) as response:
+                return response.status, dict(response.headers), response.read()
+        except urllib.error.HTTPError as error:
+            return error.code, dict(error.headers), error.read()
+
+    def test_health_lists_supported_inputs_for_the_ui(self):
+        import json
+        status, _, body = self._get("/health")
+        payload = json.loads(body)
+        self.assertEqual(status, 200)
+        self.assertIn("s16le", payload["supported_formats"])
+        self.assertEqual(payload["supported_demodulations"], ["bpsk", "qpsk", "2fsk"])
+
+    def test_ui_is_served_locally_without_path_traversal(self):
+        status, headers, body = self._get("/ui/")
+        self.assertEqual(status, 200)
+        self.assertIn("text/html", headers["Content-Type"])
+        self.assertIn(b"app.js", body)
+        self.assertEqual(self._get("/ui/../src/provenance.py")[0], 404)
+        self.assertEqual(self._get("/ui/%2e%2e/README.md")[0], 404)
+
+    def test_preflight_allows_private_network_access(self):
+        status, headers, _ = self._get("/analyse", method="OPTIONS")
+        self.assertEqual(status, 204)
+        self.assertEqual(headers.get("Access-Control-Allow-Private-Network"), "true")

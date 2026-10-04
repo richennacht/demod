@@ -93,6 +93,29 @@ The local comparison API now also produces an immutable input-provenance record 
 
 The local API also exposes `POST /demodulate` for controlled BPSK, QPSK and 2-FSK recordings. It requires an analyst-supplied samples-per-symbol value and returns reproducible hard-bit candidates, decision/EVM evidence and a GNU Radio graph descriptor. GNU Radio is preferred when installed for interactive frequency, timing and constellation nodes; the supplied Python receiver is only the tested fallback for declared parameters. It does not claim FEC, framing, payload recovery or blind synchronisation. See the [receiver MVP contract](docs/MVP_RECEIVER.md) and [GNU Radio graph notes](gnuradio/README.md).
 
+### Analyst UI (connected to the local API)
+
+`web/` is now a working front end for the local API, not a byte preview. Start the API and open the UI it serves:
+
+```powershell
+python -m pip install -r requirements-dsp.txt
+python src/local_comparison_api.py
+# then open http://127.0.0.1:8787/ui/
+```
+
+The hosted page at <https://richennacht.github.io/demod/web/> can also talk to a loopback API (the API answers Chromium's private-network preflight), but Safari blocks a secure page calling `http://127.0.0.1`, so the locally served `/ui/` is the dependable path. Captures are only ever sent to the API address shown in the sidebar.
+
+What it does:
+
+- **Capture:** load an `.iq` file (or a SigMF `.sigmf-meta` to fill format, rate and centre frequency), set IQ format, sample rate, centre frequency, gain, the source of those values, the cleaning profile and receiver settings. Every value is sent and recorded as a hypothesis with its source. A built-in generator makes a QPSK test capture with known truth for checking estimators end to end.
+- **Evidence:** backend FFT, STFT waterfall with energy segments overlaid, IQ scatter and segment timeline, switchable between the raw and derived branch; manual estimates (with one-click hand-off of CFO and symbol-rate candidates to the receiver); manual-versus-model comparison that flags disagreement and model values outside ±fs/2; classifier ranking with confidence or abstention; the cleaning audit; and the API's own stated limitations.
+- **Receiver:** runs `POST /demodulate` for BPSK, QPSK and 2-FSK only, then shows decisions against ideal points, EVM, the GNU Radio block graph and the API's limits. Output is labelled *candidate hard decisions*, never decoded, validated or decrypted data.
+- **Report:** run ID, browser-side SHA-256 checked against the API's hash, every parameter with its source, and a JSON export that keeps both API responses unchanged.
+
+`web/examples/` holds a synthetic QPSK burst capture and the API responses recorded from it, so the hosted page can show real output with no local API. It is labelled as synthetic everywhere it appears.
+
+This change also removed two accidental O(n²) loops (a median and two means recomputed per element in `denoise_iq.py` and `feature_analysis.py`). A 30,000-sample `/analyse` call dropped from about 4 minutes to about 5 seconds with byte-identical output, and a regression test guards it.
+
 ## Research basis
 
 The following papers directly motivate the currently documented technology choices. They are linked here so the implementation, evidence boundary and source material remain together.

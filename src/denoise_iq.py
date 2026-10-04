@@ -44,7 +44,9 @@ def inspect(samples: list[complex]) -> dict[str, Any]:
 def _blank_impulses(samples: list[complex], threshold: float) -> tuple[list[complex], list[int], dict[str, float]]:
     location = _robust_location(samples)
     radii = [abs(sample - location) for sample in samples]
-    center, scale = median(radii), max(1.4826 * median([abs(radius - median(radii)) for radius in radii]), 1e-12)
+    # Compute the median once: recomputing it per element made this O(n^2 log n).
+    center = median(radii)
+    scale = max(1.4826 * median([abs(radius - center) for radius in radii]), 1e-12)
     masked = [index for index, radius in enumerate(radii) if radius > center + threshold * scale]
     result = list(samples)
     for index in masked:

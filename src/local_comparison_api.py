@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import mimetypes
 import sys
 import uuid
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
@@ -16,6 +17,7 @@ from pathlib import Path
 from typing import Any
 
 ROOT = Path(__file__).parent
+WEB_ROOT = ROOT.parent / "web"
 sys.path.insert(0, str(ROOT))
 
 from analysis_pipeline import analyse as analyse_pipeline
@@ -115,14 +117,36 @@ def make_handler(service: ComparisonService):
             self.send_response(204)
             self.send_header("Access-Control-Allow-Origin", "*")
             self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+            # Lets Chromium's private/local-network preflight reach a loopback API from the hosted UI.
+            self.send_header("Access-Control-Allow-Private-Network", "true")
             self.send_header("Access-Control-Allow-Headers", "Content-Type, X-DEmod-IQ-Format, X-DEmod-Sample-Rate, X-DEmod-Denoise-Profile, X-DEmod-Centre-Frequency, X-DEmod-Gain, X-DEmod-Metadata-Source, X-DEmod-Modulation, X-DEmod-Samples-Per-Symbol, X-DEmod-Timing-Offset, X-DEmod-Carrier-Offset")
             self.end_headers()
 
+        def _send_static(self, relative: str) -> None:
+            target = (WEB_ROOT / (relative or "index.html")).resolve()
+            if WEB_ROOT.resolve() not in target.parents or not target.is_file():
+                self._send(404, {"error": "UI file not found."})
+                return
+            body = target.read_bytes()
+            self.send_response(200)
+            self.send_header("Content-Type", mimetypes.guess_type(target.name)[0] or "application/octet-stream")
+            self.send_header("Content-Length", str(len(body)))
+            self.send_header("Cache-Control", "no-store")
+            self.end_headers()
+            self.wfile.write(body)
+
         def do_GET(self) -> None:
-            if self.path == "/health":
-                self._send(200, {"status": "ok", "data_persistence": "none", "max_input_bytes": MAX_INPUT_BYTES})
+            path = self.path.split("?", 1)[0]
+            if path == "/health":
+                self._send(200, {"status": "ok", "data_persistence": "none", "max_input_bytes": MAX_INPUT_BYTES, "supported_formats": list(SUPPORTED_FORMATS), "supported_demodulations": list(SUPPORTED_DEMODULATIONS)})
+            elif path in ("/", "/ui"):
+                self.send_response(302)
+                self.send_header("Location", "/ui/")
+                self.end_headers()
+            elif path.startswith("/ui/"):
+                self._send_static(path[len("/ui/"):])
             else:
-                self._send(404, {"error": "Use GET /health or POST /analyse."})
+                self._send(404, {"error": "Use GET /health, GET /ui/, POST /analyse or POST /demodulate."})
 
         def do_POST(self) -> None:
             if self.path not in ("/analyse", "/demodulate"):
@@ -159,6 +183,7 @@ def main() -> None:
     service = ComparisonService(args.recipes, args.examples)
     server = ThreadingHTTPServer((args.host, args.port), make_handler(service))
     print(f"DEmod local comparison API listening at http://{args.host}:{args.port}")
+    print(f"Analyst UI served at http://{args.host}:{args.port}/ui/")
     server.serve_forever()
 
 

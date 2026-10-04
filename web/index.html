@@ -2,60 +2,180 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>DEmod Signal Analysis Workbench</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>DEmod</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&display=swap">
   <link rel="stylesheet" href="styles.css">
-  <link rel="stylesheet" href="provenance.css">
 </head>
 <body>
-  <div class="app-shell">
-    <aside class="sidebar">
-      <a class="brand" href="#file-management" aria-label="DEmod home"><span class="brand-mark">D</span><span>DEmod<small>Signal workbench</small></span></a>
-      <nav class="stage-nav" aria-label="Analysis stages">
-        <button class="stage-link active" data-tab="file-management"><span>01</span>File management</button>
-        <button class="stage-link" data-tab="dsp"><span>02</span>DSP characterization</button>
-        <button class="stage-link" data-tab="demodulation"><span>03</span>Demodulation</button>
-        <button class="stage-link" data-tab="fec"><span>04</span>FEC &amp; bit recovery</button>
-        <button class="stage-link" data-tab="results"><span>05</span>Results</button>
+  <div class="shell">
+    <aside class="side">
+      <a class="mark" href="#capture" aria-label="DEmod, new capture"><span class="slash">/</span><span>DEmod</span></a>
+
+      <nav aria-label="Workflow">
+        <h2 class="side-label">Workflow</h2>
+        <a href="#capture" class="nav-link" data-view="capture">Capture</a>
+        <a href="#evidence" class="nav-link" data-view="evidence">Evidence</a>
+        <a href="#receiver" class="nav-link" data-view="receiver">Receiver</a>
+        <a href="#report" class="nav-link" data-view="report">Report</a>
       </nav>
-      <div class="sidebar-foot"><span class="status-dot"></span>Local analysis workspace</div>
+
+      <section class="api" aria-label="Local API">
+        <h2 class="side-label">Local API</h2>
+        <div class="api-row"><span class="dot" id="api-dot"></span><span id="api-status">Checking</span></div>
+        <label class="api-url"><span class="sr">API address</span><input id="api-url" spellcheck="false" autocomplete="off"></label>
+        <button class="text-button" id="api-check" type="button">Check again</button>
+        <p class="side-note" id="api-help"></p>
+      </section>
+
+      <p class="side-foot">SIH26147. File analysis only.</p>
     </aside>
 
-    <main class="workspace">
-      <aside class="caution-card" role="note" aria-label="Display provenance"><span>i</span><div><strong>Local preview, not a demodulation claim</strong><p>For an uploaded file, the browser creates a raw-byte preview and records a provenance ledger. It does not run the Python DSP pipeline, denoise samples, infer a modulation, or upload your capture. Prepared demo rows are manifest examples only.</p></div></aside>
-      <header class="topbar"><div><p class="eyebrow">SIH26147 · evidence-first analysis</p><h1 id="page-title">File management</h1></div><button class="quiet-button" id="reset-button">Reset session</button></header>
+    <main class="main">
+      <section class="view" id="view-capture" aria-labelledby="capture-title">
+        <header class="page-head">
+          <h1 id="capture-title">New capture</h1>
+          <p>Load a raw IQ file and say what you know about it. Headerless bytes can't prove their own sample rate, centre frequency, gain or format, so every value here is recorded as a hypothesis with its source.</p>
+        </header>
 
-      <section class="tab-panel active" id="file-management" aria-labelledby="page-title">
-        <div class="intro-row"><div><h2>Start an automated analysis</h2><p>Upload an authorised IQ or WAV recording. DEmod selects an interpretation, characterises the signal, and opens the result. You can revisit any stage to adjust its assumptions.</p></div><span class="mode-label">Auto mode</span></div>
-        <div class="file-grid">
-          <label class="upload-zone" for="file-input"><input id="file-input" type="file" accept=".iq,.wav,.sigmf-data,.cf32,.cs16,.cu8"><span class="upload-icon">↑</span><strong>Choose a capture</strong><small>IQ, WAV, SigMF data or supported raw samples</small></label>
-          <div class="metadata-card"><span class="card-kicker">Selected file</span><strong id="selected-file">No file selected</strong><p id="selected-detail">Upload a file or select a prepared demonstration capture.</p><button class="primary-button" id="run-analysis" disabled>Run automated analysis <span>→</span></button></div>
+        <label class="drop" id="drop" for="file-input">
+          <input id="file-input" type="file" accept=".iq,.cs16,.cu8,.cs8,.cf32,.sigmf-data,.bin,.raw,.dat">
+          <span class="drop-body">
+            <strong id="drop-title">Drop an IQ file here</strong>
+            <span id="drop-detail">or click to choose one. The local API takes up to 16 MB per run.</span>
+          </span>
+        </label>
+        <div class="drop-actions">
+          <label class="text-button" tabindex="0" id="sigmf-label">Fill from SigMF metadata<input id="sigmf-input" type="file" accept=".sigmf-meta,.json" hidden></label>
+          <button class="text-button" type="button" id="make-test">Generate a test capture</button>
+          <button class="text-button" type="button" id="open-example">Open example run</button>
         </div>
-        <div class="section-heading"><div><p class="eyebrow">Prepared captures</p><h2>Demo files</h2></div><p>Illustrative only — no operational data.</p></div>
-        <div class="demo-grid">
-          <button class="demo-file" data-file="vhf_qpsk_capture.cs16" data-detail="Manifest-only example · raw complex signed 16-bit IQ · 2.4 MS/s"><span class="file-badge">IQ</span><span><strong>vhf_qpsk_capture.cs16</strong><small>Manifest-only example · no local bytes</small></span><span class="chevron">›</span></button>
-          <button class="demo-file" data-file="telemetry_burst.wav" data-detail="Manifest-only example · stereo PCM WAV · 48 kHz"><span class="file-badge blue">WAV</span><span><strong>telemetry_burst.wav</strong><small>Manifest-only example · no local bytes</small></span><span class="chevron">›</span></button>
-          <button class="demo-file" data-file="unknown_burst.cu8" data-detail="Manifest-only example · headerless unsigned 8-bit raw IQ"><span class="file-badge gold">RAW</span><span><strong>unknown_burst.cu8</strong><small>Manifest-only example · no local bytes</small></span><span class="chevron">›</span></button>
+
+        <div class="form-grid">
+          <fieldset class="group">
+            <legend>Interpretation</legend>
+            <label class="field"><span>IQ format</span>
+              <select id="p-format">
+                <option value="s16le">Signed 16-bit, little endian</option>
+                <option value="s16be">Signed 16-bit, big endian</option>
+                <option value="s8">Signed 8-bit</option>
+                <option value="cu8">Unsigned 8-bit (RTL-SDR)</option>
+                <option value="f32le">Float 32, little endian</option>
+                <option value="f32be">Float 32, big endian</option>
+              </select>
+            </label>
+            <label class="field"><span>Sample rate (Hz)</span><input id="p-rate" inputmode="decimal" placeholder="250000"><small>Required. Sets every time and frequency axis.</small></label>
+            <label class="field"><span>Centre frequency (Hz)</span><input id="p-centre" inputmode="decimal" placeholder="Unknown"><small>Optional. Only used to label absolute frequency.</small></label>
+            <label class="field"><span>Gain (dB)</span><input id="p-gain" inputmode="decimal" placeholder="Unknown"></label>
+            <label class="field"><span>Source of these values</span>
+              <select id="p-source">
+                <option value="analyst_hypothesis">My hypothesis</option>
+                <option value="sigmf_metadata">SigMF sidecar</option>
+                <option value="capture_log">Capture log or operator note</option>
+              </select>
+            </label>
+          </fieldset>
+
+          <fieldset class="group">
+            <legend>Cleaning</legend>
+            <div class="seg" role="radiogroup" aria-label="Cleaning profile" id="p-denoise">
+              <button type="button" role="radio" data-value="raw">Raw</button>
+              <button type="button" role="radio" data-value="dc_only">DC only</button>
+              <button type="button" role="radio" data-value="dc_and_impulse">DC and impulses</button>
+            </div>
+            <p class="help">Cleaning builds a separate derived branch. The raw branch is always analysed and kept.</p>
+
+            <h3 class="legend">Receiver</h3>
+            <label class="field"><span>Modulation</span>
+              <select id="p-mod">
+                <option value="auto">Use classifier if supported</option>
+                <option value="bpsk">BPSK</option>
+                <option value="qpsk">QPSK</option>
+                <option value="2fsk">2-FSK</option>
+              </select>
+            </label>
+            <div class="field-pair">
+              <label class="field"><span>Samples per symbol</span><input id="p-sps" inputmode="numeric" placeholder="8"></label>
+              <label class="field"><span>Timing offset</span><input id="p-timing" inputmode="numeric" value="0"></label>
+            </div>
+            <label class="field"><span>Carrier offset to remove (Hz)</span><input id="p-cfo" inputmode="decimal" value="0"></label>
+          </fieldset>
         </div>
+
+        <div class="foot">
+          <p id="capture-summary" class="muted">No file loaded.</p>
+          <button class="button" id="run-analysis" type="button" disabled>Analyse capture</button>
+        </div>
+        <p class="error" id="capture-error" role="alert" hidden></p>
       </section>
 
-      <section class="tab-panel" id="dsp">
-        <div class="intro-row"><div><h2>DSP characterization</h2><p>Clean only what can be evidenced, then measure the candidate signal.</p></div><span class="stage-state" id="dsp-state">Awaiting file</span></div>
-        <div class="control-strip"><label><span>Input interpretation</span><select id="format-select"><option>Auto-detect</option><option>Complex signed 16-bit LE</option><option>Complex unsigned 8-bit</option><option>Complex float32 LE</option></select></label><label><span>Sample rate</span><input id="sample-rate" type="text" value="Auto" aria-label="Sample rate"></label><label><span>Processing</span><select><option>Remove DC + normalize</option><option>Raw samples</option></select></label><button class="secondary-button" id="apply-dsp">Re-run characterization</button></div>
-        <div class="chart-grid"><article class="chart-card"><div class="chart-header"><div><span class="card-kicker">Frequency domain</span><h3>Raw-byte DFT preview</h3></div><span class="metric" id="spectrum-metric">Awaiting capture</span></div><svg id="spectrum-plot" viewBox="0 0 600 180" role="img" aria-label="Raw-byte spectrum preview"><path class="grid-line" d="M40 20V150H580M40 85H580"/><text x="190" y="90">No local capture analysed</text></svg></article>
-          <article class="chart-card"><div class="chart-header"><div><span class="card-kicker">Time × byte value</span><h3>Raw-byte waterfall preview</h3></div><span class="metric" id="waterfall-metric">Awaiting capture</span></div><div class="waterfall" id="waterfall-plot" aria-label="Raw-byte waterfall preview"></div></article>
-          <article class="chart-card"><div class="chart-header"><div><span class="card-kicker">Paired byte domain</span><h3>Byte-pair scatter preview</h3></div><span class="metric" id="constellation-metric">Awaiting capture</span></div><svg id="constellation-plot" viewBox="0 0 600 180" role="img" aria-label="Paired byte scatter preview"><path class="grid-line" d="M300 16V164M40 90H560"/><text x="190" y="90">No local capture analysed</text></svg></article>
-          <article class="measurement-card"><span class="card-kicker">Raw preview measurements</span><dl><div><dt>Bytes inspected</dt><dd id="bytes-inspected">—</dd></div><div><dt>Byte mean / spread</dt><dd id="byte-distribution">—</dd></div><div><dt>Representation</dt><dd id="representation-state">—</dd></div><div><dt>Denoising</dt><dd id="denoise-state">Not run</dd></div></dl></article></div>
-        <article class="provenance-card" aria-live="polite"><span class="card-kicker">Run provenance</span><dl><div><dt>Run ID</dt><dd id="run-id">No run</dd></div><div><dt>Input source</dt><dd id="provenance-source">No local file</dd></div><div><dt>Plot source</dt><dd id="provenance-plots">No plots generated</dd></div><div><dt>Processing boundary</dt><dd id="provenance-boundary">No denoising, DSP demodulation or ML inference has run.</dd></div></dl></article>
+      <section class="view" id="view-evidence" aria-labelledby="evidence-title" hidden>
+        <header class="page-head">
+          <h1 id="evidence-title">Evidence</h1>
+          <p id="evidence-sub">Analyse a capture to fill this page.</p>
+          <ul class="tags" id="evidence-tags"></ul>
+        </header>
+        <p class="notice" id="example-notice" hidden></p>
+        <div class="bar" id="evidence-bar" hidden>
+          <div class="filters" role="tablist" aria-label="Filter evidence" id="filters">
+            <button role="tab" data-filter="all" aria-selected="true">All</button>
+            <button role="tab" data-filter="spectrum" aria-selected="false">Spectrum</button>
+            <button role="tab" data-filter="time" aria-selected="false">Time</button>
+            <button role="tab" data-filter="iq" aria-selected="false">IQ</button>
+            <button role="tab" data-filter="estimates" aria-selected="false">Estimates</button>
+            <button role="tab" data-filter="model" aria-selected="false">Model</button>
+          </div>
+          <div class="seg small" role="radiogroup" aria-label="Branch shown in plots" id="branch">
+            <button type="button" role="radio" data-value="raw">Raw</button>
+            <button type="button" role="radio" data-value="derived">Derived</button>
+          </div>
+        </div>
+        <div class="feed" id="feed"></div>
+        <div class="empty" id="evidence-empty"><p>Nothing analysed yet.</p><a class="button" href="#capture">Load a capture</a></div>
       </section>
 
-      <section class="tab-panel" id="demodulation"><div class="intro-row"><div><h2>Demodulation detector</h2><p>Rank modulation hypotheses from DSP evidence, then use only a supported decoder.</p></div><span class="stage-state" id="demod-state">Awaiting DSP</span></div><div class="hypothesis-layout"><div class="hypothesis-list"><button class="hypothesis selected"><span class="rank">01</span><span><strong>No candidate yet</strong><small>Requires backend DSP feature report</small></span><b>—</b></button><button class="hypothesis"><span class="rank">02</span><span><strong>FSK / PSK / QAM / OFDM</strong><small>Candidate families will be ranked with evidence</small></span><b>—</b></button><button class="hypothesis"><span class="rank">03</span><span><strong>Unsupported / abstain</strong><small>Returned when evidence is insufficient</small></span><b>—</b></button></div><article class="decoder-card"><span class="card-kicker">Bounded branch template</span><h3>Awaiting modulation hypothesis</h3><div class="pipeline"><span>Channel filter</span><i>→</i><span>Carrier recovery</span><i>→</i><span>Timing lock</span><i>→</i><span>Soft bits</span></div><label class="toggle-row"><input type="checkbox" disabled><span>Demodulation backend not connected</span></label><button class="primary-button" id="run-demod">Explain block <span>→</span></button></article></div></section>
+      <section class="view" id="view-receiver" aria-labelledby="receiver-title" hidden>
+        <header class="page-head">
+          <h1 id="receiver-title">Receiver</h1>
+          <p>Hard decisions for BPSK, QPSK and 2-FSK at the settings you give it. Timing is a fixed integrate-and-dump and no carrier loop runs, so the output is a candidate bit stream to inspect, not decoded data.</p>
+        </header>
+        <div class="rx-row">
+          <label class="field"><span>Modulation</span>
+            <select data-bind="p-mod">
+              <option value="auto">Use classifier if supported</option>
+              <option value="bpsk">BPSK</option>
+              <option value="qpsk">QPSK</option>
+              <option value="2fsk">2-FSK</option>
+            </select>
+          </label>
+          <label class="field"><span>Samples per symbol</span><input data-bind="p-sps" inputmode="numeric" placeholder="8"></label>
+          <label class="field"><span>Timing offset</span><input data-bind="p-timing" inputmode="numeric"></label>
+          <label class="field"><span>Carrier offset (Hz)</span><input data-bind="p-cfo" inputmode="decimal"></label>
+          <button class="button" id="run-demod" type="button" disabled>Run demodulation</button>
+        </div>
+        <div class="hints" id="rx-hints"></div>
+        <p class="error" id="rx-error" role="alert" hidden></p>
+        <div class="feed" id="rx-feed"></div>
+        <div class="empty" id="rx-empty"><p id="rx-empty-text">Load a capture first. The receiver uses the same bytes and interpretation.</p></div>
+      </section>
 
-      <section class="tab-panel" id="fec"><div class="intro-row"><div><h2>FEC &amp; bit recovery</h2><p>This stage only runs after a quality-gated soft-bit stream exists.</p></div><span class="stage-state" id="fec-state">Awaiting demodulation</span></div><div class="fec-grid"><article class="decoder-card"><span class="card-kicker">Quality gate</span><h3>Soft-bit stream quality</h3><div class="quality-line"><span>Synchronization</span><b>Locked</b></div><div class="quality-line"><span>Confidence</span><b>0.81</b></div><div class="quality-line"><span>CRC / framing</span><b>Not yet identified</b></div><button class="secondary-button" id="run-fec">Run bounded FEC search</button></article><article class="caution-card"><span>!</span><div><strong>Evidence-gated analysis</strong><p>Unknown or low-quality streams must return insufficient evidence instead of a fabricated code or interleaver label.</p></div></article></div></section>
-
-      <section class="tab-panel" id="results"><div class="intro-row"><div><h2>Analysis result</h2><p id="results-subtitle">Run a capture to create an evidence report.</p></div><span class="mode-label" id="result-mode">No result</span></div><div class="result-hero"><div><span class="card-kicker">Best-supported hypothesis</span><h2 id="result-name">No capture analysed</h2><p id="result-description">Select a file in File management to begin.</p></div><div class="confidence-block"><span>Confidence</span><strong id="result-confidence">—</strong><small>Evidence fusion score</small></div></div><div class="result-grid"><article><span class="card-kicker">Input interpretation</span><strong id="result-format">—</strong><small id="result-input">—</small></article><article><span class="card-kicker">Signal parameters</span><strong id="result-params">—</strong><small>Measured from selected segment</small></article><article><span class="card-kicker">Deep analysis</span><strong id="result-fec">—</strong><small>Only for supported streams</small></article></div><div class="result-actions"><button class="secondary-button" data-go="dsp">Inspect DSP evidence</button><button class="secondary-button" data-go="demodulation">Tune demodulator</button><button class="primary-button" id="export-report">Export JSON report <span>↓</span></button></div></section>
+      <section class="view" id="view-report" aria-labelledby="report-title" hidden>
+        <header class="page-head">
+          <h1 id="report-title">Report</h1>
+          <p>What ran, on which bytes, under which assumptions. The export keeps both API responses unchanged next to the browser's own record.</p>
+        </header>
+        <dl class="report" id="report"></dl>
+        <div class="foot">
+          <p class="muted" id="report-note">No run yet.</p>
+          <button class="button" id="export" type="button" disabled>Export JSON</button>
+        </div>
+        <details class="raw-json"><summary>Raw API responses</summary><pre id="raw-json">None yet.</pre></details>
+      </section>
     </main>
   </div>
+  <div class="tip" id="tip" hidden></div>
   <script src="app.js"></script>
 </body>
 </html>
