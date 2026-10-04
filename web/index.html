@@ -103,6 +103,10 @@
             <label class="field"><span>Modulation</span>
               <select id="p-mod">
                 <option value="auto">Use classifier if supported</option>
+                <option value="8psk">8-PSK</option>
+                <option value="16qam">16-QAM</option>
+                <option value="64qam">64-QAM</option>
+                <option value="4fsk">4-FSK</option>
                 <option value="bpsk">BPSK</option>
                 <option value="qpsk">QPSK</option>
                 <option value="2fsk">2-FSK</option>
@@ -151,12 +155,16 @@
       <section class="view" id="view-receiver" aria-labelledby="receiver-title" hidden>
         <header class="page-head">
           <h1 id="receiver-title">Receiver</h1>
-          <p>Hard decisions for BPSK, QPSK and 2-FSK at the settings you give it. Timing is a fixed integrate-and-dump and no carrier loop runs, so the output is a candidate bit stream to inspect, not decoded data.</p>
+          <p>Library-backed PSK, QAM and FSK candidate bits. Choose pulse filtering and fixed or static-search timing/phase. This is not a verified payload decoder; carrier phase, mapping and frame ambiguity remain.</p>
         </header>
         <div class="rx-row">
           <label class="field"><span>Modulation</span>
             <select data-bind="p-mod">
               <option value="auto">Use classifier if supported</option>
+              <option value="8psk">8-PSK</option>
+              <option value="16qam">16-QAM</option>
+              <option value="64qam">64-QAM</option>
+              <option value="4fsk">4-FSK</option>
               <option value="bpsk">BPSK</option>
               <option value="qpsk">QPSK</option>
               <option value="2fsk">2-FSK</option>
@@ -169,6 +177,13 @@
           <button class="button" id="run-auto-demod" type="button">Run AMC-guided receiver</button>
         </div>
         <label class="field"><span>FEC/interleaver frame offset (bits)</span><input id="fec-frame-offset" inputmode="numeric" value="0"><small>Experimental known-candidate search. Supply the 420-bit interleaver frame start relative to receiver bits; no arbitrary frame recovery or decryption.</small></label>
+        <div class="rx-row">
+          <label class="field"><span>Pulse</span><select id="rx-pulse"><option value="rect">Rectangular</option><option value="rrc">Root-raised cosine (PSK/QAM)</option></select></label>
+          <label class="field"><span>RRC rolloff</span><input id="rx-rolloff" value="0.35" inputmode="decimal"></label>
+          <label class="field"><span>Phase correction (radians or auto)</span><input id="rx-phase" value="0"></label>
+          <label class="field"><span>FSK tones after CFO correction (Hz)</span><input id="rx-tones" placeholder="-3000,-1000,1000,3000"><small>Blank: estimate levels; every tone must be represented.</small></label>
+          <label><input id="rx-auto-timing" type="checkbox">Search static integer timing offset</label>
+        </div>
         <div class="hints" id="rx-hints"></div>
         <p class="error" id="rx-error" role="alert" hidden></p>
         <div class="feed" id="rx-feed"></div>

@@ -1,5 +1,11 @@
 # DEmod receiver MVP
 
+## Current library-backed receiver (2026-10-05)
+
+The current receiver contract is [DEMODULATION_TOOLING.md](DEMODULATION_TOOLING.md): Komm/SciPy paths now support BPSK/QPSK/8-PSK, 16/64-QAM and unshaped 2/4-FSK. Pulse filtering, fixed or static-search timing/phase, tone hypotheses and mapping provenance are exposed in the API and UI. Reference-bit BER/SER results are in [receiver_results.md](../research/results/receiver_results.md). `src/receive_capture.py` exports the full candidate bitstream. The optional GNU Radio PSK/QAM runner exists but is not runtime-validated here. There is still no continuous/fractional timing tracking in Python or verified framing/FEC/payload decoding.
+
+The description below documents the retained **legacy_fixed** three-mode backend, not the new library receiver's complete capabilities.
+
 The local API now offers a bounded receiver endpoint:
 
 ```text

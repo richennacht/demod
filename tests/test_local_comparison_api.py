@@ -120,7 +120,7 @@ class LocalUiServingTests(unittest.TestCase):
         payload = json.loads(body)
         self.assertEqual(status, 200)
         self.assertIn("s16le", payload["supported_formats"])
-        self.assertEqual(payload["supported_demodulations"], ["bpsk", "qpsk", "2fsk"])
+        self.assertEqual(payload["supported_demodulations"], ["bpsk", "qpsk", "8psk", "16qam", "64qam", "2fsk", "4fsk"])
 
     def test_ui_is_served_locally_without_path_traversal(self):
         status, headers, body = self._get("/ui/")

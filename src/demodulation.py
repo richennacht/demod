@@ -1,8 +1,7 @@
-"""Bounded, analyst-configured MVP receivers for baseband BPSK/QPSK/2-FSK.
+"""Library-backed PSK/QAM/FSK candidate receivers with a legacy fixed fallback.
 
-These receivers deliberately require a declared samples-per-symbol value. They
-provide inspectable hard decisions for controlled test signals, not blind or
-protocol-level decoding.
+SPS is supplied or estimated upstream. Komm/SciPy performs seven-mode filtering
+and decisions with optional static acquisition; no blind protocol decoding.
 """
 
 from __future__ import annotations
@@ -11,7 +10,7 @@ import math
 from typing import Any
 
 
-SUPPORTED = ("bpsk", "qpsk", "2fsk")
+SUPPORTED = ("bpsk", "qpsk", "8psk", "16qam", "64qam", "2fsk", "4fsk")
 
 
 def _correct(samples: list[complex], carrier_offset_hz: float, sample_rate_hz: float) -> list[complex]:
@@ -43,11 +42,41 @@ def _evm(symbols: list[complex], points: list[complex]) -> float:
     return math.sqrt(sum(min(abs(value - point) ** 2 for point in points) for value in normalized) / len(normalized))
 
 
-def demodulate(samples: list[complex], sample_rate_hz: float, modulation: str, samples_per_symbol: int, timing_offset: int = 0, carrier_offset_hz: float = 0.0, source: str = "analyst_override", fec_frame_offset_bits: int = 0) -> dict[str, Any]:
+def demodulate(samples: list[complex], sample_rate_hz: float, modulation: str, samples_per_symbol: int, timing_offset: int | None = 0, carrier_offset_hz: float = 0.0, source: str = "analyst_override", fec_frame_offset_bits: int = 0, backend: str = 'auto', pulse: str = 'rect', rrc_rolloff: float = .35, phase_radians: float | None = 0., fsk_tones_hz=None) -> dict[str, Any]:
     if modulation not in SUPPORTED:
         raise ValueError(f"Supported MVP modulations are {', '.join(SUPPORTED)}.")
     if len(samples) < samples_per_symbol * 2:
         raise ValueError("Insufficient samples for two symbols at the supplied samples_per_symbol.")
+    if type(samples_per_symbol) is not int or not 1 <= samples_per_symbol <= 64:
+        raise ValueError('SPS must be an integer in [1,64].')
+    if not math.isfinite(sample_rate_hz) or sample_rate_hz <= 0 or not math.isfinite(carrier_offset_hz) or abs(carrier_offset_hz)>=sample_rate_hz/2:
+        raise ValueError('Invalid Fs/CFO.')
+    if backend not in ('auto','komm_scipy','legacy_fixed'):
+        raise ValueError('Receiver backend must be auto, komm_scipy, or legacy_fixed.')
+    from library_receiver import libraries, receive
+    use_library=backend!='legacy_fixed'
+    if use_library:
+        try: libraries()
+        except ValueError:
+            if backend=='komm_scipy' or modulation not in ('bpsk','qpsk','2fsk') or timing_offset is None or phase_radians!=0. or pulse!='rect': raise
+            use_library=False
+    if use_library:
+        rx=receive(samples,sample_rate_hz,modulation,samples_per_symbol,timing_offset,carrier_offset_hz,pulse,rrc_rolloff,phase_radians,fsk_tones_hz)
+        bits=rx['bits']
+        if type(fec_frame_offset_bits) is not int or not 0 <= fec_frame_offset_bits < len(bits):
+            raise ValueError('FEC frame offset must be within receiver bits.')
+        from fec_identification import analyse_bits
+        fec=analyse_bits(bits,fec_frame_offset_bits) if len(bits)>=1680 else {'status':'abstained','reason':'Need at least 1680 bits for experimental FEC identification.'}
+        return dict(status='hard_decisions_available',modulation=modulation,
+                    configuration={**rx['configuration'],'parameter_source':source},
+                    symbol_count=rx['symbol_count'],bit_count=len(bits),bits_preview=''.join(map(str,bits[:512])),
+                    packed_bytes_preview=_pack(bits[:512]),quality=rx['quality'],decisions_preview=rx['decisions_preview'],fec_identification=fec,
+                    limitations=['Candidate hard bits, not verified decoded payload. No framing/CRC/FEC decoding/decryption.',
+                      'Static integer timing acquisition only; no fractional timing, clock drift tracking or equalisation.',
+                      'Carrier offset must be supplied or estimated upstream; static phase search has unresolved rotational ambiguity.',
+                      'Bit mapping is declared, not inferred from an unknown protocol.'])
+    if modulation not in ('bpsk','qpsk','2fsk') or timing_offset is None or pulse!='rect' or phase_radians!=0.:
+        raise ValueError('Legacy receiver supports only fixed rectangular BPSK/QPSK/2-FSK.')
     corrected = _correct(samples, carrier_offset_hz, sample_rate_hz)
     symbol_values = _integrate_and_dump(corrected, samples_per_symbol, timing_offset)
     if modulation == "bpsk":
@@ -79,7 +108,7 @@ def demodulate(samples: list[complex], sample_rate_hz: float, modulation: str, s
                "bit_count_supplied": len(bits), "scope": "No code or interleaver inferred from this short preview."}
     return {
         "status": "hard_decisions_available", "modulation": modulation,
-        "configuration": {"samples_per_symbol": samples_per_symbol, "timing_offset_samples": timing_offset, "carrier_offset_hz": carrier_offset_hz, "parameter_source": source},
+        "configuration": {"backend":"legacy_fixed", "samples_per_symbol": samples_per_symbol, "timing_offset_samples": timing_offset, "carrier_offset_hz": carrier_offset_hz, "parameter_source": source},
         "symbol_count": len(symbol_values), "bit_count": len(bits), "bits_preview": "".join(map(str, bits[:512]),), "packed_bytes_preview": _pack(bits[:512]),
         "quality": {"evm_rms": None if modulation == "2fsk" else round(evm, 6), "meaning": "constellation EVM after fixed integrate-and-dump; it is not BER without known reference bits."},
         "decisions_preview": decisions,

@@ -1,0 +1,2424 @@
+{
+  "seed": 20261006,
+  "scope": "Controlled same-generator burst BER/SER, not real intercept or blind phase/mapping recovery.",
+  "recipe": {
+    "symbols": 1024,
+    "sps": 8,
+    "fs": 250000,
+    "cfo_hz": 750,
+    "phase_radians": 0.17,
+    "timing_offset": 3,
+    "rrc_rolloff": 0.35,
+    "edge_symbols_excluded": 12,
+    "captures_per_row": 4,
+    "fsk_tones": "known equally spaced 0.025 cycles/sample odd levels"
+  },
+  "hashes": {
+    "research\\eval_receivers.py": "3eecfbf3f43559a4a8a3915181bfe4109d8f7c247cb2fb9974c821e1b42ba551",
+    "src\\library_receiver.py": "5dbff4e7561f51ea14d3244e7adc9cb6c8dc9cbf6880313482ebbcabf20c715d"
+  },
+  "komm_version": "0.36.0",
+  "numpy_version": "2.3.5",
+  "rows": [
+    {
+      "modulation": "bpsk",
+      "pulse": "rect",
+      "snr_db": 15,
+      "acquisition": "manual",
+      "bit_errors": 0,
+      "bits_compared": 4000,
+      "ber": 0.0,
+      "symbol_errors": 0,
+      "symbols_compared": 4000,
+      "ser": 0.0,
+      "records": [
+        {
+          "input_sha256": "cf8766922ef4ad24be2ac4d85f5eb90b65e3d1846e3199f9d582bf9319561f79",
+          "bit_errors": 0,
+          "bits_compared": 1000,
+          "symbol_errors": 0,
+          "symbols_compared": 1000,
+          "actual_timing": 3,
+          "actual_phase": 0.17
+        },
+        {
+          "input_sha256": "babbf0c6bccd2b537b748e17cb4c3f941c85af307662d026dba57919ef561c6d",
+          "bit_errors": 0,
+          "bits_compared": 1000,
+          "symbol_errors": 0,
+          "symbols_compared": 1000,
+          "actual_timing": 3,
+          "actual_phase": 0.17
+        },
+        {
+          "input_sha256": "6582825b1c74ca26c3ea0f1bc4a26b78b12416b9d5d6bd5d2d28b64ca25d1f3d",
+          "bit_errors": 0,
+          "bits_compared": 1000,
+          "symbol_errors": 0,
+          "symbols_compared": 1000,
+          "actual_timing": 3,
+          "actual_phase": 0.17
+        },
+        {
+          "input_sha256": "675792ccfcf32c2967c334ecceeba256d951d9d6d338fc8b53568ae08ec3fc76",
+          "bit_errors": 0,
+          "bits_compared": 1000,
+          "symbol_errors": 0,
+          "symbols_compared": 1000,
+          "actual_timing": 3,
+          "actual_phase": 0.17
+        }
+      ]
+    },
+    {
+      "modulation": "bpsk",
+      "pulse": "rect",
+      "snr_db": 15,
+      "acquisition": "static_auto",
+      "bit_errors": 0,
+      "bits_compared": 4000,
+      "ber": 0.0,
+      "symbol_errors": 0,
+      "symbols_compared": 4000,
+      "ser": 0.0,
+      "records": [
+        {
+          "input_sha256": "232cac046866fdd207f538ed698db07e0909d54e02eab5d71dffe5e0a73647a7",
+          "bit_errors": 0,
+          "bits_compared": 1000,
+          "symbol_errors": 0,
+          "symbols_compared": 1000,
+          "actual_timing": 3,
+          "actual_phase": 0.16916268134714274
+        },
+        {
+          "input_sha256": "921a020543e513dac1ea552ccaf9a74bf1265438ad7729d8a4dfb82901f391f8",
+          "bit_errors": 0,
+          "bits_compared": 1000,
+          "symbol_errors": 0,
+          "symbols_compared": 1000,
+          "actual_timing": 3,
+          "actual_phase": 0.16916268134714274
+        },
+        {
+          "input_sha256": "e672c33c0da426a5fcdd53231ffae69a37bebf01bdceecae64e5238e70f6b7ac",
+          "bit_errors": 0,
+          "bits_compared": 1000,
+          "symbol_errors": 0,
+          "symbols_compared": 1000,
+          "actual_timing": 3,
+          "actual_phase": 0.16916268134714274
+        },
+        {
+          "input_sha256": "d968d83668618d029cc15efadcfe48b92f219f54c6e63bc282d9e859c1fed906",
+          "bit_errors": 0,
+          "bits_compared": 1000,
+          "symbol_errors": 0,
+          "symbols_compared": 1000,
+          "actual_timing": 3,
+          "actual_phase": 0.16916268134714274
+        }
+      ]
+    },
+    {
+      "modulation": "bpsk",
+      "pulse": "rect",
+      "snr_db": 25,
+      "acquisition": "manual",
+      "bit_errors": 0,
+      "bits_compared": 4000,
+      "ber": 0.0,
+      "symbol_errors": 0,
+      "symbols_compared": 4000,
+      "ser": 0.0,
+      "records": [
+        {
+          "input_sha256": "b8d6a4fd18200602e4e492b22a4cca0d0aa5b4cd06f1ae7fcd27e64f6133527a",
+          "bit_errors": 0,
+          "bits_compared": 1000,
+          "symbol_errors": 0,
+          "symbols_compared": 1000,
+          "actual_timing": 3,
+          "actual_phase": 0.17
+        },
+        {
+          "input_sha256": "4b164beb4449b840ea8d1b14e5f2c6b4bddbe48acb2d646e5bf5f8c911d0d8fc",
+          "bit_errors": 0,
+          "bits_compared": 1000,
+          "symbol_errors": 0,
+          "symbols_compared": 1000,
+          "actual_timing": 3,
+          "actual_phase": 0.17
+        },
+        {
+          "input_sha256": "271e89e68168965e970655394ea96b0c2abeed1b987eb9d4014218a00575bc26",
+          "bit_errors": 0,
+          "bits_compared": 1000,
+          "symbol_errors": 0,
+          "symbols_compared": 1000,
+          "actual_timing": 3,
+          "actual_phase": 0.17
+        },
+        {
+          "input_sha256": "e80cd0bdec99e8504eea7dbe0e5c6c5b5d6ed747175db3c5f9235e5369ca0126",
+          "bit_errors": 0,
+          "bits_compared": 1000,
+          "symbol_errors": 0,
+          "symbols_compared": 1000,
+          "actual_timing": 3,
+          "actual_phase": 0.17
+        }
+      ]
+    },
+    {
+      "modulation": "bpsk",
+      "pulse": "rect",
+      "snr_db": 25,
+      "acquisition": "static_auto",
+      "bit_errors": 0,
+      "bits_compared": 4000,
+      "ber": 0.0,
+      "symbol_errors": 0,
+      "symbols_compared": 4000,
+      "ser": 0.0,
+      "records": [
+        {
+          "input_sha256": "4d01980af06d8cf05be21163dc245b0e2b25666a4abc7c018629dc79c10ce54c",
+          "bit_errors": 0,
+          "bits_compared": 1000,
+          "symbol_errors": 0,
+          "symbols_compared": 1000,
+          "actual_timing": 3,
+          "actual_phase": 0.16916268134714274
+        },
+        {
+          "input_sha256": "88fdea985479f5d7b075b5d290dd4e8a7e8e3a00d9242fa81fec25d6e3292e41",
+          "bit_errors": 0,
+          "bits_compared": 1000,
+          "symbol_errors": 0,
+          "symbols_compared": 1000,
+          "actual_timing": 3,
+          "actual_phase": 0.16916268134714274
+        },
+        {
+          "input_sha256": "ec09c1b873e8f5efb06af609a73d64a16069c0e2604761572d777a2bbce356b4",
+          "bit_errors": 0,
+          "bits_compared": 1000,
+          "symbol_errors": 0,
+          "symbols_compared": 1000,
+          "actual_timing": 3,
+          "actual_phase": 0.16916268134714274
+        },
+        {
+          "input_sha256": "364828adfc6bd1dedb112f84f7125fb4d16aeaf8bdbeef55b3873a23826c1fe0",
+          "bit_errors": 0,
+          "bits_compared": 1000,
+          "symbol_errors": 0,
+          "symbols_compared": 1000,
+          "actual_timing": 3,
+          "actual_phase": 0.16916268134714274
+        }
+      ]
+    },
+    {
+      "modulation": "bpsk",
+      "pulse": "rrc",
+      "snr_db": 15,
+      "acquisition": "manual",
+      "bit_errors": 0,
+      "bits_compared": 4000,
+      "ber": 0.0,
+      "symbol_errors": 0,
+      "symbols_compared": 4000,
+      "ser": 0.0,
+      "records": [
+        {
+          "input_sha256": "95fa0efe14c77ce1f29227758a13ccaa715f8bd30e107a3c5c1b10ad37f6fa27",
+          "bit_errors": 0,
+          "bits_compared": 1000,
+          "symbol_errors": 0,
+          "symbols_compared": 1000,
+          "actual_timing": 3,
+          "actual_phase": 0.17
+        },
+        {
+          "input_sha256": "ff5ba2cf0c967168aa1d18ff5f95cdf035823f9e892852755c9851ce76f78ef0",
+          "bit_errors": 0,
+          "bits_compared": 1000,
+          "symbol_errors": 0,
+          "symbols_compared": 1000,
+          "actual_timing": 3,
+          "actual_phase": 0.17
+        },
+        {
+          "input_sha256": "b788de4a8b823010c61419d0ea0d466d9314217ba399a061669449da7dbd8992",
+          "bit_errors": 0,
+          "bits_compared": 1000,
+          "symbol_errors": 0,
+          "symbols_compared": 1000,
+          "actual_timing": 3,
+          "actual_phase": 0.17
+        },
+        {
+          "input_sha256": "13be5bfa62352ef4d99bba81ec3fc043ca024b8fe4aa77523d6836dd3a6161f1",
+          "bit_errors": 0,
+          "bits_compared": 1000,
+          "symbol_errors": 0,
+          "symbols_compared": 1000,
+          "actual_timing": 3,
+          "actual_phase": 0.17
+        }
+      ]
+    },
+    {
+      "modulation": "bpsk",
+      "pulse": "rrc",
+      "snr_db": 15,
+      "acquisition": "static_auto",
+      "bit_errors": 0,
+      "bits_compared": 4000,
+      "ber": 0.0,
+      "symbol_errors": 0,
+      "symbols_compared": 4000,
+      "ser": 0.0,
+      "records": [
+        {
+          "input_sha256": "986ab3c0755aa8dc0b57312bee340f153bacd9790f0fa98c904e1d3c8d3e6f9d",
+          "bit_errors": 0,
+          "bits_compared": 1000,
+          "symbol_errors": 0,
+          "symbols_compared": 1000,
+          "actual_timing": 3,
+          "actual_phase": 0.16916268134714274
+        },
+        {
+          "input_sha256": "c2cab27984d4bc8a09821beb7f69a4dbb767c3f661dfbc58218ac9bd9bdf5bb0",
+          "bit_errors": 0,
+          "bits_compared": 1000,
+          "symbol_errors": 0,
+          "symbols_compared": 1000,
+          "actual_timing": 3,
+          "actual_phase": 0.16916268134714274
+        },
+        {
+          "input_sha256": "1b7ab1dc7177959f34bcf976d9d7509f85d8f29b52db5a848582b4373a294da3",
+          "bit_errors": 0,
+          "bits_compared": 1000,
+          "symbol_errors": 0,
+          "symbols_compared": 1000,
+          "actual_timing": 3,
+          "actual_phase": 0.16916268134714274
+        },
+        {
+          "input_sha256": "ab65e076ee3bdaad693a74337489803274cd4448acee5117568a2feb849f7890",
+          "bit_errors": 0,
+          "bits_compared": 1000,
+          "symbol_errors": 0,
+          "symbols_compared": 1000,
+          "actual_timing": 3,
+          "actual_phase": 0.16916268134714274
+        }
+      ]
+    },
+    {
+      "modulation": "bpsk",
+      "pulse": "rrc",
+      "snr_db": 25,
+      "acquisition": "manual",
+      "bit_errors": 0,
+      "bits_compared": 4000,
+      "ber": 0.0,
+      "symbol_errors": 0,
+      "symbols_compared": 4000,
+      "ser": 0.0,
+      "records": [
+        {
+          "input_sha256": "d1066e9251261ac82d77b7d229bb12840825cb042f88ffe4e9987c973462323c",
+          "bit_errors": 0,
+          "bits_compared": 1000,
+          "symbol_errors": 0,
+          "symbols_compared": 1000,
+          "actual_timing": 3,
+          "actual_phase": 0.17
+        },
+        {
+          "input_sha256": "79d3fbe17385d98177f94d1c66e4c6b1bd59f447bc5ed3c72454b8817bae2b57",
+          "bit_errors": 0,
+          "bits_compared": 1000,
+          "symbol_errors": 0,
+          "symbols_compared": 1000,
+          "actual_timing": 3,
+          "actual_phase": 0.17
+        },
+        {
+          "input_sha256": "34ede5573991a1dca2f703cc7359d2851595841b89807f6fc9292e1ed7136314",
+          "bit_errors": 0,
+          "bits_compared": 1000,
+          "symbol_errors": 0,
+          "symbols_compared": 1000,
+          "actual_timing": 3,
+          "actual_phase": 0.17
+        },
+        {
+          "input_sha256": "57f9e0443909e8998c36acb4719f075ab10cb2612279b27cfe257ce1d842c75a",
+          "bit_errors": 0,
+          "bits_compared": 1000,
+          "symbol_errors": 0,
+          "symbols_compared": 1000,
+          "actual_timing": 3,
+          "actual_phase": 0.17
+        }
+      ]
+    },
+    {
+      "modulation": "bpsk",
+      "pulse": "rrc",
+      "snr_db": 25,
+      "acquisition": "static_auto",
+      "bit_errors": 0,
+      "bits_compared": 4000,
+      "ber": 0.0,
+      "symbol_errors": 0,
+      "symbols_compared": 4000,
+      "ser": 0.0,
+      "records": [
+        {
+          "input_sha256": "df984a61b8cadd267e543258ca3abba3aacc96187e954cd0761bb576ede46b70",
+          "bit_errors": 0,
+          "bits_compared": 1000,
+          "symbol_errors": 0,
+          "symbols_compared": 1000,
+          "actual_timing": 3,
+          "actual_phase": 0.16916268134714274
+        },
+        {
+          "input_sha256": "c80bc065562b28d7dc14064d21aa0a90e77c683efb1b6a2cac666802ba36262a",
+          "bit_errors": 0,
+          "bits_compared": 1000,
+          "symbol_errors": 0,
+          "symbols_compared": 1000,
+          "actual_timing": 3,
+          "actual_phase": 0.16916268134714274
+        },
+        {
+          "input_sha256": "e6acd72be3ad834b3662b7e2b8b0be941a667cf5ccb9a831386e1ecf7c242097",
+          "bit_errors": 0,
+          "bits_compared": 1000,
+          "symbol_errors": 0,
+          "symbols_compared": 1000,
+          "actual_timing": 3,
+          "actual_phase": 0.16916268134714274
+        },
+        {
+          "input_sha256": "4850fc5f1571b99c74a906bf07a4ac7dda9dcf94c6b0f61a5b8603f93647b344",
+          "bit_errors": 0,
+          "bits_compared": 1000,
+          "symbol_errors": 0,
+          "symbols_compared": 1000,
+          "actual_timing": 3,
+          "actual_phase": 0.16916268134714274
+        }
+      ]
+    },
+    {
+      "modulation": "qpsk",
+      "pulse": "rect",
+      "snr_db": 15,
+      "acquisition": "manual",
+      "bit_errors": 0,
+      "bits_compared": 8000,
+      "ber": 0.0,
+      "symbol_errors": 0,
+      "symbols_compared": 4000,
+      "ser": 0.0,
+      "records": [
+        {
+          "input_sha256": "c23f86bfdac500a4c691b05d0b3a12d834808cb4b61d913cba4f7a85ec27e1da",
+          "bit_errors": 0,
+          "bits_compared": 2000,
+          "symbol_errors": 0,
+          "symbols_compared": 1000,
+          "actual_timing": 3,
+          "actual_phase": 0.17
+        },
+        {
+          "input_sha256": "0b9256b8563af9618aea49f65278328e1794d7958df029ee39ef6d585bd49827",
+          "bit_errors": 0,
+          "bits_compared": 2000,
+          "symbol_errors": 0,
+          "symbols_compared": 1000,
+          "actual_timing": 3,
+          "actual_phase": 0.17
+        },
+        {
+          "input_sha256": "43608eafcc3a55ac465d308dd6b0fcb0813675640028053db6caeee09e6e20d2",
+          "bit_errors": 0,
+          "bits_compared": 2000,
+          "symbol_errors": 0,
+          "symbols_compared": 1000,
+          "actual_timing": 3,
+          "actual_phase": 0.17
+        },
+        {
+          "input_sha256": "5159c84c55835aa951c65f8346c2be1b0009b20c643e5c17aa0c51ae84da31c5",
+          "bit_errors": 0,
+          "bits_compared": 2000,
+          "symbol_errors": 0,
+          "symbols_compared": 1000,
+          "actual_timing": 3,
+          "actual_phase": 0.17
+        }
+      ]
+    },
+    {
+      "modulation": "qpsk",
+      "pulse": "rect",
+      "snr_db": 15,
+      "acquisition": "static_auto",
+      "bit_errors": 0,
+      "bits_compared": 8000,
+      "ber": 0.0,
+      "symbol_errors": 0,
+      "symbols_compared": 4000,
+      "ser": 0.0,
+      "records": [
+        {
+          "input_sha256": "b4c57b6e4d0d79bdf6dc7dce616b1f64ba0d842ce8ca505cec9fdcd89a33fd9e",
+          "bit_errors": 0,
+          "bits_compared": 2000,
+          "symbol_errors": 0,
+          "symbols_compared": 1000,
+          "actual_timing": 3,
+          "actual_phase": 0.15707963267948966
+        },
+        {
+          "input_sha256": "e6531a99a28ed4b7d1b4b92191e0fab22c04152ba30ce1b85628bcacae84dfa8",
+          "bit_errors": 0,
+          "bits_compared": 2000,
+          "symbol_errors": 0,
+          "symbols_compared": 1000,
+          "actual_timing": 3,
+          "actual_phase": 0.18124573001479571
+        },
+        {
+          "input_sha256": "5112bd3200360acd0c48f1d669ca0c83b999122fe3c80c308571722c98f4a4b5",
+          "bit_errors": 0,
+          "bits_compared": 2000,
+          "symbol_errors": 0,
+          "symbols_compared": 1000,
+          "actual_timing": 3,
+          "actual_phase": 0.18124573001479571
+        },
+        {
+          "input_sha256": "06c6864d34d5c77bb73ffccc604ba5823894409f80994fa5d39738cc77bd649d",
+          "bit_errors": 0,
+          "bits_compared": 2000,
+          "symbol_errors": 0,
+          "symbols_compared": 1000,
+          "actual_timing": 3,
+          "actual_phase": 0.15707963267948966
+        }
+      ]
+    },
+    {
+      "modulation": "qpsk",
+      "pulse": "rect",
+      "snr_db": 25,
+      "acquisition": "manual",
+      "bit_errors": 0,
+      "bits_compared": 8000,
+      "ber": 0.0,
+      "symbol_errors": 0,
+      "symbols_compared": 4000,
+      "ser": 0.0,
+      "records": [
+        {
+          "input_sha256": "045239eda5895dc9b814d2020d0e101e40d3a0f05307e8b88ae5afc7c8a4adbf",
+          "bit_errors": 0,
+          "bits_compared": 2000,
+          "symbol_errors": 0,
+          "symbols_compared": 1000,
+          "actual_timing": 3,
+          "actual_phase": 0.17
+        },
+        {
+          "input_sha256": "b4408c751d63e23a9035e2c4404868bba66a165448ffafa420a3a744647ce9f4",
+          "bit_errors": 0,
+          "bits_compared": 2000,
+          "symbol_errors": 0,
+          "symbols_compared": 1000,
+          "actual_timing": 3,
+          "actual_phase": 0.17
+        },
+        {
+          "input_sha256": "bfec42949f50112de86d879e0c61a9db331bcd71d24e6ee7d26891c41f37be23",
+          "bit_errors": 0,
+          "bits_compared": 2000,
+          "symbol_errors": 0,
+          "symbols_compared": 1000,
+          "actual_timing": 3,
+          "actual_phase": 0.17
+        },
+        {
+          "input_sha256": "19026cc982bfaa12014d6c4d65bc3f003ccec971b1c27a0e1f33d5ba30e808ca",
+          "bit_errors": 0,
+          "bits_compared": 2000,
+          "symbol_errors": 0,
+          "symbols_compared": 1000,
+          "actual_timing": 3,
+          "actual_phase": 0.17
+        }
+      ]
+    },
+    {
+      "modulation": "qpsk",
+      "pulse": "rect",
+      "snr_db": 25,
+      "acquisition": "static_auto",
+      "bit_errors": 0,
+      "bits_compared": 8000,
+      "ber": 0.0,
+      "symbol_errors": 0,
+      "symbols_compared": 4000,
+      "ser": 0.0,
+      "records": [
+        {
+          "input_sha256": "15bae368bba19729d2eaf9834c88a76a447204b751b0d368c47b3402849a2e09",
+          "bit_errors": 0,
+          "bits_compared": 2000,
+          "symbol_errors": 0,
+          "symbols_compared": 1000,
+          "actual_timing": 3,
+          "actual_phase": 0.18124573001479571
+        },
+        {
+          "input_sha256": "af076ab1f8606221e5a1ca4fe34607a4eb6d94b788e4ac9d0cec102889fdb7ee",
+          "bit_errors": 0,
+          "bits_compared": 2000,
+          "symbol_errors": 0,
+          "symbols_compared": 1000,
+          "actual_timing": 3,
+          "actual_phase": 0.18124573001479571
+        },
+        {
+          "input_sha256": "1a11b2f7fb7c2255267f206b2fb21dd2a5c67325223730a867a5cb9189f132ad",
+          "bit_errors": 0,
+          "bits_compared": 2000,
+          "symbol_errors": 0,
+          "symbols_compared": 1000,
+          "actual_timing": 3,
+          "actual_phase": 0.18124573001479571
+        },
+        {
+          "input_sha256": "79180d461845f7b5c46633d0196f86dcb72a3f20379effc124d53fdef68d7e51",
+          "bit_errors": 0,
+          "bits_compared": 2000,
+          "symbol_errors": 0,
+          "symbols_compared": 1000,
+          "actual_timing": 3,
+          "actual_phase": 0.18124573001479571
+        }
+      ]
+    },
+    {
+      "modulation": "qpsk",
+      "pulse": "rrc",
+      "snr_db": 15,
+      "acquisition": "manual",
+      "bit_errors": 0,
+      "bits_compared": 8000,
+      "ber": 0.0,
+      "symbol_errors": 0,
+      "symbols_compared": 4000,
+      "ser": 0.0,
+      "records": [
+        {
+          "input_sha256": "7c1aea1a098abe627c0c724324c5c74d1ebe5ae312f8466e426d1b1e89382c08",
+          "bit_errors": 0,
+          "bits_compared": 2000,
+          "symbol_errors": 0,
+          "symbols_compared": 1000,
+          "actual_timing": 3,
+          "actual_phase": 0.17
+        },
+        {
+          "input_sha256": "6c102852af44e3b59f81d4a724798061cdc6774270c8bb4dfbc3286d5885ac66",
+          "bit_errors": 0,
+          "bits_compared": 2000,
+          "symbol_errors": 0,
+          "symbols_compared": 1000,
+          "actual_timing": 3,
+          "actual_phase": 0.17
+        },
+        {
+          "input_sha256": "28532c298afe0cfb04461521ae3313bac3088be3dd9024275eafbb3d77d859a5",
+          "bit_errors": 0,
+          "bits_compared": 2000,
+          "symbol_errors": 0,
+          "symbols_compared": 1000,
+          "actual_timing": 3,
+          "actual_phase": 0.17
+        },
+        {
+          "input_sha256": "9373918c8509d451cfeecbaadf4ec327fb1de95fd424a5a38ce8f5f438e7c700",
+          "bit_errors": 0,
+          "bits_compared": 2000,
+          "symbol_errors": 0,
+          "symbols_compared": 1000,
+          "actual_timing": 3,
+          "actual_phase": 0.17
+        }
+      ]
+    },
+    {
+      "modulation": "qpsk",
+      "pulse": "rrc",
+      "snr_db": 15,
+      "acquisition": "static_auto",
+      "bit_errors": 0,
+      "bits_compared": 8000,
+      "ber": 0.0,
+      "symbol_errors": 0,
+      "symbols_compared": 4000,
+      "ser": 0.0,
+      "records": [
+        {
+          "input_sha256": "fbd64abce0af82e03b8f85704e07c46b53afbd14901d25584a0f0ae1b0249a23",
+          "bit_errors": 0,
+          "bits_compared": 2000,
+          "symbol_errors": 0,
+          "symbols_compared": 1000,
+          "actual_timing": 3,
+          "actual_phase": 0.18124573001479571
+        },
+        {
+          "input_sha256": "cd9b54dac795d9196c84283d6fbc9f5d84ce8a9cc4f190c8bd10c72c0b016e70",
+          "bit_errors": 0,
+          "bits_compared": 2000,
+          "symbol_errors": 0,
+          "symbols_compared": 1000,
+          "actual_timing": 3,
+          "actual_phase": 0.15707963267948966
+        },
+        {
+          "input_sha256": "8f9fbe213b9b70379fa10e47fb34efe258dac21458ca80e68a74fa32fdde8df5",
+          "bit_errors": 0,
+          "bits_compared": 2000,
+          "symbol_errors": 0,
+          "symbols_compared": 1000,
+          "actual_timing": 3,
+          "actual_phase": 0.18124573001479571
+        },
+        {
+          "input_sha256": "b2c597d5ff40329e7cfc7c8ce074e5a5dd5b421a073103080755ae34e814c8ef",
+          "bit_errors": 0,
+          "bits_compared": 2000,
+          "symbol_errors": 0,
+          "symbols_compared": 1000,
+          "actual_timing": 3,
+          "actual_phase": 0.18124573001479571
+        }
+      ]
+    },
+    {
+      "modulation": "qpsk",
+      "pulse": "rrc",
+      "snr_db": 25,
+      "acquisition": "manual",
+      "bit_errors": 0,
+      "bits_compared": 8000,
+      "ber": 0.0,
+      "symbol_errors": 0,
+      "symbols_compared": 4000,
+      "ser": 0.0,
+      "records": [
+        {
+          "input_sha256": "87c4127fba1076212086342927bc745f816137985fd6bb303272fd00e78a5c99",
+          "bit_errors": 0,
+          "bits_compared": 2000,
+          "symbol_errors": 0,
+          "symbols_compared": 1000,
+          "actual_timing": 3,
+          "actual_phase": 0.17
+        },
+        {
+          "input_sha256": "6be8fad356ad2b96c60f8fc2603b105c8274b9b8386355bb4ca6f8432f818d58",
+          "bit_errors": 0,
+          "bits_compared": 2000,
+          "symbol_errors": 0,
+          "symbols_compared": 1000,
+          "actual_timing": 3,
+          "actual_phase": 0.17
+        },
+        {
+          "input_sha256": "785717d241e602738a8583cea9d29faf7dae2211d633c8c8094a97234fb9c402",
+          "bit_errors": 0,
+          "bits_compared": 2000,
+          "symbol_errors": 0,
+          "symbols_compared": 1000,
+          "actual_timing": 3,
+          "actual_phase": 0.17
+        },
+        {
+          "input_sha256": "728f84268925a22861888d759e990c3ccca1c26cae013072d33c8469d59e8893",
+          "bit_errors": 0,
+          "bits_compared": 2000,
+          "symbol_errors": 0,
+          "symbols_compared": 1000,
+          "actual_timing": 3,
+          "actual_phase": 0.17
+        }
+      ]
+    },
+    {
+      "modulation": "qpsk",
+      "pulse": "rrc",
+      "snr_db": 25,
+      "acquisition": "static_auto",
+      "bit_errors": 0,
+      "bits_compared": 8000,
+      "ber": 0.0,
+      "symbol_errors": 0,
+      "symbols_compared": 4000,
+      "ser": 0.0,
+      "records": [
+        {
+          "input_sha256": "03b76f58f19e34cda32ac80efbbcf59413190e33f7309295fe0dde173c78960a",
+          "bit_errors": 0,
+          "bits_compared": 2000,
+          "symbol_errors": 0,
+          "symbols_compared": 1000,
+          "actual_timing": 3,
+          "actual_phase": 0.18124573001479571
+        },
+        {
+          "input_sha256": "f8f5b4ae7a127826972a8f03f8176cba1e56558e8f8cb0b37639e7fb38d37579",
+          "bit_errors": 0,
+          "bits_compared": 2000,
+          "symbol_errors": 0,
+          "symbols_compared": 1000,
+          "actual_timing": 3,
+          "actual_phase": 0.18124573001479571
+        },
+        {
+          "input_sha256": "492296e06336ef7c793bd335871fc5eb7d4d2f552061aaaee12779b660f90ac2",
+          "bit_errors": 0,
+          "bits_compared": 2000,
+          "symbol_errors": 0,
+          "symbols_compared": 1000,
+          "actual_timing": 3,
+          "actual_phase": 0.15707963267948966
+        },
+        {
+          "input_sha256": "7c11ce496d712cd4f39e4c60b7e6f7c45743b3522e9f05b07ecc3d5740786918",
+          "bit_errors": 0,
+          "bits_compared": 2000,
+          "symbol_errors": 0,
+          "symbols_compared": 1000,
+          "actual_timing": 3,
+          "actual_phase": 0.18124573001479571
+        }
+      ]
+    },
+    {
+      "modulation": "8psk",
+      "pulse": "rect",
+      "snr_db": 15,
+      "acquisition": "manual",
+      "bit_errors": 0,
+      "bits_compared": 12000,
+      "ber": 0.0,
+      "symbol_errors": 0,
+      "symbols_compared": 4000,
+      "ser": 0.0,
+      "records": [
+        {
+          "input_sha256": "225f3184846bbd7cae00dfbd6e8c11e276bd215d4329e6f2b55f1d356f2328a4",
+          "bit_errors": 0,
+          "bits_compared": 3000,
+          "symbol_errors": 0,
+          "symbols_compared": 1000,
+          "actual_timing": 3,
+          "actual_phase": 0.17
+        },
+        {
+          "input_sha256": "be8c6713ecf38535dd2350b3863397b7b44bc9806eb01730901d05c856fb494a",
+          "bit_errors": 0,
+          "bits_compared": 3000,
+          "symbol_errors": 0,
+          "symbols_compared": 1000,
+          "actual_timing": 3,
+          "actual_phase": 0.17
+        },
+        {
+          "input_sha256": "ca8b599294e5f30e59262eef3a819bdb01cbd1a1825cb07a702ec856bc15b4aa",
+          "bit_errors": 0,
+          "bits_compared": 3000,
+          "symbol_errors": 0,
+          "symbols_compared": 1000,
+          "actual_timing": 3,
+          "actual_phase": 0.17
+        },
+        {
+          "input_sha256": "f922dd54ce4de1b7892e3f91b73997f208c93620501762259ee4a93e7b91adc0",
+          "bit_errors": 0,
+          "bits_compared": 3000,
+          "symbol_errors": 0,
+          "symbols_compared": 1000,
+          "actual_timing": 3,
+          "actual_phase": 0.17
+        }
+      ]
+    },
+    {
+      "modulation": "8psk",
+      "pulse": "rect",
+      "snr_db": 15,
+      "acquisition": "static_auto",
+      "bit_errors": 0,
+      "bits_compared": 12000,
+      "ber": 0.0,
+      "symbol_errors": 0,
+      "symbols_compared": 4000,
+      "ser": 0.0,
+      "records": [
+        {
+          "input_sha256": "b5b5548ae9c0f6926f4780a061f6a35620e48bea59811910437afad8cc4fa013",
+          "bit_errors": 0,
+          "bits_compared": 3000,
+          "symbol_errors": 0,
+          "symbols_compared": 1000,
+          "actual_timing": 3,
+          "actual_phase": 0.17520420568096917
+        },
+        {
+          "input_sha256": "9539437c75a46e7efbf2026a3d455ad70010dfc519d2546b2966d75d40fbc6d9",
+          "bit_errors": 0,
+          "bits_compared": 3000,
+          "symbol_errors": 0,
+          "symbols_compared": 1000,
+          "actual_timing": 3,
+          "actual_phase": 0.17520420568096917
+        },
+        {
+          "input_sha256": "579661dc7980450d0b2e3c44a84c2252182a4c9a768aeca57f7740e547072632",
+          "bit_errors": 0,
+          "bits_compared": 3000,
+          "symbol_errors": 0,
+          "symbols_compared": 1000,
+          "actual_timing": 3,
+          "actual_phase": 0.1631211570133162
+        },
+        {
+          "input_sha256": "2834ade6ec5ccac7d11c62ae99186e51bd96c147cec489ceeaf3654e8c2f636a",
+          "bit_errors": 0,
+          "bits_compared": 3000,
+          "symbol_errors": 0,
+          "symbols_compared": 1000,
+          "actual_timing": 3,
+          "actual_phase": 0.17520420568096917
+        }
+      ]
+    },
+    {
+      "modulation": "8psk",
+      "pulse": "rect",
+      "snr_db": 25,
+      "acquisition": "manual",
+      "bit_errors": 0,
+      "bits_compared": 12000,
+      "ber": 0.0,
+      "symbol_errors": 0,
+      "symbols_compared": 4000,
+      "ser": 0.0,
+      "records": [
+        {
+          "input_sha256": "60b8c6aefdb60d497a4f41eaeb3f26653969942ea471302870a5b55fd5f3056d",
+          "bit_errors": 0,
+          "bits_compared": 3000,
+          "symbol_errors": 0,
+          "symbols_compared": 1000,
+          "actual_timing": 3,
+          "actual_phase": 0.17
+        },
+        {
+          "input_sha256": "1130a0a33d05eb54eab246112325349b0f9d042a0cbacdc397d3ea8799351326",
+          "bit_errors": 0,
+          "bits_compared": 3000,
+          "symbol_errors": 0,
+          "symbols_compared": 1000,
+          "actual_timing": 3,
+          "actual_phase": 0.17
+        },
+        {
+          "input_sha256": "964198b784b1e6dc17dc22beef109342695fe7c36f2239ea6390b4de0da3f9e3",
+          "bit_errors": 0,
+          "bits_compared": 3000,
+          "symbol_errors": 0,
+          "symbols_compared": 1000,
+          "actual_timing": 3,
+          "actual_phase": 0.17
+        },
+        {
+          "input_sha256": "65c9d46b4fa9853d423b4051d987f9477fe28a220139a3504467922f68667fbc",
+          "bit_errors": 0,
+          "bits_compared": 3000,
+          "symbol_errors": 0,
+          "symbols_compared": 1000,
+          "actual_timing": 3,
+          "actual_phase": 0.17
+        }
+      ]
+    },
+    {
+      "modulation": "8psk",
+      "pulse": "rect",
+      "snr_db": 25,
+      "acquisition": "static_auto",
+      "bit_errors": 0,
+      "bits_compared": 12000,
+      "ber": 0.0,
+      "symbol_errors": 0,
+      "symbols_compared": 4000,
+      "ser": 0.0,
+      "records": [
+        {
+          "input_sha256": "8820fbd403b127937add5a7626d3cfa286470f666aa403e562afc0f3ec6434a7",
+          "bit_errors": 0,
+          "bits_compared": 3000,
+          "symbol_errors": 0,
+          "symbols_compared": 1000,
+          "actual_timing": 3,
+          "actual_phase": 0.17520420568096917
+        },
+        {
+          "input_sha256": "59877e835a11287cbbccf84981594528389678ee1cab6a5bace0241d2d7c8937",
+          "bit_errors": 0,
+          "bits_compared": 3000,
+          "symbol_errors": 0,
+          "symbols_compared": 1000,
+          "actual_timing": 3,
+          "actual_phase": 0.17520420568096917
+        },
+        {
+          "input_sha256": "957e6a2dc4ae428bb71aaa0a1cf84d681f616a7f886ac4127cfcb986ddb741d5",
+          "bit_errors": 0,
+          "bits_compared": 3000,
+          "symbol_errors": 0,
+          "symbols_compared": 1000,
+          "actual_timing": 3,
+          "actual_phase": 0.17520420568096917
+        },
+        {
+          "input_sha256": "b72e13343ed13bee9e87d003bda5202121aba787f828c7010e8b28b20a0763f0",
+          "bit_errors": 0,
+          "bits_compared": 3000,
+          "symbol_errors": 0,
+          "symbols_compared": 1000,
+          "actual_timing": 3,
+          "actual_phase": 0.17520420568096917
+        }
+      ]
+    },
+    {
+      "modulation": "8psk",
+      "pulse": "rrc",
+      "snr_db": 15,
+      "acquisition": "manual",
+      "bit_errors": 0,
+      "bits_compared": 12000,
+      "ber": 0.0,
+      "symbol_errors": 0,
+      "symbols_compared": 4000,
+      "ser": 0.0,
+      "records": [
+        {
+          "input_sha256": "4e070ca7115cf0ab9a89489ee1423c40127fc3c30ed553b1e757f8c07554e1f2",
+          "bit_errors": 0,
+          "bits_compared": 3000,
+          "symbol_errors": 0,
+          "symbols_compared": 1000,
+          "actual_timing": 3,
+          "actual_phase": 0.17
+        },
+        {
+          "input_sha256": "0206c645465a6974f3dc2de17bdcd1b18fbbfed905961fbdda83e13a7fcaa7e6",
+          "bit_errors": 0,
+          "bits_compared": 3000,
+          "symbol_errors": 0,
+          "symbols_compared": 1000,
+          "actual_timing": 3,
+          "actual_phase": 0.17
+        },
+        {
+          "input_sha256": "42bd2e4b9f2111a842034bf54e9a8cbd7a580ade5869c1a3f38e9f6ebcf34758",
+          "bit_errors": 0,
+          "bits_compared": 3000,
+          "symbol_errors": 0,
+          "symbols_compared": 1000,
+          "actual_timing": 3,
+          "actual_phase": 0.17
+        },
+        {
+          "input_sha256": "d0ed24cd98a3d067d4cfcf965bc9c176d1ba35ceea5f748385ca4e5b4a65c4a9",
+          "bit_errors": 0,
+          "bits_compared": 3000,
+          "symbol_errors": 0,
+          "symbols_compared": 1000,
+          "actual_timing": 3,
+          "actual_phase": 0.17
+        }
+      ]
+    },
+    {
+      "modulation": "8psk",
+      "pulse": "rrc",
+      "snr_db": 15,
+      "acquisition": "static_auto",
+      "bit_errors": 0,
+      "bits_compared": 12000,
+      "ber": 0.0,
+      "symbol_errors": 0,
+      "symbols_compared": 4000,
+      "ser": 0.0,
+      "records": [
+        {
+          "input_sha256": "475982c424351ad2c81200c73acb722f7763404504577ca7d9882c24ba3cd158",
+          "bit_errors": 0,
+          "bits_compared": 3000,
+          "symbol_errors": 0,
+          "symbols_compared": 1000,
+          "actual_timing": 3,
+          "actual_phase": 0.17520420568096917
+        },
+        {
+          "input_sha256": "844a2329307876d20f8a64312eadccfbb9c2de1a30b49c1734d25ef0fb89692e",
+          "bit_errors": 0,
+          "bits_compared": 3000,
+          "symbol_errors": 0,
+          "symbols_compared": 1000,
+          "actual_timing": 3,
+          "actual_phase": 0.17520420568096917
+        },
+        {
+          "input_sha256": "71a953f3076d4af61b689e9d49cc4a0f52059d3c88f6d76072b1c1b7af3359c9",
+          "bit_errors": 0,
+          "bits_compared": 3000,
+          "symbol_errors": 0,
+          "symbols_compared": 1000,
+          "actual_timing": 3,
+          "actual_phase": 0.17520420568096917
+        },
+        {
+          "input_sha256": "694698bb85eea59a543705f46f77497de8d84e76ccdf4c579819b90860a35e70",
+          "bit_errors": 0,
+          "bits_compared": 3000,
+          "symbol_errors": 0,
+          "symbols_compared": 1000,
+          "actual_timing": 3,
+          "actual_phase": 0.17520420568096917
+        }
+      ]
+    },
+    {
+      "modulation": "8psk",
+      "pulse": "rrc",
+      "snr_db": 25,
+      "acquisition": "manual",
+      "bit_errors": 0,
+      "bits_compared": 12000,
+      "ber": 0.0,
+      "symbol_errors": 0,
+      "symbols_compared": 4000,
+      "ser": 0.0,
+      "records": [
+        {
+          "input_sha256": "ef154ba8b0e4d52af84ad7429ed059003eae07fbe3a866dcfe4bfe1f1d167a45",
+          "bit_errors": 0,
+          "bits_compared": 3000,
+          "symbol_errors": 0,
+          "symbols_compared": 1000,
+          "actual_timing": 3,
+          "actual_phase": 0.17
+        },
+        {
+          "input_sha256": "2ab6bfe1f45c467a7f03966e45ef97098c7416706b18e405fef35e45513e05ed",
+          "bit_errors": 0,
+          "bits_compared": 3000,
+          "symbol_errors": 0,
+          "symbols_compared": 1000,
+          "actual_timing": 3,
+          "actual_phase": 0.17
+        },
+        {
+          "input_sha256": "26810ce4feaa362e5019ed3b7c85d708c70cf61f57591b5c6b592305b392d344",
+          "bit_errors": 0,
+          "bits_compared": 3000,
+          "symbol_errors": 0,
+          "symbols_compared": 1000,
+          "actual_timing": 3,
+          "actual_phase": 0.17
+        },
+        {
+          "input_sha256": "f3441447d6757c0ea016ae7504251378d1472b413b5d1dfff08ac9047cb8b3c4",
+          "bit_errors": 0,
+          "bits_compared": 3000,
+          "symbol_errors": 0,
+          "symbols_compared": 1000,
+          "actual_timing": 3,
+          "actual_phase": 0.17
+        }
+      ]
+    },
+    {
+      "modulation": "8psk",
+      "pulse": "rrc",
+      "snr_db": 25,
+      "acquisition": "static_auto",
+      "bit_errors": 0,
+      "bits_compared": 12000,
+      "ber": 0.0,
+      "symbol_errors": 0,
+      "symbols_compared": 4000,
+      "ser": 0.0,
+      "records": [
+        {
+          "input_sha256": "32e2894b1774be730852430f55992ac62fd0e61fd1dd55615caab509890ec787",
+          "bit_errors": 0,
+          "bits_compared": 3000,
+          "symbol_errors": 0,
+          "symbols_compared": 1000,
+          "actual_timing": 3,
+          "actual_phase": 0.17520420568096917
+        },
+        {
+          "input_sha256": "9292d3d0ff34fb3760a9c6a7c09859e39c8d3a7ab70d416e978e5f9043166174",
+          "bit_errors": 0,
+          "bits_compared": 3000,
+          "symbol_errors": 0,
+          "symbols_compared": 1000,
+          "actual_timing": 3,
+          "actual_phase": 0.17520420568096917
+        },
+        {
+          "input_sha256": "e8dbc23b2c25958ecf911a9af1cfd83cb1c5c3c7819fcdf12ca78c403828e119",
+          "bit_errors": 0,
+          "bits_compared": 3000,
+          "symbol_errors": 0,
+          "symbols_compared": 1000,
+          "actual_timing": 3,
+          "actual_phase": 0.17520420568096917
+        },
+        {
+          "input_sha256": "c4253c3fbae543640db040af7c20e149ed4fba983152abe4cb1e96a61ae94f69",
+          "bit_errors": 0,
+          "bits_compared": 3000,
+          "symbol_errors": 0,
+          "symbols_compared": 1000,
+          "actual_timing": 3,
+          "actual_phase": 0.17520420568096917
+        }
+      ]
+    },
+    {
+      "modulation": "16qam",
+      "pulse": "rect",
+      "snr_db": 15,
+      "acquisition": "manual",
+      "bit_errors": 0,
+      "bits_compared": 16000,
+      "ber": 0.0,
+      "symbol_errors": 0,
+      "symbols_compared": 4000,
+      "ser": 0.0,
+      "records": [
+        {
+          "input_sha256": "f2d86c6a001bd6c2f942ac487e454a282696a3a3577c9c3126acfb910e3edc0f",
+          "bit_errors": 0,
+          "bits_compared": 4000,
+          "symbol_errors": 0,
+          "symbols_compared": 1000,
+          "actual_timing": 3,
+          "actual_phase": 0.17
+        },
+        {
+          "input_sha256": "b420964cd140d2b6b7293a1667b4d8b2edff552c63c8a728b60f760720fa8804",
+          "bit_errors": 0,
+          "bits_compared": 4000,
+          "symbol_errors": 0,
+          "symbols_compared": 1000,
+          "actual_timing": 3,
+          "actual_phase": 0.17
+        },
+        {
+          "input_sha256": "18ce05fb05ca46d0822dc5b3286cec5e3e79413766b2c2fcc74e806b87075aef",
+          "bit_errors": 0,
+          "bits_compared": 4000,
+          "symbol_errors": 0,
+          "symbols_compared": 1000,
+          "actual_timing": 3,
+          "actual_phase": 0.17
+        },
+        {
+          "input_sha256": "9867eec5a3d51448086afb6ae7479f60c153b0495f9ed84b4b4878c97255f2a4",
+          "bit_errors": 0,
+          "bits_compared": 4000,
+          "symbol_errors": 0,
+          "symbols_compared": 1000,
+          "actual_timing": 3,
+          "actual_phase": 0.17
+        }
+      ]
+    },
+    {
+      "modulation": "16qam",
+      "pulse": "rect",
+      "snr_db": 15,
+      "acquisition": "static_auto",
+      "bit_errors": 0,
+      "bits_compared": 16000,
+      "ber": 0.0,
+      "symbol_errors": 0,
+      "symbols_compared": 4000,
+      "ser": 0.0,
+      "records": [
+        {
+          "input_sha256": "ba0d092deae544ca45d424ae660d8f7f3be314fccd9513987b7db91bc71a8e60",
+          "bit_errors": 0,
+          "bits_compared": 4000,
+          "symbol_errors": 0,
+          "symbols_compared": 1000,
+          "actual_timing": 3,
+          "actual_phase": 0.15707963267948966
+        },
+        {
+          "input_sha256": "be03bb1b7580b6ceac2b6045d44973b52b85d9a9ee1dd0edd35ba2c7f540c309",
+          "bit_errors": 0,
+          "bits_compared": 4000,
+          "symbol_errors": 0,
+          "symbols_compared": 1000,
+          "actual_timing": 3,
+          "actual_phase": 0.18124573001479571
+        },
+        {
+          "input_sha256": "671834f25588fb1a6d69278c3cb6cef1248614b7a5ddee45403d111397cbd5d9",
+          "bit_errors": 0,
+          "bits_compared": 4000,
+          "symbol_errors": 0,
+          "symbols_compared": 1000,
+          "actual_timing": 3,
+          "actual_phase": 0.15707963267948966
+        },
+        {
+          "input_sha256": "87e7c5d7992194a1d5ad3f228e1177912d7923f602a3c7e392e6fe99406ac758",
+          "bit_errors": 0,
+          "bits_compared": 4000,
+          "symbol_errors": 0,
+          "symbols_compared": 1000,
+          "actual_timing": 3,
+          "actual_phase": 0.18124573001479571
+        }
+      ]
+    },
+    {
+      "modulation": "16qam",
+      "pulse": "rect",
+      "snr_db": 25,
+      "acquisition": "manual",
+      "bit_errors": 0,
+      "bits_compared": 16000,
+      "ber": 0.0,
+      "symbol_errors": 0,
+      "symbols_compared": 4000,
+      "ser": 0.0,
+      "records": [
+        {
+          "input_sha256": "b97c32ed603e2cd1ed0ac5261a8518f6c55173c0e262228c6fb563379f7ed005",
+          "bit_errors": 0,
+          "bits_compared": 4000,
+          "symbol_errors": 0,
+          "symbols_compared": 1000,
+          "actual_timing": 3,
+          "actual_phase": 0.17
+        },
+        {
+          "input_sha256": "7702fbca841290136a56e181cb563e460e157cd187bc648259cb49667d287c2e",
+          "bit_errors": 0,
+          "bits_compared": 4000,
+          "symbol_errors": 0,
+          "symbols_compared": 1000,
+          "actual_timing": 3,
+          "actual_phase": 0.17
+        },
+        {
+          "input_sha256": "b2d790efb6eb48735a7a1b265d4973d1d230e6c703666c807d58c3560ad53292",
+          "bit_errors": 0,
+          "bits_compared": 4000,
+          "symbol_errors": 0,
+          "symbols_compared": 1000,
+          "actual_timing": 3,
+          "actual_phase": 0.17
+        },
+        {
+          "input_sha256": "dd04e2a2a30e2bf25c943e844ed3fae0b49a1a815aa9d6d0be8157443d77b319",
+          "bit_errors": 0,
+          "bits_compared": 4000,
+          "symbol_errors": 0,
+          "symbols_compared": 1000,
+          "actual_timing": 3,
+          "actual_phase": 0.17
+        }
+      ]
+    },
+    {
+      "modulation": "16qam",
+      "pulse": "rect",
+      "snr_db": 25,
+      "acquisition": "static_auto",
+      "bit_errors": 0,
+      "bits_compared": 16000,
+      "ber": 0.0,
+      "symbol_errors": 0,
+      "symbols_compared": 4000,
+      "ser": 0.0,
+      "records": [
+        {
+          "input_sha256": "15f59c3f270e8d3ef874d5f78cd18f1cb675df39e603ed4f61460c43cd14d0a7",
+          "bit_errors": 0,
+          "bits_compared": 4000,
+          "symbol_errors": 0,
+          "symbols_compared": 1000,
+          "actual_timing": 3,
+          "actual_phase": 0.18124573001479571
+        },
+        {
+          "input_sha256": "27e7773b54807587fce204006ea7c8a45a13b2ed2f19f16d80b59efe8d21dade",
+          "bit_errors": 0,
+          "bits_compared": 4000,
+          "symbol_errors": 0,
+          "symbols_compared": 1000,
+          "actual_timing": 3,
+          "actual_phase": 0.18124573001479571
+        },
+        {
+          "input_sha256": "f72d61a74076399b19844213ff0b504fd76383727be51b16a889547e2612a3f7",
+          "bit_errors": 0,
+          "bits_compared": 4000,
+          "symbol_errors": 0,
+          "symbols_compared": 1000,
+          "actual_timing": 3,
+          "actual_phase": 0.18124573001479571
+        },
+        {
+          "input_sha256": "4bac3e71533ba29aa5443b1bdc21d4d76b2b88ae2ab1e3377012146ac0d26d98",
+          "bit_errors": 0,
+          "bits_compared": 4000,
+          "symbol_errors": 0,
+          "symbols_compared": 1000,
+          "actual_timing": 3,
+          "actual_phase": 0.18124573001479571
+        }
+      ]
+    },
+    {
+      "modulation": "16qam",
+      "pulse": "rrc",
+      "snr_db": 15,
+      "acquisition": "manual",
+      "bit_errors": 0,
+      "bits_compared": 16000,
+      "ber": 0.0,
+      "symbol_errors": 0,
+      "symbols_compared": 4000,
+      "ser": 0.0,
+      "records": [
+        {
+          "input_sha256": "91e148e038fa4fa7fd19fb9d307ae873c6beb3ca26f208a89a81b7702322d2b7",
+          "bit_errors": 0,
+          "bits_compared": 4000,
+          "symbol_errors": 0,
+          "symbols_compared": 1000,
+          "actual_timing": 3,
+          "actual_phase": 0.17
+        },
+        {
+          "input_sha256": "1839ac9062e4148731f5e8b6b003f919372cfa230c9bff8e619e4aa36c9acbf4",
+          "bit_errors": 0,
+          "bits_compared": 4000,
+          "symbol_errors": 0,
+          "symbols_compared": 1000,
+          "actual_timing": 3,
+          "actual_phase": 0.17
+        },
+        {
+          "input_sha256": "5186f19ba45e764c99d1bb2399e5a37b779d41f574d9b1bd90de37e7da8cd6e0",
+          "bit_errors": 0,
+          "bits_compared": 4000,
+          "symbol_errors": 0,
+          "symbols_compared": 1000,
+          "actual_timing": 3,
+          "actual_phase": 0.17
+        },
+        {
+          "input_sha256": "7326abadd3ac99e1eeda2b9c97999b69a6dc8900907354aca5ec7dcaf3dae4d5",
+          "bit_errors": 0,
+          "bits_compared": 4000,
+          "symbol_errors": 0,
+          "symbols_compared": 1000,
+          "actual_timing": 3,
+          "actual_phase": 0.17
+        }
+      ]
+    },
+    {
+      "modulation": "16qam",
+      "pulse": "rrc",
+      "snr_db": 15,
+      "acquisition": "static_auto",
+      "bit_errors": 0,
+      "bits_compared": 16000,
+      "ber": 0.0,
+      "symbol_errors": 0,
+      "symbols_compared": 4000,
+      "ser": 0.0,
+      "records": [
+        {
+          "input_sha256": "b733a594af260f86e4f00ee205303687d4326168e5ca2e6b4948c4ed16ddabdd",
+          "bit_errors": 0,
+          "bits_compared": 4000,
+          "symbol_errors": 0,
+          "symbols_compared": 1000,
+          "actual_timing": 3,
+          "actual_phase": 0.18124573001479571
+        },
+        {
+          "input_sha256": "d4bfde87dae58f28824ee35eea5ac75df40fed23aa8767198d50772c42f69822",
+          "bit_errors": 0,
+          "bits_compared": 4000,
+          "symbol_errors": 0,
+          "symbols_compared": 1000,
+          "actual_timing": 3,
+          "actual_phase": 0.18124573001479571
+        },
+        {
+          "input_sha256": "320e57c09b5f89c6c36c566f8aa59f2bf524cfddd06b1d4ddfec41da553891ce",
+          "bit_errors": 0,
+          "bits_compared": 4000,
+          "symbol_errors": 0,
+          "symbols_compared": 1000,
+          "actual_timing": 3,
+          "actual_phase": 0.18124573001479571
+        },
+        {
+          "input_sha256": "53e5acc203615b719952a7a4ae4908bb2b303b5b6bfb4dfc0766b313bcb5f010",
+          "bit_errors": 0,
+          "bits_compared": 4000,
+          "symbol_errors": 0,
+          "symbols_compared": 1000,
+          "actual_timing": 3,
+          "actual_phase": 0.18124573001479571
+        }
+      ]
+    },
+    {
+      "modulation": "16qam",
+      "pulse": "rrc",
+      "snr_db": 25,
+      "acquisition": "manual",
+      "bit_errors": 0,
+      "bits_compared": 16000,
+      "ber": 0.0,
+      "symbol_errors": 0,
+      "symbols_compared": 4000,
+      "ser": 0.0,
+      "records": [
+        {
+          "input_sha256": "f6aa1901c271dead5ff6d61186a957845cfae21fe36896b8ee2bb1934a36dfbc",
+          "bit_errors": 0,
+          "bits_compared": 4000,
+          "symbol_errors": 0,
+          "symbols_compared": 1000,
+          "actual_timing": 3,
+          "actual_phase": 0.17
+        },
+        {
+          "input_sha256": "6b47814cf9efc967ef603e9ec2288bad3572f11c2fb4551f6ee35876ea8421be",
+          "bit_errors": 0,
+          "bits_compared": 4000,
+          "symbol_errors": 0,
+          "symbols_compared": 1000,
+          "actual_timing": 3,
+          "actual_phase": 0.17
+        },
+        {
+          "input_sha256": "c7c57a8a41176af54fe94153e64bbe89f028750847b8c6b47e51d1d7b09c6471",
+          "bit_errors": 0,
+          "bits_compared": 4000,
+          "symbol_errors": 0,
+          "symbols_compared": 1000,
+          "actual_timing": 3,
+          "actual_phase": 0.17
+        },
+        {
+          "input_sha256": "17fb616c235c538114b282f14e2612fe0630f4b9760bc4d5fdc1868d6ab9653d",
+          "bit_errors": 0,
+          "bits_compared": 4000,
+          "symbol_errors": 0,
+          "symbols_compared": 1000,
+          "actual_timing": 3,
+          "actual_phase": 0.17
+        }
+      ]
+    },
+    {
+      "modulation": "16qam",
+      "pulse": "rrc",
+      "snr_db": 25,
+      "acquisition": "static_auto",
+      "bit_errors": 0,
+      "bits_compared": 16000,
+      "ber": 0.0,
+      "symbol_errors": 0,
+      "symbols_compared": 4000,
+      "ser": 0.0,
+      "records": [
+        {
+          "input_sha256": "c6ccf4883195abe8e3a0374bd0f0760265268940e51cfb1617dc6ed5cfd60efa",
+          "bit_errors": 0,
+          "bits_compared": 4000,
+          "symbol_errors": 0,
+          "symbols_compared": 1000,
+          "actual_timing": 3,
+          "actual_phase": 0.18124573001479571
+        },
+        {
+          "input_sha256": "27f4b388898d9eb1fffabf646cdc401b91294d0ed707afb94415739795a0db6a",
+          "bit_errors": 0,
+          "bits_compared": 4000,
+          "symbol_errors": 0,
+          "symbols_compared": 1000,
+          "actual_timing": 3,
+          "actual_phase": 0.18124573001479571
+        },
+        {
+          "input_sha256": "859f7145e3dafa1ea9f92a51d8d57716cde6e2eb2547359e69d975390692dc74",
+          "bit_errors": 0,
+          "bits_compared": 4000,
+          "symbol_errors": 0,
+          "symbols_compared": 1000,
+          "actual_timing": 3,
+          "actual_phase": 0.18124573001479571
+        },
+        {
+          "input_sha256": "afcb7aace01428a7d610ab9c6b502f5ef596751c92a6a18d44070d38a6ae1ada",
+          "bit_errors": 0,
+          "bits_compared": 4000,
+          "symbol_errors": 0,
+          "symbols_compared": 1000,
+          "actual_timing": 3,
+          "actual_phase": 0.18124573001479571
+        }
+      ]
+    },
+    {
+      "modulation": "64qam",
+      "pulse": "rect",
+      "snr_db": 15,
+      "acquisition": "manual",
+      "bit_errors": 9,
+      "bits_compared": 24000,
+      "ber": 0.000375,
+      "symbol_errors": 9,
+      "symbols_compared": 4000,
+      "ser": 0.00225,
+      "records": [
+        {
+          "input_sha256": "fe25141547173913aba1cbb4a138cb8e8bfa6e34305d0e1f8288c04c4db3f8ea",
+          "bit_errors": 4,
+          "bits_compared": 6000,
+          "symbol_errors": 4,
+          "symbols_compared": 1000,
+          "actual_timing": 3,
+          "actual_phase": 0.17
+        },
+        {
+          "input_sha256": "f9efd65c2525938d713690c101e90bf402ca6634caee18af81d9db47f02a4ab4",
+          "bit_errors": 2,
+          "bits_compared": 6000,
+          "symbol_errors": 2,
+          "symbols_compared": 1000,
+          "actual_timing": 3,
+          "actual_phase": 0.17
+        },
+        {
+          "input_sha256": "5778d4ad8d7aea6d796283ac794429976e8cf54f2f1c308106e7ff2a3d89d2e0",
+          "bit_errors": 2,
+          "bits_compared": 6000,
+          "symbol_errors": 2,
+          "symbols_compared": 1000,
+          "actual_timing": 3,
+          "actual_phase": 0.17
+        },
+        {
+          "input_sha256": "d22aeceaca2fca27fe827f7ad6a6dbd1a58bb21d532886db007873cc76bee365",
+          "bit_errors": 1,
+          "bits_compared": 6000,
+          "symbol_errors": 1,
+          "symbols_compared": 1000,
+          "actual_timing": 3,
+          "actual_phase": 0.17
+        }
+      ]
+    },
+    {
+      "modulation": "64qam",
+      "pulse": "rect",
+      "snr_db": 15,
+      "acquisition": "static_auto",
+      "bit_errors": 21,
+      "bits_compared": 24000,
+      "ber": 0.000875,
+      "symbol_errors": 21,
+      "symbols_compared": 4000,
+      "ser": 0.00525,
+      "records": [
+        {
+          "input_sha256": "68003fef0a43f578f3e247e91cbf94af8abc226b83f6f2541cfcedad5152f254",
+          "bit_errors": 3,
+          "bits_compared": 6000,
+          "symbol_errors": 3,
+          "symbols_compared": 1000,
+          "actual_timing": 3,
+          "actual_phase": 0.15707963267948966
+        },
+        {
+          "input_sha256": "83213686870e6493ff320d69d86bc8f21754a96e5450184f2b53dcbafd7e9f04",
+          "bit_errors": 9,
+          "bits_compared": 6000,
+          "symbol_errors": 9,
+          "symbols_compared": 1000,
+          "actual_timing": 3,
+          "actual_phase": 0.18124573001479571
+        },
+        {
+          "input_sha256": "b8cf0e5218a25c9b52b82b3023b67b3fad436ab1d514487aae47f7aa46a764c1",
+          "bit_errors": 4,
+          "bits_compared": 6000,
+          "symbol_errors": 4,
+          "symbols_compared": 1000,
+          "actual_timing": 3,
+          "actual_phase": 0.15707963267948966
+        },
+        {
+          "input_sha256": "ad04765e52604af15a367bf74045f5d16112942415873d41b1ec1ded698d3156",
+          "bit_errors": 5,
+          "bits_compared": 6000,
+          "symbol_errors": 5,
+          "symbols_compared": 1000,
+          "actual_timing": 3,
+          "actual_phase": 0.15707963267948966
+        }
+      ]
+    },
+    {
+      "modulation": "64qam",
+      "pulse": "rect",
+      "snr_db": 25,
+      "acquisition": "manual",
+      "bit_errors": 0,
+      "bits_compared": 24000,
+      "ber": 0.0,
+      "symbol_errors": 0,
+      "symbols_compared": 4000,
+      "ser": 0.0,
+      "records": [
+        {
+          "input_sha256": "c280ffbe053edab3a1b1104fe357c54615f10186d6d99c8002f17861fa19cd0a",
+          "bit_errors": 0,
+          "bits_compared": 6000,
+          "symbol_errors": 0,
+          "symbols_compared": 1000,
+          "actual_timing": 3,
+          "actual_phase": 0.17
+        },
+        {
+          "input_sha256": "a3f4a5e295dd486736f50f7571c93fe0ab5780a1599db492d46efdb680f449b1",
+          "bit_errors": 0,
+          "bits_compared": 6000,
+          "symbol_errors": 0,
+          "symbols_compared": 1000,
+          "actual_timing": 3,
+          "actual_phase": 0.17
+        },
+        {
+          "input_sha256": "1586d0c868e610f5ab570f4703ec9a5e18be4366b0c454a2553f1ee504764fba",
+          "bit_errors": 0,
+          "bits_compared": 6000,
+          "symbol_errors": 0,
+          "symbols_compared": 1000,
+          "actual_timing": 3,
+          "actual_phase": 0.17
+        },
+        {
+          "input_sha256": "c2d87fc1059d5ed6fe3fe8a6fda8e4a510eb4726d3bae5825bf08a8d524253e6",
+          "bit_errors": 0,
+          "bits_compared": 6000,
+          "symbol_errors": 0,
+          "symbols_compared": 1000,
+          "actual_timing": 3,
+          "actual_phase": 0.17
+        }
+      ]
+    },
+    {
+      "modulation": "64qam",
+      "pulse": "rect",
+      "snr_db": 25,
+      "acquisition": "static_auto",
+      "bit_errors": 0,
+      "bits_compared": 24000,
+      "ber": 0.0,
+      "symbol_errors": 0,
+      "symbols_compared": 4000,
+      "ser": 0.0,
+      "records": [
+        {
+          "input_sha256": "346b378b9eea2420926c25a896056aae941784e8600343aed0a2af6bb5b5037d",
+          "bit_errors": 0,
+          "bits_compared": 6000,
+          "symbol_errors": 0,
+          "symbols_compared": 1000,
+          "actual_timing": 3,
+          "actual_phase": 0.18124573001479571
+        },
+        {
+          "input_sha256": "23f70811027ead66276d761f8d8787e90ee131b0ad409f23c18a0d0ca54302b9",
+          "bit_errors": 0,
+          "bits_compared": 6000,
+          "symbol_errors": 0,
+          "symbols_compared": 1000,
+          "actual_timing": 3,
+          "actual_phase": 0.18124573001479571
+        },
+        {
+          "input_sha256": "04290f467dde29456bc31b7b1058cba8d113715b6afaab1fa0038c90528865f8",
+          "bit_errors": 0,
+          "bits_compared": 6000,
+          "symbol_errors": 0,
+          "symbols_compared": 1000,
+          "actual_timing": 3,
+          "actual_phase": 0.18124573001479571
+        },
+        {
+          "input_sha256": "e51594447774bbb9edac08195a0f11b142ca5c6a51623d3f1a0339a8385c859a",
+          "bit_errors": 0,
+          "bits_compared": 6000,
+          "symbol_errors": 0,
+          "symbols_compared": 1000,
+          "actual_timing": 3,
+          "actual_phase": 0.15707963267948966
+        }
+      ]
+    },
+    {
+      "modulation": "64qam",
+      "pulse": "rrc",
+      "snr_db": 15,
+      "acquisition": "manual",
+      "bit_errors": 7,
+      "bits_compared": 24000,
+      "ber": 0.0002916666666666667,
+      "symbol_errors": 7,
+      "symbols_compared": 4000,
+      "ser": 0.00175,
+      "records": [
+        {
+          "input_sha256": "b2089f95829a1fb1b91bf6fb407488d753f9ee7ea6f4fac7b01a48d113e84572",
+          "bit_errors": 1,
+          "bits_compared": 6000,
+          "symbol_errors": 1,
+          "symbols_compared": 1000,
+          "actual_timing": 3,
+          "actual_phase": 0.17
+        },
+        {
+          "input_sha256": "76dc74d5cf5ab3c00ad25c8363d784a80f9f187b2e92eb16adf4e48cade7b39b",
+          "bit_errors": 1,
+          "bits_compared": 6000,
+          "symbol_errors": 1,
+          "symbols_compared": 1000,
+          "actual_timing": 3,
+          "actual_phase": 0.17
+        },
+        {
+          "input_sha256": "b80806ec8d3831e922a79b0eed7f4af8f8673b281fe4d941fe6bb4587a3eaaf5",
+          "bit_errors": 3,
+          "bits_compared": 6000,
+          "symbol_errors": 3,
+          "symbols_compared": 1000,
+          "actual_timing": 3,
+          "actual_phase": 0.17
+        },
+        {
+          "input_sha256": "b5a0ca4a581668a8a30820db5a5e9d12e6b2f5639f4ede0b03110d10b48cc37c",
+          "bit_errors": 2,
+          "bits_compared": 6000,
+          "symbol_errors": 2,
+          "symbols_compared": 1000,
+          "actual_timing": 3,
+          "actual_phase": 0.17
+        }
+      ]
+    },
+    {
+      "modulation": "64qam",
+      "pulse": "rrc",
+      "snr_db": 15,
+      "acquisition": "static_auto",
+      "bit_errors": 17,
+      "bits_compared": 24000,
+      "ber": 0.0007083333333333334,
+      "symbol_errors": 17,
+      "symbols_compared": 4000,
+      "ser": 0.00425,
+      "records": [
+        {
+          "input_sha256": "eed28177856e16760256e8c1e2f216d8eeb69981cee0044c4c0572ff52d81f00",
+          "bit_errors": 12,
+          "bits_compared": 6000,
+          "symbol_errors": 12,
+          "symbols_compared": 1000,
+          "actual_timing": 3,
+          "actual_phase": 0.18124573001479571
+        },
+        {
+          "input_sha256": "82b41d20736235f71e77dc59aa7077e5499b6040c984426c34d149445fae1360",
+          "bit_errors": 2,
+          "bits_compared": 6000,
+          "symbol_errors": 2,
+          "symbols_compared": 1000,
+          "actual_timing": 3,
+          "actual_phase": 0.18124573001479571
+        },
+        {
+          "input_sha256": "eebca01beed3df5ba4ea2207a4936afb8ffa173b0818f493da29a04dc14bc05a",
+          "bit_errors": 3,
+          "bits_compared": 6000,
+          "symbol_errors": 3,
+          "symbols_compared": 1000,
+          "actual_timing": 3,
+          "actual_phase": 0.15707963267948966
+        },
+        {
+          "input_sha256": "ab63c2138f0f180c6b259b3a37467ab025b95dd8e9f6e8b9b7850323546f28c8",
+          "bit_errors": 0,
+          "bits_compared": 6000,
+          "symbol_errors": 0,
+          "symbols_compared": 1000,
+          "actual_timing": 3,
+          "actual_phase": 0.15707963267948966
+        }
+      ]
+    },
+    {
+      "modulation": "64qam",
+      "pulse": "rrc",
+      "snr_db": 25,
+      "acquisition": "manual",
+      "bit_errors": 0,
+      "bits_compared": 24000,
+      "ber": 0.0,
+      "symbol_errors": 0,
+      "symbols_compared": 4000,
+      "ser": 0.0,
+      "records": [
+        {
+          "input_sha256": "a53373b2a71f134deb7091f2a4f48e49c68fa9af2e5ef2c12f577d71d15184ef",
+          "bit_errors": 0,
+          "bits_compared": 6000,
+          "symbol_errors": 0,
+          "symbols_compared": 1000,
+          "actual_timing": 3,
+          "actual_phase": 0.17
+        },
+        {
+          "input_sha256": "4608c0cd877bc566788a878488c7eb6b59d4ccad247414be9170568b662e7535",
+          "bit_errors": 0,
+          "bits_compared": 6000,
+          "symbol_errors": 0,
+          "symbols_compared": 1000,
+          "actual_timing": 3,
+          "actual_phase": 0.17
+        },
+        {
+          "input_sha256": "bf1cff0c197de2e57468c6f91e9c03af24e803b88c15cf927643462d92ca6a26",
+          "bit_errors": 0,
+          "bits_compared": 6000,
+          "symbol_errors": 0,
+          "symbols_compared": 1000,
+          "actual_timing": 3,
+          "actual_phase": 0.17
+        },
+        {
+          "input_sha256": "96f8dc420973272d090c09658f98974c544c1a8003bbdf4f6b20826271a7ca0a",
+          "bit_errors": 0,
+          "bits_compared": 6000,
+          "symbol_errors": 0,
+          "symbols_compared": 1000,
+          "actual_timing": 3,
+          "actual_phase": 0.17
+        }
+      ]
+    },
+    {
+      "modulation": "64qam",
+      "pulse": "rrc",
+      "snr_db": 25,
+      "acquisition": "static_auto",
+      "bit_errors": 0,
+      "bits_compared": 24000,
+      "ber": 0.0,
+      "symbol_errors": 0,
+      "symbols_compared": 4000,
+      "ser": 0.0,
+      "records": [
+        {
+          "input_sha256": "70fd214ef16160eb78bf1756279dc753cbabcfac502252a9d781a97133101475",
+          "bit_errors": 0,
+          "bits_compared": 6000,
+          "symbol_errors": 0,
+          "symbols_compared": 1000,
+          "actual_timing": 3,
+          "actual_phase": 0.18124573001479571
+        },
+        {
+          "input_sha256": "addf19c98abd93c3f822ce976ae79c470606a9f8c348ff45d4f908711b92973b",
+          "bit_errors": 0,
+          "bits_compared": 6000,
+          "symbol_errors": 0,
+          "symbols_compared": 1000,
+          "actual_timing": 3,
+          "actual_phase": 0.18124573001479571
+        },
+        {
+          "input_sha256": "46ed35916346e6454bc626a05c9f5f42609998a6c62fee2a8b3553905544ca63",
+          "bit_errors": 0,
+          "bits_compared": 6000,
+          "symbol_errors": 0,
+          "symbols_compared": 1000,
+          "actual_timing": 3,
+          "actual_phase": 0.18124573001479571
+        },
+        {
+          "input_sha256": "135bc58064417e2a4c44fd9b4673a1c6c9c2363913ccdabbef7459d03504f17e",
+          "bit_errors": 0,
+          "bits_compared": 6000,
+          "symbol_errors": 0,
+          "symbols_compared": 1000,
+          "actual_timing": 3,
+          "actual_phase": 0.18124573001479571
+        }
+      ]
+    },
+    {
+      "modulation": "2fsk",
+      "pulse": "rect",
+      "snr_db": 15,
+      "acquisition": "manual",
+      "bit_errors": 0,
+      "bits_compared": 4000,
+      "ber": 0.0,
+      "symbol_errors": 0,
+      "symbols_compared": 4000,
+      "ser": 0.0,
+      "records": [
+        {
+          "input_sha256": "3aefe5db644c64edfd514a2aec48f3220ec0ae7cd50752dfd562d09742a71aaf",
+          "bit_errors": 0,
+          "bits_compared": 1000,
+          "symbol_errors": 0,
+          "symbols_compared": 1000,
+          "actual_timing": 3,
+          "actual_phase": null
+        },
+        {
+          "input_sha256": "5b937b2aa6ec908f05542555924a4f2e1751f362b17555b9173e3e8716fe7492",
+          "bit_errors": 0,
+          "bits_compared": 1000,
+          "symbol_errors": 0,
+          "symbols_compared": 1000,
+          "actual_timing": 3,
+          "actual_phase": null
+        },
+        {
+          "input_sha256": "8df1e7ec01a7f595e53f68dc4a79184298ea50a4665f46004e1b188d3169a7af",
+          "bit_errors": 0,
+          "bits_compared": 1000,
+          "symbol_errors": 0,
+          "symbols_compared": 1000,
+          "actual_timing": 3,
+          "actual_phase": null
+        },
+        {
+          "input_sha256": "03e7dd5fff2737cb2be6b62001fe756de0d043e28251fb112858f124b7cd9922",
+          "bit_errors": 0,
+          "bits_compared": 1000,
+          "symbol_errors": 0,
+          "symbols_compared": 1000,
+          "actual_timing": 3,
+          "actual_phase": null
+        }
+      ]
+    },
+    {
+      "modulation": "2fsk",
+      "pulse": "rect",
+      "snr_db": 15,
+      "acquisition": "static_auto",
+      "bit_errors": 0,
+      "bits_compared": 3999,
+      "ber": 0.0,
+      "symbol_errors": 0,
+      "symbols_compared": 3999,
+      "ser": 0.0,
+      "records": [
+        {
+          "input_sha256": "99742185d8a52f5c46f628aa8f8901b76b4c46b7a14b87f0eb419ddf7b1011a7",
+          "bit_errors": 0,
+          "bits_compared": 1000,
+          "symbol_errors": 0,
+          "symbols_compared": 1000,
+          "actual_timing": 3,
+          "actual_phase": null
+        },
+        {
+          "input_sha256": "b29fc3958a9cbd886b30f0e74d04a99eb4cc05b9229e89aa8b38f7237756bbe7",
+          "bit_errors": 0,
+          "bits_compared": 1000,
+          "symbol_errors": 0,
+          "symbols_compared": 1000,
+          "actual_timing": 3,
+          "actual_phase": null
+        },
+        {
+          "input_sha256": "f21cccf85dfce2bb22bf8f757d0d94ab4478c26b3d0a4e0013343cb30454c3d6",
+          "bit_errors": 0,
+          "bits_compared": 1000,
+          "symbol_errors": 0,
+          "symbols_compared": 1000,
+          "actual_timing": 3,
+          "actual_phase": null
+        },
+        {
+          "input_sha256": "feae79949fa10db03acdb6773704894599873eff9c539f6f11803aeb82f1eaa6",
+          "bit_errors": 0,
+          "bits_compared": 999,
+          "symbol_errors": 0,
+          "symbols_compared": 999,
+          "actual_timing": 4,
+          "actual_phase": null
+        }
+      ]
+    },
+    {
+      "modulation": "2fsk",
+      "pulse": "rect",
+      "snr_db": 25,
+      "acquisition": "manual",
+      "bit_errors": 0,
+      "bits_compared": 4000,
+      "ber": 0.0,
+      "symbol_errors": 0,
+      "symbols_compared": 4000,
+      "ser": 0.0,
+      "records": [
+        {
+          "input_sha256": "80273cb34e730f1826fd481dfd43e2b11d3c882a8d297f571a9dc3a9bf07a1ed",
+          "bit_errors": 0,
+          "bits_compared": 1000,
+          "symbol_errors": 0,
+          "symbols_compared": 1000,
+          "actual_timing": 3,
+          "actual_phase": null
+        },
+        {
+          "input_sha256": "5bcefb61e7671a109a5c7d9aec4b4549759220f98f756f1dd51fda15303f2f86",
+          "bit_errors": 0,
+          "bits_compared": 1000,
+          "symbol_errors": 0,
+          "symbols_compared": 1000,
+          "actual_timing": 3,
+          "actual_phase": null
+        },
+        {
+          "input_sha256": "071783a43f5aa786584524c99bf4ef791927ebb9f3ecc609e2bcdc151a66595c",
+          "bit_errors": 0,
+          "bits_compared": 1000,
+          "symbol_errors": 0,
+          "symbols_compared": 1000,
+          "actual_timing": 3,
+          "actual_phase": null
+        },
+        {
+          "input_sha256": "f696399ca28af87111add80fce04c2475bd97d4abf947462a168370301fc76fe",
+          "bit_errors": 0,
+          "bits_compared": 1000,
+          "symbol_errors": 0,
+          "symbols_compared": 1000,
+          "actual_timing": 3,
+          "actual_phase": null
+        }
+      ]
+    },
+    {
+      "modulation": "2fsk",
+      "pulse": "rect",
+      "snr_db": 25,
+      "acquisition": "static_auto",
+      "bit_errors": 0,
+      "bits_compared": 3999,
+      "ber": 0.0,
+      "symbol_errors": 0,
+      "symbols_compared": 3999,
+      "ser": 0.0,
+      "records": [
+        {
+          "input_sha256": "71fa8efba8f7038ce27c52d39fbf2f7dc854fa2f46e96c1f6e4406f96c6f1f51",
+          "bit_errors": 0,
+          "bits_compared": 1000,
+          "symbol_errors": 0,
+          "symbols_compared": 1000,
+          "actual_timing": 3,
+          "actual_phase": null
+        },
+        {
+          "input_sha256": "3ba853d58dc565111452a83b197759083d28c22b7e30e3e102fdeba3c8503f9a",
+          "bit_errors": 0,
+          "bits_compared": 1000,
+          "symbol_errors": 0,
+          "symbols_compared": 1000,
+          "actual_timing": 3,
+          "actual_phase": null
+        },
+        {
+          "input_sha256": "cbb3aab79eaeee117e94c9096d8f306e6c5b78340555b39fe5a228336e4d884c",
+          "bit_errors": 0,
+          "bits_compared": 999,
+          "symbol_errors": 0,
+          "symbols_compared": 999,
+          "actual_timing": 4,
+          "actual_phase": null
+        },
+        {
+          "input_sha256": "d3ff8fd80ab5ec20f30b4f486fb140a60e1882d8cd27babd01eb902d8ec953ce",
+          "bit_errors": 0,
+          "bits_compared": 1000,
+          "symbol_errors": 0,
+          "symbols_compared": 1000,
+          "actual_timing": 3,
+          "actual_phase": null
+        }
+      ]
+    },
+    {
+      "modulation": "4fsk",
+      "pulse": "rect",
+      "snr_db": 15,
+      "acquisition": "manual",
+      "bit_errors": 0,
+      "bits_compared": 8000,
+      "ber": 0.0,
+      "symbol_errors": 0,
+      "symbols_compared": 4000,
+      "ser": 0.0,
+      "records": [
+        {
+          "input_sha256": "dd15ff7d9e353df68d675a9a37e3717ce5e530bdaa182ab9d15eb48d94b21cc3",
+          "bit_errors": 0,
+          "bits_compared": 2000,
+          "symbol_errors": 0,
+          "symbols_compared": 1000,
+          "actual_timing": 3,
+          "actual_phase": null
+        },
+        {
+          "input_sha256": "232d6099090c47362b1359e2ab1253adefd5bd936c832e508a3660ba983e14be",
+          "bit_errors": 0,
+          "bits_compared": 2000,
+          "symbol_errors": 0,
+          "symbols_compared": 1000,
+          "actual_timing": 3,
+          "actual_phase": null
+        },
+        {
+          "input_sha256": "d252aacf3f8c2e90df5c3ffe55687e6787bf79b35e90678361b097600a3d8dca",
+          "bit_errors": 0,
+          "bits_compared": 2000,
+          "symbol_errors": 0,
+          "symbols_compared": 1000,
+          "actual_timing": 3,
+          "actual_phase": null
+        },
+        {
+          "input_sha256": "6b924adbe8e236663c0fcee7270806ca1069574ec035d9a5df9ff02d977d94e2",
+          "bit_errors": 0,
+          "bits_compared": 2000,
+          "symbol_errors": 0,
+          "symbols_compared": 1000,
+          "actual_timing": 3,
+          "actual_phase": null
+        }
+      ]
+    },
+    {
+      "modulation": "4fsk",
+      "pulse": "rect",
+      "snr_db": 15,
+      "acquisition": "static_auto",
+      "bit_errors": 0,
+      "bits_compared": 7996,
+      "ber": 0.0,
+      "symbol_errors": 0,
+      "symbols_compared": 3998,
+      "ser": 0.0,
+      "records": [
+        {
+          "input_sha256": "29015112fae45255ef4eb1c94acd9fc177010e392aff1d647a85251de7cfa9f3",
+          "bit_errors": 0,
+          "bits_compared": 1998,
+          "symbol_errors": 0,
+          "symbols_compared": 999,
+          "actual_timing": 4,
+          "actual_phase": null
+        },
+        {
+          "input_sha256": "ccf870bea3d28c850e9fd29fdd22549b67eee71e9cbfd127ff300ecd12ed118e",
+          "bit_errors": 0,
+          "bits_compared": 2000,
+          "symbol_errors": 0,
+          "symbols_compared": 1000,
+          "actual_timing": 3,
+          "actual_phase": null
+        },
+        {
+          "input_sha256": "550196987935da489a7fa5e56d4499d72d2ae88b4b2f01082ff50e74f88cac97",
+          "bit_errors": 0,
+          "bits_compared": 1998,
+          "symbol_errors": 0,
+          "symbols_compared": 999,
+          "actual_timing": 4,
+          "actual_phase": null
+        },
+        {
+          "input_sha256": "1766d1e2ef8c85cefd70735a7e39942577e121adf6292906169d7eba9217c883",
+          "bit_errors": 0,
+          "bits_compared": 2000,
+          "symbol_errors": 0,
+          "symbols_compared": 1000,
+          "actual_timing": 3,
+          "actual_phase": null
+        }
+      ]
+    },
+    {
+      "modulation": "4fsk",
+      "pulse": "rect",
+      "snr_db": 25,
+      "acquisition": "manual",
+      "bit_errors": 0,
+      "bits_compared": 8000,
+      "ber": 0.0,
+      "symbol_errors": 0,
+      "symbols_compared": 4000,
+      "ser": 0.0,
+      "records": [
+        {
+          "input_sha256": "ea8140957ef5ffb35c4e97da31194c09aeeaf5ff0de92e9381874ebfbbe035a2",
+          "bit_errors": 0,
+          "bits_compared": 2000,
+          "symbol_errors": 0,
+          "symbols_compared": 1000,
+          "actual_timing": 3,
+          "actual_phase": null
+        },
+        {
+          "input_sha256": "1280b0e93e20e41a0b9be87c58ae76e1872f40be41c876f26769069653dd0f00",
+          "bit_errors": 0,
+          "bits_compared": 2000,
+          "symbol_errors": 0,
+          "symbols_compared": 1000,
+          "actual_timing": 3,
+          "actual_phase": null
+        },
+        {
+          "input_sha256": "a12a10975b21a5dc26fc6a12810cfce468c27d58757ba50389ec789efa787a6b",
+          "bit_errors": 0,
+          "bits_compared": 2000,
+          "symbol_errors": 0,
+          "symbols_compared": 1000,
+          "actual_timing": 3,
+          "actual_phase": null
+        },
+        {
+          "input_sha256": "c79d4dbbf057ae47a4e2c3dd5aeec2066512a253320fd5cd95d378b8000db138",
+          "bit_errors": 0,
+          "bits_compared": 2000,
+          "symbol_errors": 0,
+          "symbols_compared": 1000,
+          "actual_timing": 3,
+          "actual_phase": null
+        }
+      ]
+    },
+    {
+      "modulation": "4fsk",
+      "pulse": "rect",
+      "snr_db": 25,
+      "acquisition": "static_auto",
+      "bit_errors": 0,
+      "bits_compared": 7994,
+      "ber": 0.0,
+      "symbol_errors": 0,
+      "symbols_compared": 3997,
+      "ser": 0.0,
+      "records": [
+        {
+          "input_sha256": "7435513fdc4253824f678c267f7567a016e878e807ae111fc86b1b3c223c456b",
+          "bit_errors": 0,
+          "bits_compared": 2000,
+          "symbol_errors": 0,
+          "symbols_compared": 1000,
+          "actual_timing": 3,
+          "actual_phase": null
+        },
+        {
+          "input_sha256": "690116889cb4ebb3ea65e69929df08c4550e0816fd93d653caa57e2fef24faf5",
+          "bit_errors": 0,
+          "bits_compared": 1998,
+          "symbol_errors": 0,
+          "symbols_compared": 999,
+          "actual_timing": 4,
+          "actual_phase": null
+        },
+        {
+          "input_sha256": "23c893d2c5b97618c8231766830ebbca0b28cfbf7f8192c0a58a66227c769df0",
+          "bit_errors": 0,
+          "bits_compared": 1998,
+          "symbol_errors": 0,
+          "symbols_compared": 999,
+          "actual_timing": 4,
+          "actual_phase": null
+        },
+        {
+          "input_sha256": "f31a87fae47c0e67887fb91fe73ec84114787f5b099784988491a05a182be6b3",
+          "bit_errors": 0,
+          "bits_compared": 1998,
+          "symbol_errors": 0,
+          "symbols_compared": 999,
+          "actual_timing": 4,
+          "actual_phase": null
+        }
+      ]
+    }
+  ]
+}

@@ -8,7 +8,7 @@ const MAX_BYTES = 16 * 1024 * 1024;
 const SAMPLE_BYTES = { s8: 2, cu8: 2, s16le: 4, s16be: 4, f32le: 8, f32be: 8 };
 const SOURCE_LABEL = { analyst_hypothesis: 'My hypothesis', sigmf_metadata: 'SigMF sidecar', wav_header: 'WAV header', analyst_wav_interpretation: 'Declared WAV interpretation', capture_log: 'Capture log', unavailable: 'Not supplied', automatic_classifier: 'Classifier', analyst_override: 'Analyst setting' };
 const DENOISE_LABEL = { raw: 'Raw', dc_only: 'DC only', dc_and_impulse: 'DC and impulses' };
-const RX_SUPPORTED = ['bpsk', 'qpsk', '2fsk'];
+const RX_SUPPORTED = ['bpsk', 'qpsk', '8psk', '16qam', '64qam', '2fsk', '4fsk'];
 const EXAMPLE_JSON = 'examples/synthetic-qpsk-burst.json';
 
 const $ = (s, el = document) => el.querySelector(s);
@@ -342,16 +342,22 @@ $('#run-analysis').addEventListener('click', () => busy($('#run-analysis'), 'Ana
   } catch (err) { flash('#capture-error', err.message); }
 }));
 
+function receiverHeaders() {
+  return { 'X-DEmod-Pulse': $('#rx-pulse').value, 'X-DEmod-RRC-Rolloff': $('#rx-rolloff').value,
+    'X-DEmod-Phase-Radians': $('#rx-phase').value || '0',
+    ...($('#rx-tones').value.trim() ? { 'X-DEmod-FSK-Tones-Hz': $('#rx-tones').value.trim() } : {}),
+    ...($('#rx-auto-timing').checked ? { 'X-DEmod-Timing-Offset': 'auto' } : {}) };
+}
 $('#run-demod').addEventListener('click', () => busy($('#run-demod'), 'Running', async () => {
   const s = settings(); const p = captureProblems(s).filter(x => !x.startsWith('Enter a positive'));
   if (!Number.isInteger(s.samples_per_symbol) || s.samples_per_symbol < 1) p.push('Samples per symbol must be a whole number of at least 1.');
-  else if (!Number.isInteger(s.timing_offset) || s.timing_offset < 0 || s.timing_offset >= s.samples_per_symbol) p.push(`Timing offset must be a whole number from 0 to ${s.samples_per_symbol - 1}.`);
+  else if (!$('#rx-auto-timing').checked && (!Number.isInteger(s.timing_offset) || s.timing_offset < 0 || s.timing_offset >= s.samples_per_symbol)) p.push(`Timing offset must be a whole number from 0 to ${s.samples_per_symbol - 1}.`);
   if (!Number.isFinite(s.carrier_offset_hz)) p.push('Carrier offset should be a number in Hz.');
   if (!(s.sample_rate_hz > 0)) p.push('Set a sample rate on the Capture page.');
   if (p.length) { flash('#rx-error', p.join(' ')); return; }
   flash('#rx-error', '');
   try {
-    state.demod = await post('/demodulate', { ...captureHeaders(s), 'X-DEmod-Modulation': s.modulation, 'X-DEmod-Samples-Per-Symbol': String(s.samples_per_symbol), 'X-DEmod-Timing-Offset': String(s.timing_offset), 'X-DEmod-Carrier-Offset': String(s.carrier_offset_hz) });
+    state.demod = await post('/demodulate', { ...captureHeaders(s), 'X-DEmod-Modulation': s.modulation, 'X-DEmod-Samples-Per-Symbol': String(s.samples_per_symbol), 'X-DEmod-Timing-Offset': String(s.timing_offset), 'X-DEmod-Carrier-Offset': String(s.carrier_offset_hz), ...receiverHeaders() });
     state.demodSettings = s; renderReceiver(); renderReport();
   } catch (err) { flash('#rx-error', err.message); }
 }));
@@ -362,7 +368,7 @@ $('#run-auto-demod').addEventListener('click', () => busy($('#run-auto-demod'), 
   if (problems.length) { flash('#rx-error', problems.join(' ')); return; }
   flash('#rx-error', '');
   try {
-    state.demod = await post('/demodulate', { ...captureHeaders(s), 'X-DEmod-Modulation': 'auto' });
+    state.demod = await post('/demodulate', { ...captureHeaders(s), 'X-DEmod-Modulation': 'auto', ...receiverHeaders() });
     state.demodSettings = s; renderReceiver(); renderReport();
   } catch (err) { flash('#rx-error', err.message); }
 }));
@@ -736,29 +742,32 @@ function renderReceiver() {
   const cfg = d.configuration; const mod = d.modulation; const fs = state.demodSettings?.sample_rate_hz;
   if (cfg.parameter_sources) tiles.push(tile({ title: 'Receiver parameter sources', src: 'Applied settings and evidence', av: 'rx',
     metric: d.input_region?.source || 'whole capture',
-    body: `<dl class="kv">${Object.entries(cfg.parameter_sources).map(([k,v]) => `<dt>${esc(k.replaceAll('_',' '))}</dt><dd>${esc(v)}</dd>`).join('')}</dl><p class="note">${d.input_region ? `Input samples ${d.input_region.sample_start} through ${d.input_region.sample_start + d.input_region.sample_count - 1}.` : ''} Timing is a fixed offset, not a recovered symbol clock.</p>` }));
+    body: `<dl class="kv">${Object.entries(cfg.parameter_sources).map(([k,v]) => `<dt>${esc(k.replaceAll('_',' '))}</dt><dd>${esc(v)}</dd>`).join('')}</dl><p class="note">${d.input_region ? `Input samples ${d.input_region.sample_start} through ${d.input_region.sample_start + d.input_region.sample_count - 1}.` : ''} Applied timing is static; clock drift and fractional timing are not tracked.</p>` }));
   const dec = d.decisions_preview || [];
-  if (mod === '2fsk') {
-    const vals = dec.map(x => x.frequency_step_rad);
+  if (mod === '2fsk' || mod === '4fsk') {
+    const vals = dec.map(x => x.frequency_hz ?? x.frequency_step_rad);
+    const unit = dec[0]?.frequency_hz != null ? 'Hz' : 'rad/sample';
+    const centres = cfg.tone_centres_hz;
+    const thresholds = centres ? centres.slice(1).map((v, i) => (v + centres[i]) / 2) : [0];
     const idx = vals.map((_, n) => n); const m = Math.max(...vals.map(Math.abs)) || 1;
-    tiles.push(instrument({ wide: true, ratio: '21 / 8', title: 'Time sink, discriminator', src: `Mean phase step per symbol, first ${vals.length} symbols`, av: 'rx', metric: '2-FSK',
+    tiles.push(instrument({ wide: true, ratio: '21 / 8', title: 'Time sink, discriminator', src: `Frequency evidence per symbol, first ${vals.length} symbols`, av: 'rx', metric: mod.toUpperCase(),
       legend: [{ label: 'Symbol mean', trace: 0 }, { label: 'Slicer threshold', trace: 1, dash: true }],
-      note: 'Above zero decides 1, below decides 0. Two well-separated rows mean the tones and symbol timing fit. Drag to zoom, double-click to reset.',
-      render(c, st) { Plot.line(c, { x: { label: 'Symbol index', domain: [0, Math.max(1, vals.length - 1)] }, y: { label: 'Phase step', unit: 'rad/sample', domain: Plot.niceDomain(-m, m, 0.08) }, zoomX: true,
-        series: [{ x: idx, y: vals, color: tr(0), dots: true, joined: true, hidden: !st.on[0] }], hlines: st.on[1] ? [{ y: 0, color: tr(1), label: 'threshold' }] : [],
-        readout: x => { const k = Math.max(0, Math.min(vals.length - 1, Math.round(x))); return `symbol ${k}  ${vals[k].toFixed(4)} rad/sample  bit ${vals[k] >= 0 ? 1 : 0}`; } }); } }));
+      note: 'Tone decisions use the recorded tone levels and mapping. Separation does not prove correct payload recovery. Drag to zoom, double-click to reset.',
+      render(c, st) { Plot.line(c, { x: { label: 'Symbol index', domain: [0, Math.max(1, vals.length - 1)] }, y: { label: 'Frequency discriminator', unit, domain: Plot.niceDomain(-m, m, 0.08) }, zoomX: true,
+        series: [{ x: idx, y: vals, color: tr(0), dots: true, joined: true, hidden: !st.on[0] }], hlines: st.on[1] ? thresholds.map(y => ({ y, color: tr(1), label: 'threshold' })) : [],
+        readout: x => { const k = Math.max(0, Math.min(vals.length - 1, Math.round(x))); return `symbol ${k}  ${vals[k].toFixed(4)} ${unit}  decision ${dec[k].symbol}`; } }); } }));
   } else {
     const rms = Math.sqrt(dec.reduce((s, x) => s + x.i * x.i + x.q * x.q, 0) / Math.max(1, dec.length)) || 1;
     const pts = dec.map(x => ({ i: x.i / rms, q: x.q / rms }));
-    const ideal = mod === 'bpsk' ? [{ i: -1, q: 0 }, { i: 1, q: 0 }] : [-1, 1].flatMap(i => [-1, 1].map(q => ({ i: i * Math.SQRT1_2, q: q * Math.SQRT1_2 })));
-    tiles.push(instrument({ wide: true, ratio: '21 / 9', title: 'Constellation sink, decisions', src: `First ${dec.length} integrate-and-dump outputs, RMS-normalised`, av: 'rx', metric: mod.toUpperCase(),
+    const ideal = cfg.constellation_points || (mod === 'bpsk' ? [{ i: -1, q: 0 }, { i: 1, q: 0 }] : [-1, 1].flatMap(i => [-1, 1].map(q => ({ i: i * Math.SQRT1_2, q: q * Math.SQRT1_2 }))));
+    tiles.push(instrument({ wide: true, ratio: '21 / 9', title: 'Constellation sink, decisions', src: `First ${dec.length} receiver symbols, RMS-normalised`, av: 'rx', metric: mod.toUpperCase(),
       legend: [{ label: 'Symbols', trace: 0 }, { label: 'Ideal points', trace: 1 }],
       note: 'Tight clusters on the crosses mean timing and carrier settings fit. A ring means residual carrier offset. A cloud at the centre means these symbols fall in a quiet stretch.',
       render(c, st) { Plot.scatter(c, { x: { label: 'In-phase' }, y: { label: 'Quadrature' }, points: st.on[0] ? pts : [], ideal: st.on[1] ? ideal : null }); } }));
   }
   const segs = state.analysis?.analysis.raw_branch.visualization?.segmentation.segments || [];
   const evm = d.quality.evm_rms;
-  tiles.push(tile({ title: 'Quality', src: 'Error vector magnitude after fixed integrate-and-dump', av: 'rx', metric: `${d.symbol_count.toLocaleString()} symbols`,
+  tiles.push(tile({ title: 'Quality', src: `Receiver evidence (${cfg.backend || 'legacy_fixed'})`, av: 'rx', metric: `${d.symbol_count.toLocaleString()} symbols`,
     body: `<div class="big">${evm == null ? 'n/a' : pct(evm)}<small>${evm == null ? 'EVM not defined for FSK' : 'EVM RMS'}</small></div>
       <p class="note">${esc(d.quality.meaning)}${segs.length > 0 && evm != null ? (d.input_region?.source !== 'whole_capture' && d.input_region ? ' Measured on the selected analysis region.' : ' It covers the whole file, so quiet stretches between bursts push it up.') : ''}</p>
       <dl class="kv" style="margin-top:12px"><dt>Samples per symbol</dt><dd>${cfg.samples_per_symbol}</dd><dt>Timing offset</dt><dd>${cfg.timing_offset_samples} samples</dd><dt>Carrier offset removed</dt><dd>${fmtHz(cfg.carrier_offset_hz, true)}</dd>${fs ? `<dt>Implied symbol rate</dt><dd>${fmtHz(fs / cfg.samples_per_symbol).replace('Hz', 'Bd')}</dd>` : ''}<dt>Settings from</dt><dd>${esc(SOURCE_LABEL[cfg.parameter_source] || cfg.parameter_source)}</dd></dl>` }));
