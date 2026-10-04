@@ -1,0 +1,2 @@
+devices: [CpuDevice(id=0)]
+{"step": 100, "loss": 2.2538072407245635, "seconds": 43.3}

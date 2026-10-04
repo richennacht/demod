@@ -1,0 +1,22 @@
+devices: [CpuDevice(id=0)]
+{"step": 100, "loss": 2.562828998565674, "seconds": 50.4}
+{"step": 200, "loss": 2.375613737106323, "seconds": 95.8}
+{"step": 300, "loss": 2.3215138053894044, "seconds": 143.5}
+{"step": 400, "loss": 2.2778172159194945, "seconds": 191.8}
+{"step": 500, "loss": 2.231330301761627, "seconds": 239.4}
+{"step": 600, "loss": 2.204886271953583, "seconds": 284.5}
+{"step": 700, "loss": 2.1739417660236358, "seconds": 331.9}
+{"step": 800, "loss": 2.144894664287567, "seconds": 380.2}
+{"step": 900, "loss": 2.1288124704360962, "seconds": 427.2}
+{"step": 1000, "loss": 2.070165513753891, "seconds": 473.5}
+{"step": 1100, "loss": 2.0577021729946137, "seconds": 519.7}
+{"step": 1200, "loss": 2.049083411693573, "seconds": 568.0}
+{"step": 1300, "loss": 2.039012180566788, "seconds": 614.7}
+{"step": 1400, "loss": 2.042323729991913, "seconds": 660.0}
+{"step": 1500, "loss": 2.013077334165573, "seconds": 708.0}
+{"step": 1600, "loss": 2.012207818031311, "seconds": 753.6}
+{"step": 1700, "loss": 2.0178273844718935, "seconds": 799.5}
+{"step": 1800, "loss": 1.9889519429206848, "seconds": 846.7}
+{"step": 1900, "loss": 2.002448046207428, "seconds": 893.2}
+{"step": 2000, "loss": 1.9970588767528534, "seconds": 937.8}
+saved /home/claude/demod/research/checkpoints/vtcnn2.npz

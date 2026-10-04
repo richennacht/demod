@@ -1,0 +1,29 @@
+devices: [CpuDevice(id=0)]
+{"step": 100, "loss": 2.252479815483093, "seconds": 40.1}
+{"step": 200, "loss": 1.548559114933014, "seconds": 85.8}
+{"step": 300, "loss": 1.207928981781006, "seconds": 149.7}
+{"step": 400, "loss": 1.0582656526565553, "seconds": 215.0}
+{"step": 500, "loss": 1.0173705315589905, "seconds": 290.7}
+{"step": 600, "loss": 0.9823771023750305, "seconds": 364.6}
+{"step": 700, "loss": 0.9347834247350693, "seconds": 439.8}
+{"step": 800, "loss": 0.8834433394670487, "seconds": 490.9}
+{"step": 900, "loss": 0.9091364866495133, "seconds": 527.7}
+{"step": 1000, "loss": 0.8572348013520241, "seconds": 564.0}
+{"step": 1100, "loss": 0.8376587420701981, "seconds": 599.4}
+{"step": 1200, "loss": 0.8125270825624465, "seconds": 635.5}
+{"step": 1300, "loss": 0.8279191148281098, "seconds": 671.4}
+{"step": 1400, "loss": 0.7833594655990601, "seconds": 707.7}
+{"step": 1500, "loss": 0.773310618698597, "seconds": 743.2}
+{"step": 1600, "loss": 0.7672236222028732, "seconds": 778.9}
+{"step": 1700, "loss": 0.7333989894390106, "seconds": 813.8}
+resumed demod_amc at step 1750
+devices: [CpuDevice(id=0)]
+{"step": 1800, "loss": 0.7559100878238678, "seconds": 22.2}
+{"step": 1900, "loss": 0.7538943549990654, "seconds": 57.6}
+{"step": 2000, "loss": 0.7250003173947335, "seconds": 92.6}
+{"step": 2100, "loss": 0.7385053551197052, "seconds": 126.9}
+{"step": 2200, "loss": 0.7209505468606949, "seconds": 161.9}
+{"step": 2300, "loss": 0.7210377955436706, "seconds": 196.7}
+{"step": 2400, "loss": 0.7105869111418724, "seconds": 231.2}
+{"step": 2500, "loss": 0.7036792421340943, "seconds": 265.7}
+saved /home/claude/demod/research/checkpoints/demod_amc_v2.npz

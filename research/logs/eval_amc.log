@@ -1,0 +1,14 @@
+in_distribution vtcnn2 0.2652 0.3063
+in_distribution lstm_ap 0.354 0.4101
+in_distribution demod_amc_nocomp 0.7773 0.9035
+in_distribution demod_amc 0.7621 0.9028
+in_distribution demod_amc_v2 0.7621 0.8986
+in_distribution centroid_retrained 0.2265 cumulants 0.2721 shipped 0.2515
+cfo_shift vtcnn2 0.2101 0.2431
+cfo_shift lstm_ap 0.2136 0.2444
+cfo_shift demod_amc_nocomp 0.7076 0.8215
+cfo_shift demod_amc 0.7697 0.9076
+cfo_shift demod_amc_v2 0.7682 0.9049
+cfo_shift centroid_retrained 0.2338 cumulants 0.2473 shipped 0.2424
+repo_native {'centroid_shipped_repo4': 0.758, 'vtcnn2': 0.267, 'lstm_ap': 0.3, 'demod_amc_nocomp': 0.417, 'demod_amc': 0.683, 'demod_amc_v2': 0.95}
+wrote /home/claude/demod/research/results/amc_results.json
