@@ -23,7 +23,9 @@ WEB_ROOT = ROOT.parent / "web"
 sys.path.insert(0, str(ROOT))
 
 from analysis_pipeline import analyse as analyse_pipeline
-from analyze_signal import decode_raw_iq
+from analyze_signal import decode_raw_iq, summarise_real
+from capture_input import decode_capture, capture_provenance
+from spectral_analysis import analyse_spectrum
 from demodulation import SUPPORTED as SUPPORTED_DEMODULATIONS, demodulate
 from dual_parameter_estimator import DualParameterEstimator
 from generate_synthetic import load_recipes
@@ -48,16 +50,25 @@ class ComparisonService:
         self.estimator = DualParameterEstimator.train_from_recipes(recipes, examples=examples)
         self.classifier = CentroidAMC.train(recipes, examples=examples)
 
-    def analyse_bytes(self, raw: bytes, iq_format: str, sample_rate_hz: float, denoise_profile: str = "raw", centre_frequency_hz: float | None = None, gain_db: float | None = None, metadata_source: str = "analyst_hypothesis") -> dict[str, Any]:
+    def analyse_bytes(self, raw: bytes, iq_format: str, sample_rate_hz: float, denoise_profile: str = "raw", centre_frequency_hz: float | None = None, gain_db: float | None = None, metadata_source: str = "analyst_hypothesis", wav_role: str = 'unspecified', if_centre_hz: float = 0.) -> dict[str, Any]:
         if iq_format not in SUPPORTED_FORMATS:
             raise ValueError(f"Unsupported iq format: {iq_format}")
-        if sample_rate_hz <= 0:
-            raise ValueError("X-DEmod-Sample-Rate must be a positive number.")
         if len(raw) > MAX_INPUT_BYTES:
             raise ValueError(f"Test-harness input limit is {MAX_INPUT_BYTES} bytes; chunk larger captures in a controlled pipeline.")
-        samples = decode_raw_iq(raw, iq_format)
+        samples, sample_rate_hz, wav_info = decode_capture(raw, iq_format, sample_rate_hz, wav_role, if_centre_hz)
+        if not math.isfinite(sample_rate_hz) or sample_rate_hz <= 0:
+            raise ValueError('Sample rate must be finite and positive, or supplied by a WAV header.')
         if len(samples) < 8:
             raise ValueError("At least eight complete complex I/Q samples are required for the DSP-versus-model comparison.")
+        input_record = capture_provenance(raw, iq_format, sample_rate_hz, centre_frequency_hz, gain_db, metadata_source, wav_info)
+        if wav_info and wav_role == 'audio':
+            summary = summarise_real([x.real for x in samples], int(sample_rate_hz))
+            vis = analyse_spectrum(samples, sample_rate_hz)
+            return {'kind': 'audio', 'run_id': str(uuid.uuid4()), 'input': input_record,
+                    'audio_summary': summary, 'manual_dsp': summary,
+                    'analysis': {'raw_branch': {'visualization': vis, 'features': summary}},
+                    'modulation_classification': {'abstained': True, 'predicted_modulation': None, 'confidence': 0., 'reason': 'Already-demodulated audio; RF modulation is not recoverable from an audio container.'},
+                    'provenance': {'raw_data_persisted': False, 'denoising_profile': 'raw', 'manual_branch': 'PCM audio levels, spectrum and time-frequency overview', 'automated_branch': 'RF models not applied to declared audio', 'training_examples': 0, 'model_training_recipes': 'none', 'scope': 'Audio overview only; no original RF or payload reconstruction.'}}
         profiles: dict[str, dict[str, dict[str, Any]]] = {
             "raw": {}, "dc_only": {"dc_offset": {"enabled": True}},
             "dc_and_impulse": {"dc_offset": {"enabled": True}, "impulse_blanking": {"enabled": True}},
@@ -85,7 +96,7 @@ class ComparisonService:
             classification["legacy_centroid"] = {k: legacy_classification[k] for k in ("predicted_modulation", "confidence", "abstained")}
         report: dict[str, Any] = {
             "run_id": str(uuid.uuid4()),
-            "input": input_provenance(raw, iq_format, sample_rate_hz, centre_frequency_hz, gain_db, metadata_source),
+            "input": input_record,
             "analysis": pipeline,
             "manual_dsp": pipeline["raw_branch"]["features"],
             "manual_parameter_estimation": pipeline["raw_branch"]["manual_parameters"],
@@ -105,15 +116,20 @@ class ComparisonService:
                 "scope": "MVP comparison baseline; not a calibrated production model or blind decoder.",
             },
         }
+        if wav_info and report['rate_estimation']:
+            report['rate_estimation']['sample_rate_source'] = 'wav_header'
         return report
 
-    def demodulate_bytes(self, raw: bytes, iq_format: str, sample_rate_hz: float, modulation: str, samples_per_symbol: int | None = None, timing_offset: int = 0, carrier_offset_hz: float | None = 0.0, parameter_source: str = "analyst_override") -> dict[str, Any]:
+    def demodulate_bytes(self, raw: bytes, iq_format: str, sample_rate_hz: float, modulation: str, samples_per_symbol: int | None = None, timing_offset: int = 0, carrier_offset_hz: float | None = 0.0, parameter_source: str = "analyst_override", wav_role: str = 'unspecified', if_centre_hz: float = 0.) -> dict[str, Any]:
+        samples, sample_rate_hz, wav_info = decode_capture(raw, iq_format, sample_rate_hz, wav_role, if_centre_hz)
+        if wav_info and wav_role == 'audio':
+            return {'status': 'abstained', 'reason': 'Declared audio is already demodulated. Use audio overview/playback; original RF modulation cannot be reconstructed.'}
         if not math.isfinite(sample_rate_hz) or sample_rate_hz <= 0:
             raise ValueError('Sample rate must be finite and positive.')
         report = None
         sources = {'modulation': 'analyst_override', 'samples_per_symbol': 'analyst_override', 'carrier_offset_hz': 'analyst_override', 'timing_offset_samples': 'analyst_fixed_offset'}
         if modulation == "auto" or samples_per_symbol is None or carrier_offset_hz is None:
-            report = self.analyse_bytes(raw, iq_format, sample_rate_hz)
+            report = self.analyse_bytes(raw, iq_format, sample_rate_hz, wav_role=wav_role, if_centre_hz=if_centre_hz)
         if modulation == "auto":
             classification = report["modulation_classification"]
             if classification["abstained"] or classification["predicted_modulation"] not in SUPPORTED_DEMODULATIONS:
@@ -133,7 +149,6 @@ class ComparisonService:
                 return {'status': 'abstained', 'reason': 'Carrier estimate unavailable or low confidence; set carrier offset manually.'}
             carrier_offset_hz = cfo['carrier_offset_hz']
             sources['carrier_offset_hz'] = cfo['model_file']
-        samples = decode_raw_iq(raw, iq_format)
         region_info = {'source': 'whole_capture', 'sample_start': 0, 'sample_count': len(samples)}
         if report is not None and sources['samples_per_symbol'] != 'analyst_override':
             region_info = report['learned_region']
@@ -144,6 +159,7 @@ class ComparisonService:
             result['configuration']['parameter_source'] = 'model_guided_with_fixed_timing'
         result['configuration']['parameter_sources'] = sources
         result['input_region'] = region_info
+        result['input'] = capture_provenance(raw, iq_format, sample_rate_hz, None, None, 'analyst_hypothesis', wav_info)
         if report is not None:
             result['input'] = report['input']
             result['automatic_evidence'] = {'classification': report['modulation_classification'], 'rates': report.get('rate_estimation'), 'carrier_offset': report['automated_parameter_comparison']['carrier_offset_hz']}
@@ -161,7 +177,7 @@ def make_handler(service: ComparisonService):
             self.send_header("Content-Type", "application/json; charset=utf-8")
             self.send_header("Content-Length", str(len(encoded)))
             self.send_header("Access-Control-Allow-Origin", "*")
-            self.send_header("Access-Control-Allow-Headers", "Content-Type, X-DEmod-IQ-Format, X-DEmod-Sample-Rate, X-DEmod-Denoise-Profile, X-DEmod-Centre-Frequency, X-DEmod-Gain, X-DEmod-Metadata-Source, X-DEmod-Modulation, X-DEmod-Samples-Per-Symbol, X-DEmod-Timing-Offset, X-DEmod-Carrier-Offset, X-DEmod-Known-Symbol-Rate, X-DEmod-Recording-Duration")
+            self.send_header("Access-Control-Allow-Headers", "Content-Type, X-DEmod-IQ-Format, X-DEmod-Sample-Rate, X-DEmod-Denoise-Profile, X-DEmod-Centre-Frequency, X-DEmod-Gain, X-DEmod-Metadata-Source, X-DEmod-Modulation, X-DEmod-Samples-Per-Symbol, X-DEmod-Timing-Offset, X-DEmod-Carrier-Offset, X-DEmod-Known-Symbol-Rate, X-DEmod-Recording-Duration, X-DEmod-WAV-Role, X-DEmod-IF-Centre")
             self.end_headers()
             self.wfile.write(encoded)
 
@@ -171,7 +187,7 @@ def make_handler(service: ComparisonService):
             self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
             # Lets Chromium's private/local-network preflight reach a loopback API from the hosted UI.
             self.send_header("Access-Control-Allow-Private-Network", "true")
-            self.send_header("Access-Control-Allow-Headers", "Content-Type, X-DEmod-IQ-Format, X-DEmod-Sample-Rate, X-DEmod-Denoise-Profile, X-DEmod-Centre-Frequency, X-DEmod-Gain, X-DEmod-Metadata-Source, X-DEmod-Modulation, X-DEmod-Samples-Per-Symbol, X-DEmod-Timing-Offset, X-DEmod-Carrier-Offset, X-DEmod-Known-Symbol-Rate, X-DEmod-Recording-Duration")
+            self.send_header("Access-Control-Allow-Headers", "Content-Type, X-DEmod-IQ-Format, X-DEmod-Sample-Rate, X-DEmod-Denoise-Profile, X-DEmod-Centre-Frequency, X-DEmod-Gain, X-DEmod-Metadata-Source, X-DEmod-Modulation, X-DEmod-Samples-Per-Symbol, X-DEmod-Timing-Offset, X-DEmod-Carrier-Offset, X-DEmod-Known-Symbol-Rate, X-DEmod-Recording-Duration, X-DEmod-WAV-Role, X-DEmod-IF-Centre")
             self.end_headers()
 
         def _send_static(self, relative: str) -> None:
@@ -213,12 +229,17 @@ def make_handler(service: ComparisonService):
                 if self.path == "/rates":
                     if raw[:4] == b'RIFF' and raw[8:12] == b'WAVE':
                         meta, values = wav_metadata(raw)
+                        role = self.headers.get('X-DEmod-WAV-Role', 'unspecified')
                         report = {"metadata": meta, "rates": None, "note": "WAV header gives Fs. Stereo channel interpretation requires an analyst declaration."}
+                        if role not in ('unspecified', 'audio'):
+                            iq, fs, info = decode_capture(raw, 's16le', optional_float('X-DEmod-Sample-Rate') or 0., role, optional_float('X-DEmod-IF-Centre') or 0.)
+                            report['rates'] = estimate_rates(iq, fs) if len(iq) >= 128 else None
+                            report['metadata'] = info
                     else:
                         values = decode_raw_iq(raw, self.headers.get("X-DEmod-IQ-Format", "s16le"))
                         report = {"metadata": None, "rates": estimate_rates(values, optional_float("X-DEmod-Sample-Rate"), optional_float("X-DEmod-Known-Symbol-Rate"), optional_float("X-DEmod-Recording-Duration"))}
                 elif self.path == "/analyse":
-                    report = service.analyse_bytes(raw, self.headers.get("X-DEmod-IQ-Format", "s16le"), float(self.headers.get("X-DEmod-Sample-Rate", "0")), self.headers.get("X-DEmod-Denoise-Profile", "raw"), optional_float("X-DEmod-Centre-Frequency"), optional_float("X-DEmod-Gain"), self.headers.get("X-DEmod-Metadata-Source", "analyst_hypothesis"))
+                    report = service.analyse_bytes(raw, self.headers.get("X-DEmod-IQ-Format", "s16le"), float(self.headers.get("X-DEmod-Sample-Rate", "0")), self.headers.get("X-DEmod-Denoise-Profile", "raw"), optional_float("X-DEmod-Centre-Frequency"), optional_float("X-DEmod-Gain"), self.headers.get("X-DEmod-Metadata-Source", "analyst_hypothesis"), self.headers.get('X-DEmod-WAV-Role', 'unspecified'), optional_float('X-DEmod-IF-Centre') or 0.)
                     duration = optional_float("X-DEmod-Recording-Duration")
                     if duration is not None:
                         if not math.isfinite(duration) or duration <= 0:
@@ -229,11 +250,11 @@ def make_handler(service: ComparisonService):
                             raise ValueError('Supplied Fs conflicts with sample count / recording duration. Clear duration to use a manual override.')
                         report['input']['capture']['sample_rate_source'] = 'sample_count / analyst_recording_duration'
                         report['input']['capture']['recording_duration_seconds'] = duration
-                        if report['rate_estimation']:
+                        if report.get('rate_estimation'):
                             report['rate_estimation']['sample_rate_source'] = 'sample_count / analyst_recording_duration'
                 else:
                     sps = int(self.headers['X-DEmod-Samples-Per-Symbol']) if self.headers.get('X-DEmod-Samples-Per-Symbol') else None
-                    report = service.demodulate_bytes(raw, self.headers.get("X-DEmod-IQ-Format", "s16le"), float(self.headers.get("X-DEmod-Sample-Rate", "0")), self.headers.get("X-DEmod-Modulation", "auto"), sps, int(self.headers.get("X-DEmod-Timing-Offset", "0")), optional_float("X-DEmod-Carrier-Offset"))
+                    report = service.demodulate_bytes(raw, self.headers.get("X-DEmod-IQ-Format", "s16le"), float(self.headers.get("X-DEmod-Sample-Rate", "0")), self.headers.get("X-DEmod-Modulation", "auto"), sps, int(self.headers.get("X-DEmod-Timing-Offset", "0")), optional_float("X-DEmod-Carrier-Offset"), wav_role=self.headers.get('X-DEmod-WAV-Role', 'unspecified'), if_centre_hz=optional_float('X-DEmod-IF-Centre') or 0.)
                 self._send(200, report)
             except (ValueError, OverflowError, wave.Error, EOFError) as error:
                 self._send(400, {"error": str(error)})

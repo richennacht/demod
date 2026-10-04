@@ -6,7 +6,7 @@
 const UI_VERSION = '0.6.0';
 const MAX_BYTES = 16 * 1024 * 1024;
 const SAMPLE_BYTES = { s8: 2, cu8: 2, s16le: 4, s16be: 4, f32le: 8, f32be: 8 };
-const SOURCE_LABEL = { analyst_hypothesis: 'My hypothesis', sigmf_metadata: 'SigMF sidecar', capture_log: 'Capture log', unavailable: 'Not supplied', automatic_classifier: 'Classifier', analyst_override: 'Analyst setting' };
+const SOURCE_LABEL = { analyst_hypothesis: 'My hypothesis', sigmf_metadata: 'SigMF sidecar', wav_header: 'WAV header', analyst_wav_interpretation: 'Declared WAV interpretation', capture_log: 'Capture log', unavailable: 'Not supplied', automatic_classifier: 'Classifier', analyst_override: 'Analyst setting' };
 const DENOISE_LABEL = { raw: 'Raw', dc_only: 'DC only', dc_and_impulse: 'DC and impulses' };
 const RX_SUPPORTED = ['bpsk', 'qpsk', '2fsk'];
 const EXAMPLE_JSON = 'examples/synthetic-qpsk-burst.json';
@@ -19,6 +19,7 @@ const state = {
   file: null, bytes: null, truncated: false, shaBrowser: null,
   analysis: null, analysisSettings: null, demod: null, demodSettings: null,
   example: null, api: { ok: false, info: null },
+  wavHeader: null, isWav: false, audioUrl: null,
 };
 
 /* ---------- small helpers ---------- */
@@ -88,6 +89,7 @@ function captureHeaders(s) {
   if (s.gain_db != null) h['X-DEmod-Gain'] = String(s.gain_db);
   const duration = parseNum($('#p-duration').value);
   if (duration > 0) h['X-DEmod-Recording-Duration'] = String(duration);
+  if (state.isWav) { h['X-DEmod-WAV-Role'] = s.wav_role; h['X-DEmod-IF-Centre'] = String(s.if_centre_hz); }
   return h;
 }
 async function post(path, headers) {
@@ -100,7 +102,7 @@ async function post(path, headers) {
 }
 
 /* ---------- settings form ---------- */
-const F = { format: $('#p-format'), rate: $('#p-rate'), centre: $('#p-centre'), gain: $('#p-gain'), source: $('#p-source'), mod: $('#p-mod'), sps: $('#p-sps'), timing: $('#p-timing'), cfo: $('#p-cfo') };
+const F = { format: $('#p-format'), rate: $('#p-rate'), centre: $('#p-centre'), gain: $('#p-gain'), source: $('#p-source'), mod: $('#p-mod'), sps: $('#p-sps'), timing: $('#p-timing'), cfo: $('#p-cfo'), wav: $('#p-wav-role'), ifcentre: $('#p-if-centre') };
 let sigmfLoaded = false;
 
 function settings() {
@@ -108,11 +110,14 @@ function settings() {
     iq_format: F.format.value, sample_rate_hz: parseNum(F.rate.value), centre_frequency_hz: parseNum(F.centre.value),
     gain_db: parseNum(F.gain.value), metadata_source: F.source.value, denoise_profile: state.denoise,
     modulation: F.mod.value, samples_per_symbol: parseNum(F.sps.value), timing_offset: parseNum(F.timing.value) ?? 0, carrier_offset_hz: parseNum(F.cfo.value) ?? 0,
+    wav_role: F.wav.value, if_centre_hz: parseNum(F.ifcentre.value) ?? 0,
   };
 }
 function captureProblems(s) {
   const p = [];
-  if (state.file?.name.toLowerCase().endsWith('.wav')) p.push('WAV rate metadata is supported here; waveform analysis currently requires raw IQ. Do not reinterpret a WAV header as IQ samples.');
+  if (state.isWav && s.wav_role === 'unspecified') p.push('Choose whether this WAV contains stereo I/Q, a mono RF/IF waveform, or audio.');
+  if (state.isWav && state.wavHeader && s.sample_rate_hz !== state.wavHeader.sample_rate_hz) p.push('Use the WAV header sample rate; resampling is a separate operation.');
+  if (state.isWav && (!Number.isFinite(s.if_centre_hz) || Math.abs(s.if_centre_hz) >= s.sample_rate_hz / 2)) p.push('Recorded IF centre must lie inside the sampled Nyquist interval.');
   if (!(s.sample_rate_hz > 0)) p.push('Enter a positive sample rate.');
   if (Number.isNaN(s.centre_frequency_hz)) p.push('Centre frequency should be a number, or leave it empty.');
   if (Number.isNaN(s.gain_db)) p.push('Gain should be a number, or leave it empty.');
@@ -127,22 +132,25 @@ function updateSummary() {
   F.gain.setAttribute('aria-invalid', String(Number.isNaN(s.gain_db)));
   const out = $('#capture-summary');
   if (!state.file) { out.textContent = 'No file loaded.'; updateButtons(); return; }
-  const size = state.bytes.byteLength; const per = SAMPLE_BYTES[s.iq_format]; const n = Math.floor(size / per);
-  let text = `${state.file.name}, ${fmtBytes(state.file.size)}. Read as ${s.iq_format}, that is ${n.toLocaleString()} complex samples`;
+  const size = state.bytes.byteLength; const per = SAMPLE_BYTES[s.iq_format]; const n = state.isWav ? (state.wavHeader?.frame_count || 0) : Math.floor(size / per);
+  let text = state.isWav ? `${state.file.name}, ${fmtBytes(state.file.size)}. WAV header: ${n.toLocaleString()} frames, ${state.wavHeader?.channels || '?'} channels` : `${state.file.name}, ${fmtBytes(state.file.size)}. Read as ${s.iq_format}, that is ${n.toLocaleString()} complex samples`;
   text += s.sample_rate_hz > 0 ? `, or ${fmtTime(n / s.sample_rate_hz)} at ${fmtRate(s.sample_rate_hz)}.` : '.';
-  if (size % per) text += ` ${size % per} trailing bytes don't fill a sample, so the format may be wrong.`;
+  if (!state.isWav && size % per) text += ` ${size % per} trailing bytes don't fill a sample, so the format may be wrong.`;
   if (state.truncated) text += ` Only the first ${fmtBytes(size)} will be sent, and the hash covers that slice only.`;
   if (state.analysisSettings && JSON.stringify(pick(state.analysisSettings)) !== JSON.stringify(pick(s))) text += ' Settings changed since the last run, so analyse again to update the evidence.';
   out.textContent = text;
   updateButtons();
 }
-const pick = s => [s.iq_format, s.sample_rate_hz, s.centre_frequency_hz, s.gain_db, s.metadata_source, s.denoise_profile];
+const pick = s => [s.iq_format, s.sample_rate_hz, s.centre_frequency_hz, s.gain_db, s.metadata_source, s.denoise_profile, s.wav_role, s.if_centre_hz];
 
 function updateButtons() {
   const s = settings();
   $('#run-analysis').disabled = !state.bytes || captureProblems(s).length > 0 || !state.api.ok;
   $('#run-analysis').title = !state.api.ok ? 'Connect the local API first' : '';
   $('#run-demod').disabled = !state.bytes || !(s.sample_rate_hz > 0) || !state.api.ok;
+  const audio = state.isWav && s.wav_role === 'audio';
+  $('#run-demod').disabled ||= audio;
+  $('#run-auto-demod').disabled = !state.bytes || !state.api.ok || captureProblems(s).length > 0 || audio;
   $('#export').disabled = !state.analysis && !state.demod;
 }
 
@@ -170,6 +178,10 @@ async function sha256(buf) {
   return [...new Uint8Array(d)].map(b => b.toString(16).padStart(2, '0')).join('');
 }
 async function loadBytes(file, buffer, extra = {}) {
+  state.wavHeader = null; state.isWav = false; F.rate.readOnly = false; F.format.disabled = false;
+  show($('#wav-options'), false);
+  if (state.audioUrl) { URL.revokeObjectURL(state.audioUrl); state.audioUrl = null; }
+  $('#wav-player').removeAttribute('src');
   state.file = { name: file.name, size: file.size, ...extra };
   state.truncated = file.size > MAX_BYTES;
   state.bytes = buffer;
@@ -184,31 +196,53 @@ async function loadBytes(file, buffer, extra = {}) {
 async function onFile(file) {
   if (!file) return;
   if (!file.size) { flash('#capture-error', `${file.name} is empty.`); return; }
+  const magic = new Uint8Array(await file.slice(0,12).arrayBuffer());
+  const wav = String.fromCharCode(...magic.slice(0,4)) === 'RIFF' && String.fromCharCode(...magic.slice(8,12)) === 'WAVE';
+  if (file.name.toLowerCase().endsWith('.wav') && !wav) { flash('#capture-error', 'This file is not a supported RIFF/WAVE container.'); return; }
+  if (wav && file.size > MAX_BYTES) { flash('#capture-error', `WAV files must fit the ${fmtBytes(MAX_BYTES)} demo limit; truncating their headers/payload would invalidate them.`); return; }
   state.example = null;
   $('#p-duration').value = ''; $('#rate-evidence').textContent = '';
   const buffer = await file.slice(0, Math.min(file.size, MAX_BYTES)).arrayBuffer();
   await loadBytes(file, buffer);
-  if (file.name.toLowerCase().endsWith('.wav') && state.api.ok) {
+  state.isWav = wav;
+  show($('#wav-options'), wav); F.wav.value = 'unspecified'; F.ifcentre.value = '0';
+  if (wav) { state.audioUrl = URL.createObjectURL(new Blob([buffer], {type:'audio/wav'})); $('#wav-player').src = state.audioUrl; F.format.disabled = true; }
+  if (wav && state.api.ok) {
     try {
       const r = await post('/rates', { 'Content-Type': 'application/octet-stream' });
-      F.rate.value = r.metadata.sample_rate_hz; F.source.value = 'wav_header';
-      $('#rate-evidence').textContent = `Fs ${fmtRate(r.metadata.sample_rate_hz)} read automatically from the WAV header. ${r.metadata.channels} channels. Waveform analysis requires raw IQ.`;
+      state.wavHeader = r.metadata;
+      F.rate.value = r.metadata.sample_rate_hz; F.rate.readOnly = true;
+      $('#wav-header-info').textContent = `${r.metadata.encoding}, ${r.metadata.bits_per_channel_sample} bits/channel sample, ${r.metadata.channels} channels, ${r.metadata.frame_count.toLocaleString()} frames, ${fmtRate(r.metadata.sample_rate_hz)}, ${fmtTime(r.metadata.duration_seconds)}. Header does not establish channel roles, RF centre or gain.`;
+      $('#rate-evidence').textContent = 'Sample rate read from WAV header. Choose its waveform interpretation to analyze it.';
       updateSummary();
     } catch (err) { flash('#capture-error', err.message); }
   }
 }
 $('#file-input').addEventListener('change', e => onFile(e.target.files[0]));
+$('#open-wav-example').addEventListener('click', async () => {
+  try {
+    const res = await fetch('examples/synthetic-qpsk-burst.wav');
+    if (!res.ok) throw new Error('WAV example is unavailable.');
+    await onFile(new File([await res.blob()], 'synthetic-qpsk-burst.wav', {type:'audio/wav'}));
+    F.wav.value = 'stereo_iq'; F.mod.value = 'auto'; F.sps.value = ''; F.cfo.value = '0';
+    $('#drop-detail').textContent = 'Synthetic QPSK demo wrapped in PCM WAV. Known channel order: channel 1 = I, channel 2 = Q.';
+    updateSummary(); syncBound();
+  } catch (err) { flash('#capture-error', err.message); }
+});
 $('#estimate-rates').addEventListener('click', async () => {
   if (!state.bytes) { $('#rate-evidence').textContent = 'Load a capture first.'; return; }
   try {
     const h = { 'Content-Type': 'application/octet-stream', 'X-DEmod-IQ-Format': F.format.value };
     const fs = parseNum(F.rate.value); if (fs > 0) h['X-DEmod-Sample-Rate'] = String(fs);
+    if (state.isWav) { h['X-DEmod-WAV-Role'] = F.wav.value; h['X-DEmod-IF-Centre'] = String(parseNum(F.ifcentre.value) ?? 0); }
     const duration = parseNum($('#p-duration').value);
     if ($('#p-duration').value.trim() && !(duration > 0)) throw new Error('Recording duration must be positive.');
     if (duration > 0) h['X-DEmod-Recording-Duration'] = String(duration);
     const r = await post('/rates', h);
     if (r.metadata) {
-      $('#rate-evidence').textContent = `Fs ${fmtRate(r.metadata.sample_rate_hz)} from WAV header; ${r.metadata.channels} channels. Rate metadata only; select raw IQ for the analysis workflow.`;
+      state.wavHeader = r.metadata; F.rate.value = r.metadata.sample_rate_hz; F.rate.readOnly = true;
+      $('#rate-evidence').textContent = `Fs ${fmtRate(r.metadata.sample_rate_hz)} from WAV header; ${r.metadata.channels} channels.${r.rates?.learned ? ' Model SPS: ' + (r.rates.learned.abstained ? 'abstained' : r.rates.learned.samples_per_symbol) + '.' : ' Choose the waveform interpretation for RF rate estimates.'}`;
+      updateSummary();
     } else {
       if (r.rates.sample_rate_source === 'sample_count / analyst_recording_duration') {
         F.rate.value = r.rates.absolute_sample_rate_hz; updateSummary();
@@ -531,12 +565,24 @@ function renderEvidence() {
     tag('Cleaning', DENOISE_LABEL[a.provenance.denoising_profile] || a.provenance.denoising_profile),
   ].join('');
 
+  if (a.kind === 'audio') {
+    state.branch = 'raw';
+    $$('#branch button').forEach(b => { b.disabled = true; b.setAttribute('aria-checked', String(b.dataset.value === 'raw')); });
+    $('#evidence-sub').textContent = `${a.audio_summary.sample_count.toLocaleString()} PCM audio frames. RF models are not applied to declared audio.`;
+    const audioTiles = instruments(rawVis, fs, null, 'PCM audio, channel average for overview', 'raw').filter(t => !t.dataset.cat.includes('iq'));
+    audioTiles.push(tile({title:'Audio overview',cat:'estimates',src:'WAV header and real-sample measurements',av:'raw',
+      body:`<dl class="kv"><dt>Duration</dt><dd>${fmtTime(a.audio_summary.duration_seconds)}</dd><dt>RMS</dt><dd>${fmtNum(a.audio_summary.rms_level)}</dd><dt>Peak</dt><dd>${fmtNum(a.audio_summary.peak_level)}</dd></dl><p>Listen using the local player on Capture. This path analyzes already-demodulated audio; it cannot recover the original RF modulation.</p>`}));
+    setTiles('feed',audioTiles); return;
+  }
+
   const rawOnly = a.provenance.denoising_profile === 'raw';
   if (rawOnly) state.branch = 'raw';
   $$('#branch button').forEach(b => { b.setAttribute('aria-checked', String(b.dataset.value === state.branch)); b.disabled = rawOnly && b.dataset.value === 'derived'; b.title = b.disabled ? 'Cleaning was set to Raw, so there is no separate derived branch' : ''; });
 
   const B = branchData(); const vis = B.visualization; const av = state.branch === 'derived' ? 'derived' : 'raw'; const src = branchLabel();
   const tiles = [];
+  if (inp.wav_header) tiles.push(tile({title:'WAV input and conversion',cat:'estimates',src:'Container facts plus declared waveform interpretation',av:'raw',
+    body:`<p>${esc(inp.wav_header.encoding)}, ${inp.wav_header.bits_per_channel_sample} bits/channel sample; ${inp.wav_header.channels} channels; ${fmtRate(fs)} from WAV header.</p><p>${esc(inp.conversion.method)}. Original WAV SHA-256 is preserved. No resampling was performed.</p><p>Raw plots show the decoded/converted waveform before optional cleaning. Real-IF conversion is derived analytic I/Q, not independently measured quadrature.</p>`}));
 
   if (vis) {
     tiles.push(...instruments(vis, fs, centre, src, av));
@@ -652,7 +698,7 @@ document.addEventListener('click', e => {
 /* ---------- receiver ---------- */
 function renderRxHints() {
   const box = $('#rx-hints'); const a = state.analysis;
-  if (!a) { box.innerHTML = ''; return; }
+  if (!a || a.kind === 'audio') { box.innerHTML = a?.kind === 'audio' ? 'Declared audio uses the audio overview rather than an RF receiver.' : ''; return; }
   const cls = a.modulation_classification; const mp = a.manual_parameter_estimation; const chips = [];
   if (!cls.abstained && RX_SUPPORTED.includes(cls.predicted_modulation)) chips.push(`<button class="chip" data-set="p-mod" data-value="${cls.predicted_modulation}">Classifier says ${cls.predicted_modulation.toUpperCase()}</button>`);
   const learnedCfo = a.automated_parameter_comparison?.carrier_offset_hz?.learned_detail;
@@ -736,6 +782,10 @@ function renderReport() {
     add('SHA-256, API', `<code>${esc(inp.sha256)}</code>${match}`);
     add('IQ format', `${esc(inp.representation.iq_format)}, ${esc(SOURCE_LABEL[inp.representation.iq_format_source] || inp.representation.iq_format_source)}`);
     add('Sample rate', `${fmtRate(cap.sample_rate_hz)}, ${esc(SOURCE_LABEL[cap.sample_rate_source] || cap.sample_rate_source)}`);
+    if (inp.wav_header) {
+      add('WAV header', `${inp.wav_header.channels} channels, ${inp.wav_header.bits_per_channel_sample} bits/channel sample, ${inp.wav_header.frame_count} frames; ${esc(inp.wav_header.encoding)}.`);
+      add('WAV interpretation', `${esc(inp.wav_header.waveform_role)} (${esc(inp.wav_header.role_source)}). ${esc(inp.conversion.method)}.`);
+    }
     add('Centre frequency', cap.centre_frequency_hz != null ? `${fmtHz(cap.centre_frequency_hz)}, ${esc(SOURCE_LABEL[cap.centre_frequency_source] || cap.centre_frequency_source)}` : 'Not supplied');
     add('Gain', cap.gain_db != null ? `${cap.gain_db} dB, ${esc(SOURCE_LABEL[cap.gain_source] || cap.gain_source)}` : 'Not supplied');
     add('Raw data kept by the API', inp.raw_data_persisted || a.provenance.raw_data_persisted ? 'Yes' : 'No');

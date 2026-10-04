@@ -28,6 +28,34 @@ class LocalComparisonTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             self.service.analyse_bytes(b"\x00\x00\x00\x00", "unknown", 1_000_000)
 
+    def test_declared_audio_has_overview_and_abstains_from_receiver(self):
+        import io
+        import wave
+        buf = io.BytesIO()
+        with wave.open(buf, 'wb') as w:
+            w.setnchannels(1); w.setsampwidth(2); w.setframerate(16000); w.writeframes(b'\0\0' * 1024)
+        raw = buf.getvalue()
+        report = self.service.analyse_bytes(raw, 's16le', 0, wav_role='audio')
+        self.assertEqual(report['kind'], 'audio')
+        self.assertEqual(report['input']['capture']['sample_rate_source'], 'wav_header')
+        self.assertTrue(report['modulation_classification']['abstained'])
+        self.assertNotIn('automated_parameter_comparison', report)
+        self.assertEqual(self.service.demodulate_bytes(raw, 's16le', 0, 'auto', wav_role='audio')['status'], 'abstained')
+
+    def test_wav_manual_receiver_matches_identical_raw_iq(self):
+        import io
+        import wave
+        values = [v for bit in (0,1,0,1) for _ in range(4) for v in ((-16384 if bit == 0 else 16384),0)]
+        iq = b''.join(v.to_bytes(2,'little',signed=True) for v in values)
+        buf = io.BytesIO()
+        with wave.open(buf,'wb') as w:
+            w.setnchannels(2); w.setsampwidth(2); w.setframerate(16000); w.writeframes(iq)
+        raw = self.service.demodulate_bytes(iq,'s16le',16000,'bpsk',4)
+        wav = self.service.demodulate_bytes(buf.getvalue(),'s8',0,'bpsk',4,wav_role='stereo_iq')
+        self.assertEqual(wav['bits_preview'],raw['bits_preview'])
+        self.assertEqual(wav['bits_preview'],'0101')
+        self.assertEqual(wav['input']['capture']['sample_rate_hz'],16000)
+
     def test_manual_demodulation_returns_bits_and_gnu_radio_graph(self):
         # BPSK 0,1,0,1 at four samples per symbol in interleaved s16le.
         values = []

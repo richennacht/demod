@@ -37,13 +37,13 @@
       <section class="view" id="view-capture" aria-labelledby="capture-title">
         <header class="page-head">
           <h1 id="capture-title">New capture</h1>
-          <p>Load a raw IQ file and say what you know about it. Headerless bytes can't prove their own sample rate, centre frequency, gain or format, so every value here is recorded as a hypothesis with its source.</p>
+          <p>Load an IQ or PCM WAV file and say what you know about it. WAV headers supply the sample rate and encoding, but not channel roles or RF centre. Headerless IQ needs supplied settings; their sources stay in the report.</p>
         </header>
 
         <label class="drop" id="drop" for="file-input">
           <input id="file-input" type="file" accept=".iq,.wav,.cs16,.cu8,.cs8,.cf32,.sigmf-data,.bin,.raw,.dat">
           <span class="drop-body">
-            <strong id="drop-title">Drop an IQ file here</strong>
+            <strong id="drop-title">Drop an IQ or WAV file here</strong>
             <span id="drop-detail">or click to choose one. The local API takes up to 16 MB per run.</span>
           </span>
         </label>
@@ -51,6 +51,7 @@
           <label class="text-button" tabindex="0" id="sigmf-label">Fill from SigMF metadata<input id="sigmf-input" type="file" accept=".sigmf-meta,.json" hidden></label>
           <button class="text-button" type="button" id="make-test">Generate a test capture</button>
           <button class="text-button" type="button" id="open-example">Open example run</button>
+          <button class="text-button" type="button" id="open-wav-example">Load WAV example</button>
         </div>
 
         <div class="form-grid">
@@ -70,6 +71,12 @@
             <button type="button" id="estimate-rates">Estimate rate evidence</button>
             <label class="field"><span>Known recording duration (seconds)</span><input id="p-duration" inputmode="decimal" placeholder="Optional"><small>External capture-log duration: Fs = sample count / duration.</small></label>
             <p id="rate-evidence" aria-live="polite"></p>
+            <div id="wav-options" hidden>
+              <label class="field"><span>WAV waveform interpretation</span><select id="p-wav-role"><option value="unspecified">Choose waveform type</option><option value="stereo_iq">Stereo: channel 1 = I, channel 2 = Q</option><option value="stereo_qi">Stereo: channel 1 = Q, channel 2 = I</option><option value="real_if">Mono RF/IF waveform → analytic I/Q</option><option value="audio">Already-demodulated audio → audio overview</option></select></label>
+              <label class="field"><span>Recorded IF centre (Hz)</span><input id="p-if-centre" inputmode="decimal" value="0"><small>Optional frequency translation after conversion; zero keeps the recorded band.</small></label>
+              <p id="wav-header-info" aria-live="polite"></p>
+              <audio id="wav-player" controls preload="metadata"></audio>
+            </div>
             <label class="field"><span>Centre frequency (Hz)</span><input id="p-centre" inputmode="decimal" placeholder="Unknown"><small>Optional. Only used to label absolute frequency.</small></label>
             <label class="field"><span>Gain (dB)</span><input id="p-gain" inputmode="decimal" placeholder="Unknown"></label>
             <label class="field"><span>Source of these values</span>

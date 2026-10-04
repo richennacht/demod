@@ -84,11 +84,21 @@ def estimate(samples, sample_rate_hz=None, known_symbol_rate_hz=None, recording_
 
 def wav_metadata(raw):
     with wave.open(io.BytesIO(raw), 'rb') as w:
-        if w.getsampwidth() not in (1, 2, 4):
-            raise ValueError('Supported PCM WAV widths are 8, 16 and 32 bits.')
+        if w.getsampwidth() not in (1, 2, 3, 4):
+            raise ValueError('Supported PCM WAV widths are 8, 16, 24 and 32 bits.')
+        expected_frames = w.getnframes()
         frames = w.readframes(w.getnframes())
         width, channels, fs = w.getsampwidth(), w.getnchannels(), w.getframerate()
-    dtype = {1: 'u1', 2: '<i2', 4: '<i4'}[width]
-    v = np.frombuffer(frames, dtype=dtype).astype(float).reshape(-1, channels)
+    if len(frames) != expected_frames * width * channels:
+        raise ValueError('WAV data is truncated or its frame count is invalid; upload the complete file.')
+    if width == 3:
+        octets = np.frombuffer(frames, dtype='u1').reshape(-1, 3).astype(np.int32)
+        signed = octets[:,0] | (octets[:,1] << 8) | (octets[:,2] << 16)
+        v = ((signed ^ 0x800000) - 0x800000).astype(float).reshape(-1, channels)
+    else:
+        dtype = {1: 'u1', 2: '<i2', 4: '<i4'}[width]
+        v = np.frombuffer(frames, dtype=dtype).astype(float).reshape(-1, channels)
     v = (v - (128 if width == 1 else 0)) / (2**(width*8-1))
-    return {'sample_rate_hz': fs, 'source': 'wav_header', 'channels': channels, 'sample_width_bytes': width}, v
+    return {'sample_rate_hz': fs, 'source': 'wav_header', 'channels': channels, 'sample_width_bytes': width,
+            'bits_per_channel_sample': width*8, 'frame_count': expected_frames, 'duration_seconds': expected_frames/fs,
+            'encoding': 'uncompressed PCM', 'payload_byte_count': len(frames)}, v
