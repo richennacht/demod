@@ -17,3 +17,9 @@ data/*.sqlite
 !data/manifests/README.md
 !data/manifests/example-synthetic.json
 !data/manifests/external-datasets.json
+
+# trained model weights are small and shipped; resume checkpoints are not
+!data/models/
+!data/models/*.npz
+research/checkpoints/*.resume.pkl
+research/__pycache__/
