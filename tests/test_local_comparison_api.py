@@ -84,3 +84,59 @@ class LocalUiServingTests(unittest.TestCase):
         status, headers, _ = self._get("/analyse", method="OPTIONS")
         self.assertEqual(status, 204)
         self.assertEqual(headers.get("Access-Control-Allow-Private-Network"), "true")
+
+
+MODELS_PRESENT = (ROOT / "data" / "models" / "speccfo.npz").exists() and (ROOT / "data" / "models" / "demod_amc.npz").exists()
+
+
+def _qpsk_burst_bytes(cfo=0.006, sps=8, symbols=1200, snr_db=20, seed=3):
+    import numpy as np
+    rng = np.random.default_rng(seed)
+    pts = np.exp(1j * (np.pi / 4 + np.pi / 2 * rng.integers(0, 4, symbols)))
+    x = np.concatenate([np.zeros(3000, complex), np.repeat(pts, sps), np.zeros(3000, complex)])
+    x = x * np.exp(2j * np.pi * cfo * np.arange(len(x)))
+    x += (rng.standard_normal(len(x)) + 1j * rng.standard_normal(len(x))) * 10 ** (-snr_db / 20) / 2 ** 0.5 * (np.arange(len(x)) >= 3000) * (np.arange(len(x)) < 3000 + symbols * sps)
+    iq = np.empty(2 * len(x), dtype="<i2")
+    iq[0::2], iq[1::2] = np.round(x.real * 8000), np.round(x.imag * 8000)
+    return iq.tobytes()
+
+
+class LearnedModelIntegrationTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.service = ComparisonService(ROOT / "data" / "recipes" / "mvp-recipes.json", examples=12)
+        cls.raw = _qpsk_burst_bytes()
+
+    @unittest.skipUnless(MODELS_PRESENT, "needs data/models/*.npz")
+    def test_carrier_offset_is_scaled_to_the_stated_sample_rate_and_reports_confidence(self):
+        for fs in (250_000.0, 1_000_000.0):
+            report = self.service.analyse_bytes(self.raw, "s16le", fs)
+            row = report["automated_parameter_comparison"]["carrier_offset_hz"]
+            truth_hz = 0.006 * fs
+            self.assertLess(abs(row["learned"] - truth_hz), 0.002 * fs / 100, fs)  # within 0.002 percent of fs
+            self.assertTrue(0 <= row["learned_detail"]["confidence"] <= 1)
+            self.assertLessEqual(abs(row["learned"]), fs / 2)
+            self.assertEqual(report["learned_region"]["source"], "longest_energy_segment")
+
+    @unittest.skipUnless(MODELS_PRESENT, "needs data/models/*.npz")
+    def test_classifier_returns_probabilities_names_the_class_and_keeps_the_legacy_answer(self):
+        report = self.service.analyse_bytes(self.raw, "s16le", 250_000.0)
+        cls = report["modulation_classification"]
+        self.assertEqual(cls["predicted_modulation"], "qpsk")
+        self.assertAlmostEqual(sum(c["probability"] for c in cls["ranked_candidates"]), 1.0, delta=0.05)
+        self.assertIn("legacy_centroid", cls)
+        self.assertIn("calibrated", cls["model"])
+
+    def test_falls_back_to_the_legacy_models_when_model_files_are_absent(self):
+        import cfo_estimators
+        import amc_models
+        saved = (cfo_estimators._DEFAULT, amc_models._DEFAULT, cfo_estimators.MODEL_PATH, amc_models.MODEL_PATH)
+        try:
+            missing = ROOT / "data" / "models" / "does-not-exist.npz"
+            cfo_estimators._DEFAULT, amc_models._DEFAULT = None, None
+            cfo_estimators.MODEL_PATH = amc_models.MODEL_PATH = missing
+            report = self.service.analyse_bytes(self.raw, "s16le", 250_000.0)
+            self.assertNotIn("learned_detail", report["automated_parameter_comparison"]["carrier_offset_hz"])
+            self.assertIn("distance", report["modulation_classification"]["ranked_candidates"][0])
+        finally:
+            cfo_estimators._DEFAULT, amc_models._DEFAULT, cfo_estimators.MODEL_PATH, amc_models.MODEL_PATH = saved
