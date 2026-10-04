@@ -112,6 +112,8 @@ The local API also exposes `POST /demodulate` for controlled BPSK, QPSK and 2-FS
 
 ### Analyst UI (connected to the local API)
 
+For the live demo, start `python src/local_comparison_api.py` and open `http://127.0.0.1:8787/ui/`. The server loads the shipped NumPy SpecCFO/DemodAMC model files directly. Its retained legacy TinyMLP/centroid fallback now uses a compact in-memory batch by default so that local startup is suitable for a demonstration; use `--examples` to raise that fallback-only batch size when investigating legacy comparisons.
+
 `web/` is now a working front end for the local API, not a byte preview. Start the API and open the UI it serves:
 
 ```powershell

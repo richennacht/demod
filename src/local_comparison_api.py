@@ -38,7 +38,7 @@ SUPPORTED_FORMATS = ("s16le", "s16be", "s8", "cu8", "f32le", "f32be")
 class ComparisonService:
     """One in-memory learned baseline paired with deterministic DSP evidence."""
 
-    def __init__(self, recipes_path: Path, examples: int = 96) -> None:
+    def __init__(self, recipes_path: Path, examples: int = 4) -> None:
         self.recipes_path = recipes_path
         self.examples = examples
         recipes = load_recipes(recipes_path)
@@ -195,7 +195,7 @@ def main() -> None:
     parser.add_argument("--host", default="127.0.0.1", help="Keep the default loopback host for authorised local testing.")
     parser.add_argument("--port", type=int, default=8787)
     parser.add_argument("--recipes", type=Path, default=Path("data/recipes/mvp-recipes.json"))
-    parser.add_argument("--examples", type=int, default=96)
+    parser.add_argument("--examples", type=int, default=4, help="Legacy TinyMLP/centroid fallback examples; learned NumPy models are loaded from data/models.")
     args = parser.parse_args()
     service = ComparisonService(args.recipes, args.examples)
     server = ThreadingHTTPServer((args.host, args.port), make_handler(service))
