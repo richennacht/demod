@@ -89,6 +89,10 @@ DEmod will train narrow models for named physical parameters, each paired with a
 
 The local comparison API now also produces an immutable input-provenance record (SHA-256 and each metadata field's source), raw and optional-derived denoising branches, FFT/STFT constellation and burst evidence for both branches, named manual parameter estimates, and a synthetic-trained modulation-classification baseline with ranked candidates and abstention. Set `X-DEmod-Denoise-Profile` to `raw` (default), `dc_only`, or `dc_and_impulse`; this never overwrites raw IQ. These models are baseline evidence tools, not field-calibrated blind decoders. The [build matrix](docs/CURRENT_BUILD_MATRIX.md) records this precise completion boundary.
 
+### Receiver MVP and GNU Radio graphs
+
+The local API also exposes `POST /demodulate` for controlled BPSK, QPSK and 2-FSK recordings. It requires an analyst-supplied samples-per-symbol value and returns reproducible hard-bit candidates, decision/EVM evidence and a GNU Radio graph descriptor. GNU Radio is preferred when installed for interactive frequency, timing and constellation nodes; the supplied Python receiver is only the tested fallback for declared parameters. It does not claim FEC, framing, payload recovery or blind synchronisation. See the [receiver MVP contract](docs/MVP_RECEIVER.md) and [GNU Radio graph notes](gnuradio/README.md).
+
 ## Research basis
 
 The following papers directly motivate the currently documented technology choices. They are linked here so the implementation, evidence boundary and source material remain together.

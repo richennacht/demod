@@ -21,7 +21,7 @@ This is the single source of truth for the current product state. “Built” me
 | Paper-driven noise-robust AMC experiment | Not built | Design choice documented below | High-SNR selection, rotation/CTS augmentation, complex-valued autoencoder and held-out ablation. |
 | Symbol synchronisation | Not built | Design and literature map only | Oerder–Meyr acquisition plus Gardner/Mueller–Müller tracking, fixtures and BER tests. |
 | Carrier recovery / equalisation | Not built | Coarse CFO metric only | Family-gated carrier loop/equaliser and EVM evidence. |
-| Demodulation | Not built | No bitstream or audio output is generated | Start with BPSK, QPSK and 2-FSK; validate BER/SER/EVM on known captures. |
+| Demodulation | Built controlled MVP | Manual-override BPSK/QPSK/2-FSK integrate-and-dump hard decisions, bit preview, EVM and GNU Radio graph descriptor | Real timing/carrier recovery, BER/SER validation, framing/CRC/FEC and protocol support. |
 | OFDM receiver | Not built | OFDM-shaped synthetic waveform only | Profile declaration, preamble/timing/CFO/channel estimation/equalisation and subcarrier decoder. |
 | FEC, deinterleaving, descrambling | Not built | No implementation | Protocol-specific candidate executor with known vectors, framing and CRC acceptance. |
 | Voice intelligence | Not built | WAV summary only | Audio demodulation for declared modes, playback and any authorised transcription workflow. |
