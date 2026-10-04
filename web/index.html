@@ -41,7 +41,7 @@
         </header>
 
         <label class="drop" id="drop" for="file-input">
-          <input id="file-input" type="file" accept=".iq,.cs16,.cu8,.cs8,.cf32,.sigmf-data,.bin,.raw,.dat">
+          <input id="file-input" type="file" accept=".iq,.wav,.cs16,.cu8,.cs8,.cf32,.sigmf-data,.bin,.raw,.dat">
           <span class="drop-body">
             <strong id="drop-title">Drop an IQ file here</strong>
             <span id="drop-detail">or click to choose one. The local API takes up to 16 MB per run.</span>
@@ -66,13 +66,17 @@
                 <option value="f32be">Float 32, big endian</option>
               </select>
             </label>
-            <label class="field"><span>Sample rate (Hz)</span><input id="p-rate" inputmode="decimal" placeholder="250000"><small>Required. Sets every time and frequency axis.</small></label>
+            <label class="field"><span>Sample rate (Hz)</span><input id="p-rate" inputmode="decimal" placeholder="250000"><small>From WAV/SigMF metadata or your time reference.</small></label>
+            <button type="button" id="estimate-rates">Estimate rate evidence</button>
+            <label class="field"><span>Known recording duration (seconds)</span><input id="p-duration" inputmode="decimal" placeholder="Optional"><small>External capture-log duration: Fs = sample count / duration.</small></label>
+            <p id="rate-evidence" aria-live="polite"></p>
             <label class="field"><span>Centre frequency (Hz)</span><input id="p-centre" inputmode="decimal" placeholder="Unknown"><small>Optional. Only used to label absolute frequency.</small></label>
             <label class="field"><span>Gain (dB)</span><input id="p-gain" inputmode="decimal" placeholder="Unknown"></label>
             <label class="field"><span>Source of these values</span>
               <select id="p-source">
                 <option value="analyst_hypothesis">My hypothesis</option>
                 <option value="sigmf_metadata">SigMF sidecar</option>
+                <option value="wav_header">WAV header</option>
                 <option value="capture_log">Capture log or operator note</option>
               </select>
             </label>

@@ -4,6 +4,8 @@
 
 ## What the first MVP does
 
+The [sampling-rate and modulation review](docs/RATE_AND_MODULATION_REVIEW.md) now maps classical methods to executable estimates. `POST /rates` and the Capture rate-evidence control work before a raw IQ sample rate is supplied; PCM WAV header Fs is read automatically, and normalized symbol-rate candidates are compared with a newly trained feature-based SPS model (2/4/8/16). A capture-log duration enables `Fs = sample_count / duration`, with per-field provenance and conflict rejection on analysis. The reproducible recipe and synthetic evaluation live in `research/train_symbol_rate.py` and `research/results/symbol_rate_results.json`. Absolute raw Fs still needs metadata or a known time reference. Modulation inference now returns all 12 candidates, arithmetic-mean window probabilities, chunk agreement and noise abstention; `research/eval_capture_amc.py` records a new 120-capture simulation smoke evaluation. The old benchmark numbers do not validate this new capture aggregation rule. Full WAV analysis in the web path remains pending.
+
 - Reads mono or multi-channel PCM WAV recordings with Python's standard library.
 - Reads raw complex IQ samples when their format is explicitly supplied: `s16le`, `s16be`, `s8`, `cu8`, `f32le`, `f32be`.
 - Produces reproducible, explainable DSP measurements: DC offset, RMS, peak, crest factor, instantaneous-frequency statistics, FFT peak, 99%-energy occupied bandwidth, and ranked modulation-family hypotheses.

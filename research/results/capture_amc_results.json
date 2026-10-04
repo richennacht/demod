@@ -1,0 +1,851 @@
+{
+  "seed": 526147,
+  "examples": 120,
+  "signal_examples": 110,
+  "coverage": 0.8363636363636363,
+  "accepted_accuracy": 1.0,
+  "noise_abstention_rate": 1.0,
+  "scope": "Small same-generator synthetic smoke evaluation; 4096 samples, 5\u201325 dB, RRC/rect, SPS 2\u201316; no real-data or calibration claim.",
+  "records": [
+    {
+      "truth": "bpsk",
+      "prediction": "bpsk",
+      "abstained": false,
+      "probability": 1.0,
+      "chunk_agreement": 1.0
+    },
+    {
+      "truth": "bpsk",
+      "prediction": "bpsk",
+      "abstained": false,
+      "probability": 1.0,
+      "chunk_agreement": 1.0
+    },
+    {
+      "truth": "bpsk",
+      "prediction": "bpsk",
+      "abstained": false,
+      "probability": 1.0,
+      "chunk_agreement": 1.0
+    },
+    {
+      "truth": "bpsk",
+      "prediction": "bpsk",
+      "abstained": false,
+      "probability": 1.0,
+      "chunk_agreement": 1.0
+    },
+    {
+      "truth": "bpsk",
+      "prediction": "bpsk",
+      "abstained": false,
+      "probability": 1.0,
+      "chunk_agreement": 1.0
+    },
+    {
+      "truth": "bpsk",
+      "prediction": "bpsk",
+      "abstained": false,
+      "probability": 1.0,
+      "chunk_agreement": 1.0
+    },
+    {
+      "truth": "bpsk",
+      "prediction": "bpsk",
+      "abstained": false,
+      "probability": 1.0,
+      "chunk_agreement": 1.0
+    },
+    {
+      "truth": "bpsk",
+      "prediction": "bpsk",
+      "abstained": false,
+      "probability": 1.0,
+      "chunk_agreement": 1.0
+    },
+    {
+      "truth": "bpsk",
+      "prediction": "bpsk",
+      "abstained": false,
+      "probability": 1.0,
+      "chunk_agreement": 1.0
+    },
+    {
+      "truth": "bpsk",
+      "prediction": "bpsk",
+      "abstained": false,
+      "probability": 1.0,
+      "chunk_agreement": 1.0
+    },
+    {
+      "truth": "qpsk",
+      "prediction": "qpsk",
+      "abstained": false,
+      "probability": 1.0,
+      "chunk_agreement": 1.0
+    },
+    {
+      "truth": "qpsk",
+      "prediction": "qpsk",
+      "abstained": false,
+      "probability": 1.0,
+      "chunk_agreement": 1.0
+    },
+    {
+      "truth": "qpsk",
+      "prediction": "qpsk",
+      "abstained": false,
+      "probability": 1.0,
+      "chunk_agreement": 1.0
+    },
+    {
+      "truth": "qpsk",
+      "prediction": "qpsk",
+      "abstained": false,
+      "probability": 1.0,
+      "chunk_agreement": 1.0
+    },
+    {
+      "truth": "qpsk",
+      "prediction": "qpsk",
+      "abstained": false,
+      "probability": 0.9997,
+      "chunk_agreement": 1.0
+    },
+    {
+      "truth": "qpsk",
+      "prediction": "qpsk",
+      "abstained": false,
+      "probability": 1.0,
+      "chunk_agreement": 1.0
+    },
+    {
+      "truth": "qpsk",
+      "prediction": "qpsk",
+      "abstained": false,
+      "probability": 1.0,
+      "chunk_agreement": 1.0
+    },
+    {
+      "truth": "qpsk",
+      "prediction": "qpsk",
+      "abstained": false,
+      "probability": 0.9999,
+      "chunk_agreement": 1.0
+    },
+    {
+      "truth": "qpsk",
+      "prediction": "qpsk",
+      "abstained": false,
+      "probability": 0.998,
+      "chunk_agreement": 1.0
+    },
+    {
+      "truth": "qpsk",
+      "prediction": "qpsk",
+      "abstained": false,
+      "probability": 1.0,
+      "chunk_agreement": 1.0
+    },
+    {
+      "truth": "8psk",
+      "prediction": "8psk",
+      "abstained": false,
+      "probability": 0.9493,
+      "chunk_agreement": 1.0
+    },
+    {
+      "truth": "8psk",
+      "prediction": "8psk",
+      "abstained": false,
+      "probability": 0.9951,
+      "chunk_agreement": 1.0
+    },
+    {
+      "truth": "8psk",
+      "prediction": "8psk",
+      "abstained": false,
+      "probability": 0.9528,
+      "chunk_agreement": 1.0
+    },
+    {
+      "truth": "8psk",
+      "prediction": "8psk",
+      "abstained": false,
+      "probability": 0.96,
+      "chunk_agreement": 1.0
+    },
+    {
+      "truth": "8psk",
+      "prediction": "8psk",
+      "abstained": false,
+      "probability": 0.972,
+      "chunk_agreement": 1.0
+    },
+    {
+      "truth": "8psk",
+      "prediction": "8psk",
+      "abstained": false,
+      "probability": 0.9951,
+      "chunk_agreement": 1.0
+    },
+    {
+      "truth": "8psk",
+      "prediction": "8psk",
+      "abstained": false,
+      "probability": 0.9893,
+      "chunk_agreement": 1.0
+    },
+    {
+      "truth": "8psk",
+      "prediction": "8psk",
+      "abstained": false,
+      "probability": 0.995,
+      "chunk_agreement": 1.0
+    },
+    {
+      "truth": "8psk",
+      "prediction": "8psk",
+      "abstained": false,
+      "probability": 0.9033,
+      "chunk_agreement": 1.0
+    },
+    {
+      "truth": "8psk",
+      "prediction": "8psk",
+      "abstained": false,
+      "probability": 0.9987,
+      "chunk_agreement": 1.0
+    },
+    {
+      "truth": "16qam",
+      "prediction": null,
+      "abstained": true,
+      "probability": 0.6442,
+      "chunk_agreement": 1.0
+    },
+    {
+      "truth": "16qam",
+      "prediction": "16qam",
+      "abstained": false,
+      "probability": 0.826,
+      "chunk_agreement": 1.0
+    },
+    {
+      "truth": "16qam",
+      "prediction": null,
+      "abstained": true,
+      "probability": 0.6069,
+      "chunk_agreement": 1.0
+    },
+    {
+      "truth": "16qam",
+      "prediction": null,
+      "abstained": true,
+      "probability": 0.7003,
+      "chunk_agreement": 1.0
+    },
+    {
+      "truth": "16qam",
+      "prediction": null,
+      "abstained": true,
+      "probability": 0.6368,
+      "chunk_agreement": 0.75
+    },
+    {
+      "truth": "16qam",
+      "prediction": null,
+      "abstained": true,
+      "probability": 0.6211,
+      "chunk_agreement": 0.75
+    },
+    {
+      "truth": "16qam",
+      "prediction": null,
+      "abstained": true,
+      "probability": 0.6935,
+      "chunk_agreement": 1.0
+    },
+    {
+      "truth": "16qam",
+      "prediction": "16qam",
+      "abstained": false,
+      "probability": 0.7475,
+      "chunk_agreement": 0.75
+    },
+    {
+      "truth": "16qam",
+      "prediction": null,
+      "abstained": true,
+      "probability": 0.6761,
+      "chunk_agreement": 1.0
+    },
+    {
+      "truth": "16qam",
+      "prediction": null,
+      "abstained": true,
+      "probability": 0.6008,
+      "chunk_agreement": 1.0
+    },
+    {
+      "truth": "64qam",
+      "prediction": null,
+      "abstained": true,
+      "probability": 0.5246,
+      "chunk_agreement": 0.5
+    },
+    {
+      "truth": "64qam",
+      "prediction": null,
+      "abstained": true,
+      "probability": 0.729,
+      "chunk_agreement": 1.0
+    },
+    {
+      "truth": "64qam",
+      "prediction": null,
+      "abstained": true,
+      "probability": 0.5711,
+      "chunk_agreement": 0.5
+    },
+    {
+      "truth": "64qam",
+      "prediction": null,
+      "abstained": true,
+      "probability": 0.5262,
+      "chunk_agreement": 0.5
+    },
+    {
+      "truth": "64qam",
+      "prediction": null,
+      "abstained": true,
+      "probability": 0.5592,
+      "chunk_agreement": 0.75
+    },
+    {
+      "truth": "64qam",
+      "prediction": null,
+      "abstained": true,
+      "probability": 0.5881,
+      "chunk_agreement": 1.0
+    },
+    {
+      "truth": "64qam",
+      "prediction": null,
+      "abstained": true,
+      "probability": 0.5751,
+      "chunk_agreement": 0.75
+    },
+    {
+      "truth": "64qam",
+      "prediction": null,
+      "abstained": true,
+      "probability": 0.4903,
+      "chunk_agreement": 0.5
+    },
+    {
+      "truth": "64qam",
+      "prediction": "64qam",
+      "abstained": false,
+      "probability": 0.7517,
+      "chunk_agreement": 1.0
+    },
+    {
+      "truth": "64qam",
+      "prediction": null,
+      "abstained": true,
+      "probability": 0.5685,
+      "chunk_agreement": 1.0
+    },
+    {
+      "truth": "2fsk",
+      "prediction": "2fsk",
+      "abstained": false,
+      "probability": 0.999,
+      "chunk_agreement": 1.0
+    },
+    {
+      "truth": "2fsk",
+      "prediction": "2fsk",
+      "abstained": false,
+      "probability": 1.0,
+      "chunk_agreement": 1.0
+    },
+    {
+      "truth": "2fsk",
+      "prediction": "2fsk",
+      "abstained": false,
+      "probability": 0.9999,
+      "chunk_agreement": 1.0
+    },
+    {
+      "truth": "2fsk",
+      "prediction": "2fsk",
+      "abstained": false,
+      "probability": 0.9801,
+      "chunk_agreement": 1.0
+    },
+    {
+      "truth": "2fsk",
+      "prediction": "2fsk",
+      "abstained": false,
+      "probability": 1.0,
+      "chunk_agreement": 1.0
+    },
+    {
+      "truth": "2fsk",
+      "prediction": "2fsk",
+      "abstained": false,
+      "probability": 0.9999,
+      "chunk_agreement": 1.0
+    },
+    {
+      "truth": "2fsk",
+      "prediction": "2fsk",
+      "abstained": false,
+      "probability": 0.9999,
+      "chunk_agreement": 1.0
+    },
+    {
+      "truth": "2fsk",
+      "prediction": "2fsk",
+      "abstained": false,
+      "probability": 1.0,
+      "chunk_agreement": 1.0
+    },
+    {
+      "truth": "2fsk",
+      "prediction": "2fsk",
+      "abstained": false,
+      "probability": 1.0,
+      "chunk_agreement": 1.0
+    },
+    {
+      "truth": "2fsk",
+      "prediction": "2fsk",
+      "abstained": false,
+      "probability": 1.0,
+      "chunk_agreement": 1.0
+    },
+    {
+      "truth": "4fsk",
+      "prediction": "4fsk",
+      "abstained": false,
+      "probability": 0.9897,
+      "chunk_agreement": 1.0
+    },
+    {
+      "truth": "4fsk",
+      "prediction": "4fsk",
+      "abstained": false,
+      "probability": 0.9783,
+      "chunk_agreement": 1.0
+    },
+    {
+      "truth": "4fsk",
+      "prediction": "4fsk",
+      "abstained": false,
+      "probability": 0.9623,
+      "chunk_agreement": 1.0
+    },
+    {
+      "truth": "4fsk",
+      "prediction": "4fsk",
+      "abstained": false,
+      "probability": 0.984,
+      "chunk_agreement": 1.0
+    },
+    {
+      "truth": "4fsk",
+      "prediction": "4fsk",
+      "abstained": false,
+      "probability": 0.9931,
+      "chunk_agreement": 1.0
+    },
+    {
+      "truth": "4fsk",
+      "prediction": "4fsk",
+      "abstained": false,
+      "probability": 0.8068,
+      "chunk_agreement": 1.0
+    },
+    {
+      "truth": "4fsk",
+      "prediction": "4fsk",
+      "abstained": false,
+      "probability": 0.9962,
+      "chunk_agreement": 1.0
+    },
+    {
+      "truth": "4fsk",
+      "prediction": "4fsk",
+      "abstained": false,
+      "probability": 0.9961,
+      "chunk_agreement": 1.0
+    },
+    {
+      "truth": "4fsk",
+      "prediction": "4fsk",
+      "abstained": false,
+      "probability": 0.9916,
+      "chunk_agreement": 1.0
+    },
+    {
+      "truth": "4fsk",
+      "prediction": "4fsk",
+      "abstained": false,
+      "probability": 0.9966,
+      "chunk_agreement": 1.0
+    },
+    {
+      "truth": "gmsk",
+      "prediction": "gmsk",
+      "abstained": false,
+      "probability": 0.9617,
+      "chunk_agreement": 1.0
+    },
+    {
+      "truth": "gmsk",
+      "prediction": "gmsk",
+      "abstained": false,
+      "probability": 0.9983,
+      "chunk_agreement": 1.0
+    },
+    {
+      "truth": "gmsk",
+      "prediction": "gmsk",
+      "abstained": false,
+      "probability": 0.9901,
+      "chunk_agreement": 1.0
+    },
+    {
+      "truth": "gmsk",
+      "prediction": "gmsk",
+      "abstained": false,
+      "probability": 0.9982,
+      "chunk_agreement": 1.0
+    },
+    {
+      "truth": "gmsk",
+      "prediction": "gmsk",
+      "abstained": false,
+      "probability": 0.9983,
+      "chunk_agreement": 1.0
+    },
+    {
+      "truth": "gmsk",
+      "prediction": "gmsk",
+      "abstained": false,
+      "probability": 0.9975,
+      "chunk_agreement": 1.0
+    },
+    {
+      "truth": "gmsk",
+      "prediction": "gmsk",
+      "abstained": false,
+      "probability": 0.9996,
+      "chunk_agreement": 1.0
+    },
+    {
+      "truth": "gmsk",
+      "prediction": "gmsk",
+      "abstained": false,
+      "probability": 0.9961,
+      "chunk_agreement": 1.0
+    },
+    {
+      "truth": "gmsk",
+      "prediction": "gmsk",
+      "abstained": false,
+      "probability": 0.9998,
+      "chunk_agreement": 1.0
+    },
+    {
+      "truth": "gmsk",
+      "prediction": "gmsk",
+      "abstained": false,
+      "probability": 0.9765,
+      "chunk_agreement": 1.0
+    },
+    {
+      "truth": "ofdm",
+      "prediction": "ofdm",
+      "abstained": false,
+      "probability": 0.9979,
+      "chunk_agreement": 1.0
+    },
+    {
+      "truth": "ofdm",
+      "prediction": "ofdm",
+      "abstained": false,
+      "probability": 0.9969,
+      "chunk_agreement": 1.0
+    },
+    {
+      "truth": "ofdm",
+      "prediction": "ofdm",
+      "abstained": false,
+      "probability": 0.9994,
+      "chunk_agreement": 1.0
+    },
+    {
+      "truth": "ofdm",
+      "prediction": "ofdm",
+      "abstained": false,
+      "probability": 0.9997,
+      "chunk_agreement": 1.0
+    },
+    {
+      "truth": "ofdm",
+      "prediction": "ofdm",
+      "abstained": false,
+      "probability": 0.9998,
+      "chunk_agreement": 1.0
+    },
+    {
+      "truth": "ofdm",
+      "prediction": "ofdm",
+      "abstained": false,
+      "probability": 0.9999,
+      "chunk_agreement": 1.0
+    },
+    {
+      "truth": "ofdm",
+      "prediction": "ofdm",
+      "abstained": false,
+      "probability": 0.9998,
+      "chunk_agreement": 1.0
+    },
+    {
+      "truth": "ofdm",
+      "prediction": "ofdm",
+      "abstained": false,
+      "probability": 0.9998,
+      "chunk_agreement": 1.0
+    },
+    {
+      "truth": "ofdm",
+      "prediction": "ofdm",
+      "abstained": false,
+      "probability": 0.9969,
+      "chunk_agreement": 1.0
+    },
+    {
+      "truth": "ofdm",
+      "prediction": "ofdm",
+      "abstained": false,
+      "probability": 0.9836,
+      "chunk_agreement": 1.0
+    },
+    {
+      "truth": "am",
+      "prediction": "am",
+      "abstained": false,
+      "probability": 0.7748,
+      "chunk_agreement": 1.0
+    },
+    {
+      "truth": "am",
+      "prediction": "am",
+      "abstained": false,
+      "probability": 0.9356,
+      "chunk_agreement": 1.0
+    },
+    {
+      "truth": "am",
+      "prediction": "am",
+      "abstained": false,
+      "probability": 0.9767,
+      "chunk_agreement": 1.0
+    },
+    {
+      "truth": "am",
+      "prediction": "am",
+      "abstained": false,
+      "probability": 1.0,
+      "chunk_agreement": 1.0
+    },
+    {
+      "truth": "am",
+      "prediction": "am",
+      "abstained": false,
+      "probability": 1.0,
+      "chunk_agreement": 1.0
+    },
+    {
+      "truth": "am",
+      "prediction": "am",
+      "abstained": false,
+      "probability": 0.9959,
+      "chunk_agreement": 1.0
+    },
+    {
+      "truth": "am",
+      "prediction": null,
+      "abstained": true,
+      "probability": 0.4437,
+      "chunk_agreement": 0.5
+    },
+    {
+      "truth": "am",
+      "prediction": "am",
+      "abstained": false,
+      "probability": 0.9955,
+      "chunk_agreement": 1.0
+    },
+    {
+      "truth": "am",
+      "prediction": "am",
+      "abstained": false,
+      "probability": 1.0,
+      "chunk_agreement": 1.0
+    },
+    {
+      "truth": "am",
+      "prediction": "am",
+      "abstained": false,
+      "probability": 0.9961,
+      "chunk_agreement": 1.0
+    },
+    {
+      "truth": "fm",
+      "prediction": "fm",
+      "abstained": false,
+      "probability": 0.998,
+      "chunk_agreement": 1.0
+    },
+    {
+      "truth": "fm",
+      "prediction": "fm",
+      "abstained": false,
+      "probability": 0.9995,
+      "chunk_agreement": 1.0
+    },
+    {
+      "truth": "fm",
+      "prediction": "fm",
+      "abstained": false,
+      "probability": 0.9999,
+      "chunk_agreement": 1.0
+    },
+    {
+      "truth": "fm",
+      "prediction": "fm",
+      "abstained": false,
+      "probability": 0.9998,
+      "chunk_agreement": 1.0
+    },
+    {
+      "truth": "fm",
+      "prediction": "fm",
+      "abstained": false,
+      "probability": 0.9821,
+      "chunk_agreement": 1.0
+    },
+    {
+      "truth": "fm",
+      "prediction": "fm",
+      "abstained": false,
+      "probability": 0.9994,
+      "chunk_agreement": 1.0
+    },
+    {
+      "truth": "fm",
+      "prediction": "fm",
+      "abstained": false,
+      "probability": 0.7547,
+      "chunk_agreement": 0.75
+    },
+    {
+      "truth": "fm",
+      "prediction": "fm",
+      "abstained": false,
+      "probability": 0.9668,
+      "chunk_agreement": 1.0
+    },
+    {
+      "truth": "fm",
+      "prediction": "fm",
+      "abstained": false,
+      "probability": 1.0,
+      "chunk_agreement": 1.0
+    },
+    {
+      "truth": "fm",
+      "prediction": "fm",
+      "abstained": false,
+      "probability": 1.0,
+      "chunk_agreement": 1.0
+    },
+    {
+      "truth": "noise",
+      "prediction": null,
+      "abstained": true,
+      "probability": 0.7595,
+      "chunk_agreement": 1.0
+    },
+    {
+      "truth": "noise",
+      "prediction": null,
+      "abstained": true,
+      "probability": 0.8442,
+      "chunk_agreement": 1.0
+    },
+    {
+      "truth": "noise",
+      "prediction": null,
+      "abstained": true,
+      "probability": 0.8866,
+      "chunk_agreement": 1.0
+    },
+    {
+      "truth": "noise",
+      "prediction": null,
+      "abstained": true,
+      "probability": 0.7285,
+      "chunk_agreement": 1.0
+    },
+    {
+      "truth": "noise",
+      "prediction": null,
+      "abstained": true,
+      "probability": 0.6618,
+      "chunk_agreement": 1.0
+    },
+    {
+      "truth": "noise",
+      "prediction": null,
+      "abstained": true,
+      "probability": 0.8241,
+      "chunk_agreement": 1.0
+    },
+    {
+      "truth": "noise",
+      "prediction": null,
+      "abstained": true,
+      "probability": 0.8024,
+      "chunk_agreement": 1.0
+    },
+    {
+      "truth": "noise",
+      "prediction": null,
+      "abstained": true,
+      "probability": 0.8352,
+      "chunk_agreement": 1.0
+    },
+    {
+      "truth": "noise",
+      "prediction": null,
+      "abstained": true,
+      "probability": 0.6906,
+      "chunk_agreement": 0.75
+    },
+    {
+      "truth": "noise",
+      "prediction": null,
+      "abstained": true,
+      "probability": 0.8652,
+      "chunk_agreement": 1.0
+    }
+  ]
+}

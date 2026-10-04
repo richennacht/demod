@@ -2,6 +2,8 @@
 
 This is the single source of truth for the current product state. “Built” means executable code exists and has automated tests. “Partial” means there is a usable fragment but it is not connected to the end-to-end workflow. “Not built” means no implementation currently exists.
 
+Latest rate/modulation update: automatic PCM WAV-header Fs extraction, existing SigMF metadata fill, duration-referenced raw Fs and DSP-versus-learned SPS hypotheses are now available through `/rates` and Capture. Unknown raw absolute Fs remains unavailable without a reference. The SPS feature-softmax model is simulation-tested for PSK/QAM at 2/4/8/16 SPS; full WAV waveform analysis is still CLI-only. DemodAMC now returns full ranking, mean-window probabilities, window agreement and noise abstention. See [review and measurements](RATE_AND_MODULATION_REVIEW.md); older entries below describe the broader workflow and are not a claim of universal rate inference.
+
 | Area | Status | Present now | Still required before it is an end-to-end feature |
 | --- | --- | --- | --- |
 | Landing page and analyst UI | Built | GitHub Pages landing page; `web/` UI connected to the local API (capture settings with provenance, backend FFT/waterfall/scatter/segments, raw vs derived, manual vs model, classifier, BPSK/QPSK/2-FSK receiver, report export); also served by the API at `/ui/` | Large-file chunking beyond the 16 MiB API cap, real-capture example set, user testing with analysts. |

@@ -86,6 +86,8 @@ function captureHeaders(s) {
   const h = { 'Content-Type': 'application/octet-stream', 'X-DEmod-IQ-Format': s.iq_format, 'X-DEmod-Sample-Rate': String(s.sample_rate_hz), 'X-DEmod-Metadata-Source': s.metadata_source };
   if (s.centre_frequency_hz != null) h['X-DEmod-Centre-Frequency'] = String(s.centre_frequency_hz);
   if (s.gain_db != null) h['X-DEmod-Gain'] = String(s.gain_db);
+  const duration = parseNum($('#p-duration').value);
+  if (duration > 0) h['X-DEmod-Recording-Duration'] = String(duration);
   return h;
 }
 async function post(path, headers) {
@@ -110,6 +112,7 @@ function settings() {
 }
 function captureProblems(s) {
   const p = [];
+  if (state.file?.name.toLowerCase().endsWith('.wav')) p.push('WAV rate metadata is supported here; waveform analysis currently requires raw IQ. Do not reinterpret a WAV header as IQ samples.');
   if (!(s.sample_rate_hz > 0)) p.push('Enter a positive sample rate.');
   if (Number.isNaN(s.centre_frequency_hz)) p.push('Centre frequency should be a number, or leave it empty.');
   if (Number.isNaN(s.gain_db)) p.push('Gain should be a number, or leave it empty.');
@@ -182,10 +185,40 @@ async function onFile(file) {
   if (!file) return;
   if (!file.size) { flash('#capture-error', `${file.name} is empty.`); return; }
   state.example = null;
+  $('#p-duration').value = ''; $('#rate-evidence').textContent = '';
   const buffer = await file.slice(0, Math.min(file.size, MAX_BYTES)).arrayBuffer();
   await loadBytes(file, buffer);
+  if (file.name.toLowerCase().endsWith('.wav') && state.api.ok) {
+    try {
+      const r = await post('/rates', { 'Content-Type': 'application/octet-stream' });
+      F.rate.value = r.metadata.sample_rate_hz; F.source.value = 'wav_header';
+      $('#rate-evidence').textContent = `Fs ${fmtRate(r.metadata.sample_rate_hz)} read automatically from the WAV header. ${r.metadata.channels} channels. Waveform analysis requires raw IQ.`;
+      updateSummary();
+    } catch (err) { flash('#capture-error', err.message); }
+  }
 }
 $('#file-input').addEventListener('change', e => onFile(e.target.files[0]));
+$('#estimate-rates').addEventListener('click', async () => {
+  if (!state.bytes) { $('#rate-evidence').textContent = 'Load a capture first.'; return; }
+  try {
+    const h = { 'Content-Type': 'application/octet-stream', 'X-DEmod-IQ-Format': F.format.value };
+    const fs = parseNum(F.rate.value); if (fs > 0) h['X-DEmod-Sample-Rate'] = String(fs);
+    const duration = parseNum($('#p-duration').value);
+    if ($('#p-duration').value.trim() && !(duration > 0)) throw new Error('Recording duration must be positive.');
+    if (duration > 0) h['X-DEmod-Recording-Duration'] = String(duration);
+    const r = await post('/rates', h);
+    if (r.metadata) {
+      $('#rate-evidence').textContent = `Fs ${fmtRate(r.metadata.sample_rate_hz)} from WAV header; ${r.metadata.channels} channels. Rate metadata only; select raw IQ for the analysis workflow.`;
+    } else {
+      if (r.rates.sample_rate_source === 'sample_count / analyst_recording_duration') {
+        F.rate.value = r.rates.absolute_sample_rate_hz; updateSummary();
+      }
+      const learned = r.rates.learned;
+      const manual = r.rates.manual.candidates.slice(0, 3).map(c => `${fmtNum(c.samples_per_symbol, 2)} samples/symbol`).join(', ');
+      $('#rate-evidence').textContent = `${r.rates.absolute_sample_rate_hz ? 'Fs ' + fmtRate(r.rates.absolute_sample_rate_hz) + ' (' + r.rates.sample_rate_source + '). ' : ''}DSP candidates: ${manual}. Model: ${learned && !learned.abstained ? learned.samples_per_symbol + ' samples/symbol' : 'abstained or unavailable'}. Absolute Fs needs metadata or a time reference. Model scope: simulated PSK/QAM, SPS 2/4/8/16.`;
+    }
+  } catch (err) { $('#rate-evidence').textContent = err.message; }
+});
 const drop = $('#drop');
 ['dragenter', 'dragover'].forEach(t => drop.addEventListener(t, () => drop.classList.add('over')));
 ['dragleave', 'drop'].forEach(t => drop.addEventListener(t, () => drop.classList.remove('over')));
@@ -520,6 +553,13 @@ function renderEvidence() {
       ${legacy ? `<p class="note">The old centroid classifier said ${legacy.abstained ? 'nothing (abstained)' : esc(label(String(legacy.predicted_modulation)))} at ${pct(legacy.confidence)}.</p>` : ''}` }));
 
   /* Manual versus learned. Carrier offset now comes from SpecCFO and carries a confidence. */
+  if (a.rate_estimation) {
+    const r = a.rate_estimation; const model = r.learned;
+    tiles.push(tile({ cat: 'model estimates', title: 'Symbol-rate evidence', av: 'model',
+      src: 'Classical cyclic-line candidates versus trained feature softmax',
+      metric: model && !model.abstained ? `${model.samples_per_symbol} samples/symbol` : 'Model abstained',
+      body: `<p>Fs ${fmtRate(r.absolute_sample_rate_hz)} (${esc(r.sample_rate_source)}).</p><p>DSP candidates: ${r.manual.candidates.slice(0,3).map(c => esc(fmtNum(c.samples_per_symbol,2))).join(', ')} samples/symbol.</p><p>${esc(model?.scope || 'Model unavailable')}</p><p>Absolute Fs needs metadata or a time reference; candidates are hypotheses.</p>` }));
+  }
   const cmp = a.automated_parameter_comparison;
   const nyq = fs / 2; const plabel = { dc_i: 'DC, I', dc_q: 'DC, Q', carrier_offset_hz: 'Carrier offset' };
   const fmtFine = v => (Math.abs(v) < 1e5 ? `${v > 0 ? '+' : v < 0 ? '−' : ''}${Math.abs(v).toFixed(1)} Hz` : fmtHz(v, true));

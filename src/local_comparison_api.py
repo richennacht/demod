@@ -10,6 +10,8 @@ from __future__ import annotations
 import argparse
 import json
 import mimetypes
+import math
+import wave
 import sys
 import uuid
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
@@ -29,6 +31,7 @@ from gnu_radio_adapter import flowgraph
 from learned_analysis import analysis_region, carrier_offset, classify
 from modulation_classifier import CentroidAMC
 from provenance import input_provenance
+from rate_estimation import estimate as estimate_rates, wav_metadata
 
 
 MAX_INPUT_BYTES = 16 * 1024 * 1024
@@ -89,6 +92,7 @@ class ComparisonService:
             "automated_parameter_comparison": comparison,
             "modulation_classification": classification or legacy_classification,
             "learned_region": region_info,
+            "rate_estimation": estimate_rates(region, sample_rate_hz) if len(region) >= 128 else None,
             "provenance": {
                 "raw_data_persisted": False,
                 "denoising_profile": denoise_profile,
@@ -126,7 +130,7 @@ def make_handler(service: ComparisonService):
             self.send_header("Content-Type", "application/json; charset=utf-8")
             self.send_header("Content-Length", str(len(encoded)))
             self.send_header("Access-Control-Allow-Origin", "*")
-            self.send_header("Access-Control-Allow-Headers", "Content-Type, X-DEmod-IQ-Format, X-DEmod-Sample-Rate, X-DEmod-Denoise-Profile, X-DEmod-Centre-Frequency, X-DEmod-Gain, X-DEmod-Metadata-Source, X-DEmod-Modulation, X-DEmod-Samples-Per-Symbol, X-DEmod-Timing-Offset, X-DEmod-Carrier-Offset")
+            self.send_header("Access-Control-Allow-Headers", "Content-Type, X-DEmod-IQ-Format, X-DEmod-Sample-Rate, X-DEmod-Denoise-Profile, X-DEmod-Centre-Frequency, X-DEmod-Gain, X-DEmod-Metadata-Source, X-DEmod-Modulation, X-DEmod-Samples-Per-Symbol, X-DEmod-Timing-Offset, X-DEmod-Carrier-Offset, X-DEmod-Known-Symbol-Rate, X-DEmod-Recording-Duration")
             self.end_headers()
             self.wfile.write(encoded)
 
@@ -136,7 +140,7 @@ def make_handler(service: ComparisonService):
             self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
             # Lets Chromium's private/local-network preflight reach a loopback API from the hosted UI.
             self.send_header("Access-Control-Allow-Private-Network", "true")
-            self.send_header("Access-Control-Allow-Headers", "Content-Type, X-DEmod-IQ-Format, X-DEmod-Sample-Rate, X-DEmod-Denoise-Profile, X-DEmod-Centre-Frequency, X-DEmod-Gain, X-DEmod-Metadata-Source, X-DEmod-Modulation, X-DEmod-Samples-Per-Symbol, X-DEmod-Timing-Offset, X-DEmod-Carrier-Offset")
+            self.send_header("Access-Control-Allow-Headers", "Content-Type, X-DEmod-IQ-Format, X-DEmod-Sample-Rate, X-DEmod-Denoise-Profile, X-DEmod-Centre-Frequency, X-DEmod-Gain, X-DEmod-Metadata-Source, X-DEmod-Modulation, X-DEmod-Samples-Per-Symbol, X-DEmod-Timing-Offset, X-DEmod-Carrier-Offset, X-DEmod-Known-Symbol-Rate, X-DEmod-Recording-Duration")
             self.end_headers()
 
         def _send_static(self, relative: str) -> None:
@@ -166,7 +170,7 @@ def make_handler(service: ComparisonService):
                 self._send(404, {"error": "Use GET /health, GET /ui/, POST /analyse or POST /demodulate."})
 
         def do_POST(self) -> None:
-            if self.path not in ("/analyse", "/demodulate"):
+            if self.path not in ("/analyse", "/demodulate", "/rates"):
                 self._send(404, {"error": "Use POST /analyse or POST /demodulate."})
                 return
             try:
@@ -175,14 +179,33 @@ def make_handler(service: ComparisonService):
                     raise ValueError(f"Content-Length must be between 1 and {MAX_INPUT_BYTES} bytes.")
                 raw = self.rfile.read(length)
                 optional_float = lambda name: float(self.headers[name]) if self.headers.get(name) else None
-                if self.path == "/analyse":
+                if self.path == "/rates":
+                    if raw[:4] == b'RIFF' and raw[8:12] == b'WAVE':
+                        meta, values = wav_metadata(raw)
+                        report = {"metadata": meta, "rates": None, "note": "WAV header gives Fs. Stereo channel interpretation requires an analyst declaration."}
+                    else:
+                        values = decode_raw_iq(raw, self.headers.get("X-DEmod-IQ-Format", "s16le"))
+                        report = {"metadata": None, "rates": estimate_rates(values, optional_float("X-DEmod-Sample-Rate"), optional_float("X-DEmod-Known-Symbol-Rate"), optional_float("X-DEmod-Recording-Duration"))}
+                elif self.path == "/analyse":
                     report = service.analyse_bytes(raw, self.headers.get("X-DEmod-IQ-Format", "s16le"), float(self.headers.get("X-DEmod-Sample-Rate", "0")), self.headers.get("X-DEmod-Denoise-Profile", "raw"), optional_float("X-DEmod-Centre-Frequency"), optional_float("X-DEmod-Gain"), self.headers.get("X-DEmod-Metadata-Source", "analyst_hypothesis"))
+                    duration = optional_float("X-DEmod-Recording-Duration")
+                    if duration is not None:
+                        if not math.isfinite(duration) or duration <= 0:
+                            raise ValueError('Recording duration must be finite and positive.')
+                        count = report['analysis']['raw_branch']['features']['sample_count']
+                        fs = report['input']['capture']['sample_rate_hz']
+                        if abs(count / duration - fs) > max(1e-6, fs * 1e-6):
+                            raise ValueError('Supplied Fs conflicts with sample count / recording duration. Clear duration to use a manual override.')
+                        report['input']['capture']['sample_rate_source'] = 'sample_count / analyst_recording_duration'
+                        report['input']['capture']['recording_duration_seconds'] = duration
+                        if report['rate_estimation']:
+                            report['rate_estimation']['sample_rate_source'] = 'sample_count / analyst_recording_duration'
                 else:
                     if not self.headers.get("X-DEmod-Samples-Per-Symbol"):
                         raise ValueError("X-DEmod-Samples-Per-Symbol is required for MVP demodulation.")
                     report = service.demodulate_bytes(raw, self.headers.get("X-DEmod-IQ-Format", "s16le"), float(self.headers.get("X-DEmod-Sample-Rate", "0")), self.headers.get("X-DEmod-Modulation", "auto"), int(self.headers["X-DEmod-Samples-Per-Symbol"]), int(self.headers.get("X-DEmod-Timing-Offset", "0")), optional_float("X-DEmod-Carrier-Offset") or 0.0)
                 self._send(200, report)
-            except (ValueError, OverflowError) as error:
+            except (ValueError, OverflowError, wave.Error, EOFError) as error:
                 self._send(400, {"error": str(error)})
 
         def log_message(self, format: str, *args: Any) -> None:

@@ -62,25 +62,29 @@ def classify(region: np.ndarray, cfo_cycles: float | None) -> dict[str, Any] | N
     if cfo_cycles is not None:
         cfo = np.full(count, cfo_cycles)
     probs = model.probabilities(chunks, cfo)
-    logp = np.log(probs + 1e-12).mean(axis=0)
-    p = np.exp(logp - logp.max())
+    # Mixture across observed windows; avoids amplifying certainty by multiplying
+    # predictions from correlated chunks of the same capture.
+    p = probs.mean(axis=0)
     p = p / p.sum()
     order = np.argsort(p)[::-1]
     best = int(order[0])
-    abstain = float(p[best]) < model.abstain_below
+    agreement = float(np.mean(np.argmax(probs, axis=1) == best))
+    abstain = float(p[best]) < model.abstain_below or agreement < .6 or CLASSES[best] == 'noise'
     calibrated = bool(model.meta.get("calibrated_on"))
     return {
         "predicted_modulation": None if abstain else CLASSES[best],
         "confidence": round(float(p[best]), 4),
         "abstained": abstain,
-        "reason": f"top probability below the abstention threshold {model.abstain_below:.2f}" if abstain else ("highest calibrated probability" if calibrated else "highest probability (model not calibrated)"),
-        "ranked_candidates": [{"modulation": CLASSES[i], "probability": round(float(p[i]), 4)} for i in order[:6]],
+        "reason": ('noise class: no modulation selected' if CLASSES[best] == 'noise' else 'chunk predictions disagree' if agreement < .6 else f"top probability below the abstention threshold {model.abstain_below:.2f}") if abstain else "highest mean chunk probability",
+        "ranked_candidates": [{"modulation": CLASSES[i], "probability": round(float(p[i]), 4)} for i in order],
+        "chunk_agreement": agreement,
         "chunks_used": int(count),
         "model": {
             "type": "DemodAMC: CFO-compensated two-branch CNN (time and x**M spectra)",
             "classes": list(CLASSES),
             "model_file": amc_models.MODEL_PATH.name,
             "calibrated": calibrated,
+            "aggregation": "arithmetic mean; temperature fitted per chunk on simulation, capture-level calibration not established",
             "temperature": model.temperature,
             "abstain_below": model.abstain_below,
             "scope": "Trained and evaluated on simulated signals only (research/README.md). Needs held-out real captures before operational use.",

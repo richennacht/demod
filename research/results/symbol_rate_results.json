@@ -1,0 +1,66 @@
+{
+  "training_seed": 26147,
+  "evaluation_seed": 826147,
+  "training_examples": 1000,
+  "test_examples": 400,
+  "classes_sps": [
+    2,
+    4,
+    8,
+    16
+  ],
+  "accuracy": 1.0,
+  "coverage": 0.99,
+  "accepted_accuracy": 1.0,
+  "confusion": [
+    [
+      100,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      100,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      100,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      100
+    ]
+  ],
+  "scope": "Independent synthetic seeds, same generator; PSK/QAM, RRC/rect, 5\u201330 dB; not real-data validation.",
+  "recipe": {
+    "length": 2048,
+    "modulations": [
+      "bpsk",
+      "qpsk",
+      "8psk",
+      "16qam",
+      "64qam"
+    ],
+    "pulses": [
+      "rrc",
+      "rect"
+    ],
+    "snr_db": [
+      5,
+      30
+    ],
+    "sps": [
+      2,
+      4,
+      8,
+      16
+    ]
+  }
+}
